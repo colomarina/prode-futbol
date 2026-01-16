@@ -1,16 +1,62 @@
-# React + Vite
+# ⚽ Prode Fútbol
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web para jugar prode con amigos.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React + Vite
+- Supabase (Backend & Auth)
 
-## React Compiler
+## 📦 Instalación
+```bash
+# Clonar repositorio
+git clone https://github.com/colomarina/prode-futbol.git
+cd prode-futbol
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+# Instalar dependencias
+npm install
 
-## Expanding the ESLint configuration
+# Configurar variables de entorno
+# Crear archivo .env con:
+# VITE_SUPABASE_URL=tu-url
+# VITE_SUPABASE_ANON_KEY=tu-key
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Correr en desarrollo
+npm run dev
+```
+
+## 🎯 Funcionalidades
+
+- ✅ Autenticación de usuarios
+- ✅ Carga de pronósticos
+- ✅ Administración de partidos (admin)
+- ✅ Validación de tiempo límite (1 hora antes)
+- ✅ Sistema de puntos automático
+- 🚧 Tabla de posiciones (en desarrollo)
+
+## 🔐 Roles
+
+- **Admin**: Puede crear partidos y cargar resultados
+- **User**: Puede cargar pronósticos y ver tabla
+
+## 📊 Sistema de Puntos
+
+- Resultado exacto: 5 puntos
+- Diferencia de goles exacta: 3 puntos
+- Ganador correcto: 1 punto
+
+## 📝 To-Do
+
+- [ ] Tabla de posiciones
+- [ ] Vista de todas las predicciones
+- [ ] Notificaciones
+- [ ] Estadísticas por usuario
+- [ ] Historial de fechas anteriores
+
+## 🚀 Deploy
+
+Deployado en Vercel: [URL cuando lo subas]
+
+## 👥 Autor
+
+[lucasmarina26@gmail.com]

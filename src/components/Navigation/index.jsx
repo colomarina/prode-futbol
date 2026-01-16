@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import PredictionForm from '../PredictionForm'
-// import Leaderboard from './Leaderboard'
+import Leaderboard from '../LeaderBoard'
 import MatchManager from '../MatchManager'
 
 export default function Navigation() {
@@ -117,7 +117,7 @@ export default function Navigation() {
       {/* Content */}
       <div style={{ paddingTop: '24px', paddingBottom: '24px' }}>
         {activeTab === 'predictions' && <PredictionForm roundNumber={1} />}
-        {/* {activeTab === 'leaderboard' && <Leaderboard />} */}
+        {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'admin' && isAdmin() && <MatchManager />}
       </div>
 
