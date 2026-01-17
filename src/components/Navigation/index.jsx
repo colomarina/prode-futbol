@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import PredictionForm from '../PredictionForm'
 import Leaderboard from '../LeaderBoard'
 import MatchManager from '../MatchManager'
+import RoundManager from '../RoundManager'
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('predictions')
@@ -10,9 +11,10 @@ export default function Navigation() {
   const { profile, isAdmin, signOut } = useAuth()
 
   const tabs = [
-    { id: 'predictions', label: 'Mis Pronósticos', icon: '📊', adminOnly: false },
-    { id: 'leaderboard', label: 'Tabla de Posiciones', icon: '🏆', adminOnly: false },
-    { id: 'admin', label: 'Administrar Partidos', icon: '⚙️', adminOnly: true },
+    { id: 'predictions', label: 'Mis Pronósticos', mobileLabel: 'Pronósticos', icon: '📊', adminOnly: false },
+    { id: 'leaderboard', label: 'Tabla de Posiciones', mobileLabel: 'Tabla', icon: '🏆', adminOnly: false },
+    // { id: 'admin', label: 'Administrar Partidos', icon: '⚙️', adminOnly: true },
+    { id: 'rounds', label: 'Gestionar Fechas', mobileLabel: 'Fechas', icon: '📅', adminOnly: true },
   ]
 
   const visibleTabs = tabs.filter(tab => !tab.adminOnly || isAdmin())
@@ -26,8 +28,7 @@ export default function Navigation() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0' }}>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>⚽</span>
-              <span style={{ display: 'none' }} className="mobile-hidden">Prode Chiqui Tapia</span>
-              <span className="mobile-visible">Prode</span>
+              <span>Prode Chiqui Tapia</span>
             </h1>
 
             {/* Desktop User Info */}
@@ -83,7 +84,7 @@ export default function Navigation() {
           )}
 
           {/* Tabs - Responsive */}
-          <div className="tabs-container" style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #E0E0E0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div className="tabs-container" style={{ display: 'flex', gap: '0px', borderBottom: '2px solid #E5E7EB', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {visibleTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -91,23 +92,34 @@ export default function Navigation() {
                   setActiveTab(tab.id)
                   setMobileMenuOpen(false)
                 }}
+                className="tab-button"
                 style={{
-                  padding: '12px 16px',
+                  flex: '1',
+                  padding: '12px 8px',
                   fontWeight: '600',
                   fontSize: '0.9rem',
-                  backgroundColor: 'transparent',
+                  backgroundColor: activeTab === tab.id ? '#f0fdf4' : 'transparent',
                   border: 'none',
-                  borderBottom: activeTab === tab.id ? '3px solid var(--color-primary)' : '3px solid transparent',
+                  borderBottom: activeTab === tab.id ? '4px solid var(--color-primary)' : '4px solid transparent',
+                  borderLeft: activeTab === tab.id ? '1px solid #dcfce7' : '1px solid transparent',
+                  borderRight: activeTab === tab.id ? '1px solid #dcfce7' : '1px solid transparent',
                   color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   whiteSpace: 'nowrap',
                   cursor: 'pointer',
-                  minHeight: 'auto'
+                  minHeight: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '2px',
+                  position: 'relative',
+                  boxShadow: activeTab === tab.id ? '0 -2px 8px rgba(16, 185, 129, 0.1)' : 'none'
                 }}
               >
-                <span style={{ marginRight: '6px' }}>{tab.icon}</span>
-                <span className="tab-label-desktop">{tab.label}</span>
-                <span className="tab-label-mobile" style={{ display: 'none' }}>{tab.label.split(' ')[0]}</span>
+                <span style={{ fontSize: '1.15rem', display: 'block', transform: activeTab === tab.id ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>{tab.icon}</span>
+                <span className="tab-label-desktop" style={{ fontSize: '0.8rem', fontWeight: activeTab === tab.id ? '700' : '600' }}>{tab.label}</span>
+                <span className="tab-label-mobile" style={{ display: 'none', fontSize: '0.7rem', fontWeight: activeTab === tab.id ? '700' : '600' }}>{tab.mobileLabel || tab.label}</span>
               </button>
             ))}
           </div>
@@ -119,6 +131,7 @@ export default function Navigation() {
         {activeTab === 'predictions' && <PredictionForm roundNumber={1} />}
         {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'admin' && isAdmin() && <MatchManager />}
+        {activeTab === 'rounds' && isAdmin() && <RoundManager />}
       </div>
 
       <style>{`
@@ -129,6 +142,9 @@ export default function Navigation() {
           .mobile-menu-btn { display: block !important; }
           .tab-label-desktop { display: none; }
           .tab-label-mobile { display: inline !important; }
+          .tab-button {
+            min-width: 90px;
+          }
         }
 
         @media (min-width: 768px) {
@@ -139,6 +155,19 @@ export default function Navigation() {
           .mobile-menu { display: none !important; }
           .tab-label-desktop { display: inline; }
           .tab-label-mobile { display: none !important; }
+          .tab-button {
+            flex-direction: row !important;
+            gap: 8px !important;
+          }
+        }
+
+        .tab-button:hover {
+          background-color: #f0fdf4;
+          transform: translateY(-1px);
+        }
+
+        .tab-button:active {
+          transform: translateY(0);
         }
 
         .tabs-container::-webkit-scrollbar {

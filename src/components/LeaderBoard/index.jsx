@@ -1,14 +1,269 @@
 import { useState } from 'react'
 import { useLeaderboard } from '../../hooks/useLeaderboard'
-import { useMatches } from '../../hooks/useMatches'
+import { useRounds } from '../../hooks/useRounds'
+
+// Custom Round Select Component
+function RoundSelect({ value, onChange, rounds, loading }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      closed: { icon: '🔒', label: 'Cerrada', color: '#9ca3af' },
+      open: { icon: '🟢', label: 'En curso', color: '#10b981' },
+      finished: { icon: '✅', label: 'Finalizada', color: '#3b82f6' }
+    }
+    return configs[status] || configs.closed
+  }
+
+  const selectedRound = value === null
+    ? { label: '🏆 Tabla General', subtitle: 'Todas las fechas' }
+    : rounds.find(r => r.round_number === value)
+
+  if (loading) {
+    return (
+      <div style={{
+        padding: '16px',
+        textAlign: 'center',
+        backgroundColor: 'var(--color-surface-variant)',
+        borderRadius: '12px',
+        border: '2px solid #E0E0E0'
+      }}>
+        <div className="spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }}></div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: '100%',
+          padding: '16px 20px',
+          borderRadius: '12px',
+          border: '2px solid var(--color-primary)',
+          backgroundColor: 'var(--color-surface)',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {value === null ? (
+            <>
+              <span style={{ fontSize: '1.8rem' }}>🏆</span>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--color-text-primary)' }}>
+                  Tabla General
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                  Todas las fechas
+                </div>
+              </div>
+            </>
+          ) : selectedRound ? (
+            <>
+              <span style={{ fontSize: '1.8rem' }}>📆</span>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{
+                  fontWeight: '700',
+                  fontSize: '1rem',
+                  color: 'var(--color-text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>Fecha {selectedRound.round_number}</span>
+                  <span style={{ fontSize: '1.2rem' }}>
+                    {getStatusConfig(selectedRound.status).icon}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                  {getStatusConfig(selectedRound.status).label}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+        <span style={{
+          fontSize: '1.2rem',
+          color: 'var(--color-text-secondary)',
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s'
+        }}>▼</span>
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10
+            }}
+            onClick={() => setIsOpen(false)}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              left: 0,
+              right: 0,
+              backgroundColor: 'var(--color-surface)',
+              border: '2px solid var(--color-primary)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              maxHeight: '400px',
+              overflowY: 'auto',
+              zIndex: 20
+            }}
+          >
+            {/* Opción General */}
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null)
+                setIsOpen(false)
+              }}
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: 'none',
+                backgroundColor: value === null ? 'var(--color-surface-variant)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                textAlign: 'left',
+                borderBottom: '1px solid #E0E0E0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+              onMouseEnter={(e) => {
+                if (value !== null) {
+                  e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (value !== null) {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }
+              }}
+            >
+              <span style={{ fontSize: '1.8rem' }}>🏆</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text-primary)' }}>
+                  Tabla General
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                  Todas las fechas del torneo
+                </div>
+              </div>
+            </button>
+
+            {/* Opciones de fechas */}
+            {rounds.map((round) => {
+              const statusConfig = getStatusConfig(round.status)
+              const isOpen = round.status === 'open'
+
+              return (
+                <button
+                  key={round.round_number}
+                  type="button"
+                  onClick={() => {
+                    onChange(round.round_number)
+                    setIsOpen(false)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    border: 'none',
+                    backgroundColor: value === round.round_number ? 'var(--color-surface-variant)' :
+                                   isOpen ? 'rgba(16, 185, 129, 0.05)' : 'transparent',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    textAlign: 'left',
+                    borderBottom: '1px solid #E0E0E0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    borderLeft: isOpen ? '4px solid #10b981' : '4px solid transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (value !== round.round_number) {
+                      e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (value !== round.round_number) {
+                      e.currentTarget.style.backgroundColor = isOpen ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
+                    }
+                  }}
+                >
+                  <span style={{ fontSize: '1.8rem' }}>📆</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontWeight: '700',
+                      fontSize: '0.95rem',
+                      color: 'var(--color-text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span>Fecha {round.round_number}</span>
+                      {isOpen && (
+                        <span style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Activa
+                        </span>
+                      )}
+                    </div>
+                    <div style={{
+                      fontSize: '0.8rem',
+                      color: statusConfig.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontWeight: '600'
+                    }}>
+                      <span>{statusConfig.icon}</span>
+                      <span>{statusConfig.label}</span>
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function Leaderboard() {
   const [selectedRound, setSelectedRound] = useState(null) // null = general
   const { leaderboard, loading, error } = useLeaderboard(selectedRound)
-  const { matches } = useMatches()
-
-  // Obtener números de fechas únicas
-  const rounds = [...new Set(matches.map(m => m.round_number))].sort((a, b) => b - a)
+  const { rounds, loading: roundsLoading } = useRounds()
 
   if (loading) {
     return (
@@ -71,35 +326,12 @@ export default function Leaderboard() {
         }}>
           📅 Filtrar por fecha
         </h3>
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap'
-        }}>
-          <button
-            onClick={() => setSelectedRound(null)}
-            className={selectedRound === null ? 'btn-primary' : 'btn-outline'}
-            style={{
-              padding: '10px 20px',
-              fontSize: '0.9rem'
-            }}
-          >
-            🏆 General
-          </button>
-          {rounds.map((round) => (
-            <button
-              key={round}
-              onClick={() => setSelectedRound(round)}
-              className={selectedRound === round ? 'btn-primary' : 'btn-outline'}
-              style={{
-                padding: '10px 20px',
-                fontSize: '0.9rem'
-              }}
-            >
-              Fecha {round}
-            </button>
-          ))}
-        </div>
+        <RoundSelect
+          value={selectedRound}
+          onChange={setSelectedRound}
+          rounds={rounds}
+          loading={roundsLoading}
+        />
       </div>
 
       {/* Tabla */}
@@ -305,49 +537,45 @@ export default function Leaderboard() {
           gap: '12px'
         }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
             padding: '12px',
             backgroundColor: 'var(--color-surface)',
             borderRadius: '8px'
           }}>
-            <span style={{
-              fontSize: '2rem',
-              minWidth: '40px',
-              textAlign: 'center'
-            }}>🎯</span>
-            <div>
-              <strong style={{ color: 'var(--color-text-primary)' }}>Resultado exacto:</strong>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '8px'
+            }}>
               <span style={{
-                marginLeft: '8px',
-                color: 'var(--color-success)',
-                fontWeight: '700',
-                fontSize: '1.1rem'
-              }}>5 puntos</span>
+                fontSize: '2rem',
+                minWidth: '40px',
+                textAlign: 'center'
+              }}>🎯</span>
+              <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
+                PLENO (resultado exacto):
+              </strong>
             </div>
-          </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px',
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '8px'
-          }}>
-            <span style={{
-              fontSize: '2rem',
-              minWidth: '40px',
-              textAlign: 'center'
-            }}>📈</span>
-            <div>
-              <strong style={{ color: 'var(--color-text-primary)' }}>Diferencia de goles exacta:</strong>
-              <span style={{
-                marginLeft: '8px',
-                color: 'var(--color-success)',
-                fontWeight: '700',
-                fontSize: '1.1rem'
-              }}>3 puntos</span>
+            <div style={{
+              marginLeft: '52px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              fontSize: '0.9rem',
+              color: 'var(--color-text-secondary)'
+            }}>
+              <div>
+                • Más de 2 goles: <span style={{
+                  color: 'var(--color-success)',
+                  fontWeight: '700'
+                }}>2 + cantidad de goles</span>
+              </div>
+              <div>
+                • 2 o menos goles: <span style={{
+                  color: 'var(--color-success)',
+                  fontWeight: '700'
+                }}>2 puntos</span>
+              </div>
             </div>
           </div>
           <div style={{
@@ -364,7 +592,34 @@ export default function Leaderboard() {
               textAlign: 'center'
             }}>✅</span>
             <div>
-              <strong style={{ color: 'var(--color-text-primary)' }}>Ganador correcto (o empate):</strong>
+              <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
+                Partidos de hasta 2 goles (acertar ganador/empate):
+              </strong>
+              <span style={{
+                marginLeft: '8px',
+                color: 'var(--color-success)',
+                fontWeight: '700',
+                fontSize: '1.1rem'
+              }}>1 punto</span>
+            </div>
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px',
+            backgroundColor: 'var(--color-surface)',
+            borderRadius: '8px'
+          }}>
+            <span style={{
+              fontSize: '2rem',
+              minWidth: '40px',
+              textAlign: 'center'
+            }}>📈</span>
+            <div>
+              <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
+                Más de 3 goles predichos (acertar cantidad total):
+              </strong>
               <span style={{
                 marginLeft: '8px',
                 color: 'var(--color-success)',

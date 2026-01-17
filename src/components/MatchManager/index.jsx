@@ -1,11 +1,111 @@
 import { useState } from 'react'
 import { useMatches } from '../../hooks/useMatches'
+import { useTeams } from '../../hooks/useTeams'
+import TeamDisplay from '../TeamDisplay'
+
+// Custom Team Select Component
+function TeamSelect({ value, onChange, teams, placeholder, disabled }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const selectedTeam = teams.find(t => t.id === value)
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+        className="form-input"
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          backgroundColor: disabled ? '#FAFAFA' : 'var(--color-surface)',
+          textAlign: 'left'
+        }}
+      >
+        {selectedTeam ? (
+          <TeamDisplay team={selectedTeam} size="sm" />
+        ) : (
+          <span style={{ color: 'var(--color-text-secondary)' }}>{placeholder}</span>
+        )}
+        <span style={{ marginLeft: '8px', color: 'var(--color-text-secondary)' }}>▼</span>
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10
+            }}
+            onClick={() => setIsOpen(false)}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 4px)',
+              left: 0,
+              right: 0,
+              backgroundColor: 'var(--color-surface)',
+              border: '2px solid var(--color-primary)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              maxHeight: '300px',
+              overflowY: 'auto',
+              zIndex: 20
+            }}
+          >
+            {teams.map((team) => (
+              <button
+                key={team.id}
+                type="button"
+                onClick={() => {
+                  onChange(team.id)
+                  setIsOpen(false)
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: 'none',
+                  backgroundColor: value === team.id ? 'var(--color-surface-variant)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                  textAlign: 'left',
+                  borderBottom: '1px solid #E0E0E0'
+                }}
+                onMouseEnter={(e) => {
+                  if (value !== team.id) {
+                    e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (value !== team.id) {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }
+                }}
+              >
+                <TeamDisplay team={team} size="sm" />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function MatchManager() {
   const { matches, createMatch, updateMatch, deleteMatch } = useMatches()
+  const { teams, loading: teamsLoading } = useTeams()
   const [formData, setFormData] = useState({
-    home_team: '',
-    away_team: '',
+    home_team_id: '',
+    away_team_id: '',
     match_date: '',
     round_number: 1,
   })
@@ -13,9 +113,21 @@ export default function MatchManager() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!formData.home_team_id || !formData.away_team_id) {
+      alert('Por favor seleccioná ambos equipos')
+      return
+    }
+
+    if (formData.home_team_id === formData.away_team_id) {
+      alert('Los equipos no pueden ser iguales')
+      return
+    }
+
     const matchData = {
-      ...formData,
+      home_team_id: formData.home_team_id,
+      away_team_id: formData.away_team_id,
       match_date: new Date(formData.match_date).toISOString(),
+      round_number: formData.round_number,
     }
 
     const { error } = await createMatch(matchData)
@@ -25,8 +137,8 @@ export default function MatchManager() {
     } else {
       alert('Partido creado!')
       setFormData({
-        home_team: '',
-        away_team: '',
+        home_team_id: '',
+        away_team_id: '',
         match_date: '',
         round_number: formData.round_number,
       })
@@ -74,31 +186,49 @@ export default function MatchManager() {
               <label className="form-label">
                 🏠 Equipo Local
               </label>
-              <input
-                type="text"
-                value={formData.home_team}
-                onChange={(e) =>
-                  setFormData({ ...formData, home_team: e.target.value })
-                }
-                className="form-input"
-                placeholder="Ej: River Plate"
-                required
-              />
+              {teamsLoading ? (
+                <div style={{
+                  padding: '12px',
+                  textAlign: 'center',
+                  color: 'var(--color-text-secondary)',
+                  backgroundColor: 'var(--color-surface-variant)',
+                  borderRadius: '8px'
+                }}>
+                  Cargando equipos...
+                </div>
+              ) : (
+                <TeamSelect
+                  value={formData.home_team_id}
+                  onChange={(teamId) => setFormData({ ...formData, home_team_id: teamId })}
+                  teams={teams}
+                  placeholder="Seleccioná un equipo"
+                  disabled={false}
+                />
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">
                 ✈️ Equipo Visitante
               </label>
-              <input
-                type="text"
-                value={formData.away_team}
-                onChange={(e) =>
-                  setFormData({ ...formData, away_team: e.target.value })
-                }
-                className="form-input"
-                placeholder="Ej: Boca Juniors"
-                required
-              />
+              {teamsLoading ? (
+                <div style={{
+                  padding: '12px',
+                  textAlign: 'center',
+                  color: 'var(--color-text-secondary)',
+                  backgroundColor: 'var(--color-surface-variant)',
+                  borderRadius: '8px'
+                }}>
+                  Cargando equipos...
+                </div>
+              ) : (
+                <TeamSelect
+                  value={formData.away_team_id}
+                  onChange={(teamId) => setFormData({ ...formData, away_team_id: teamId })}
+                  teams={teams}
+                  placeholder="Seleccioná un equipo"
+                  disabled={false}
+                />
+              )}
             </div>
           </div>
 
@@ -142,6 +272,7 @@ export default function MatchManager() {
             type="submit"
             className="btn-primary"
             style={{ width: '100%' }}
+            disabled={teamsLoading}
           >
             ➕ Crear Partido
           </button>
@@ -185,16 +316,23 @@ export default function MatchManager() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       flexWrap: 'wrap',
-                      gap: '8px',
-                      marginBottom: '8px'
+                      gap: '12px',
+                      marginBottom: '12px'
                     }}>
-                      <p style={{
-                        fontWeight: '700',
-                        fontSize: '1.1rem',
-                        color: 'var(--color-text-primary)'
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        flexWrap: 'wrap'
                       }}>
-                        {match.home_team} vs {match.away_team}
-                      </p>
+                        <TeamDisplay team={match.home_team} size="md" />
+                        <span style={{
+                          fontSize: '1.2rem',
+                          fontWeight: '700',
+                          color: 'var(--color-text-secondary)'
+                        }}>vs</span>
+                        <TeamDisplay team={match.away_team} size="md" />
+                      </div>
                       {match.is_finished && (
                         <span style={{
                           backgroundColor: 'var(--color-success)',

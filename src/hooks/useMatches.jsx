@@ -8,7 +8,6 @@ export const useMatches = (roundNumber = null) => {
 
   useEffect(() => {
     fetchMatches()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundNumber])
 
   const fetchMatches = async () => {
@@ -16,7 +15,11 @@ export const useMatches = (roundNumber = null) => {
       setLoading(true)
       let query = supabase
         .from('matches')
-        .select('*')
+        .select(`
+          *,
+          home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
+          away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url)
+        `)
         .order('match_date', { ascending: true })
 
       if (roundNumber) {
@@ -39,7 +42,11 @@ export const useMatches = (roundNumber = null) => {
       const { data, error } = await supabase
         .from('matches')
         .insert([matchData])
-        .select()
+        .select(`
+          *,
+          home_team:teams!matches_home_team_id_fkey(*),
+          away_team:teams!matches_away_team_id_fkey(*)
+        `)
 
       if (error) throw error
       await fetchMatches()
@@ -55,7 +62,11 @@ export const useMatches = (roundNumber = null) => {
         .from('matches')
         .update(updates)
         .eq('id', matchId)
-        .select()
+        .select(`
+          *,
+          home_team:teams!matches_home_team_id_fkey(*),
+          away_team:teams!matches_away_team_id_fkey(*)
+        `)
 
       if (error) throw error
       await fetchMatches()

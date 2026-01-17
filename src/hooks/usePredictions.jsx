@@ -26,8 +26,10 @@ export const usePredictions = (roundNumber = null) => {
           *,
           matches (
             id,
-            home_team,
-            away_team,
+            home_team_id,
+            away_team_id,
+            home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
+            away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
             match_date,
             home_score,
             away_score,
