@@ -8,6 +8,7 @@ export const useMatches = (roundNumber = null) => {
 
   useEffect(() => {
     fetchMatches()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundNumber])
 
   const fetchMatches = async () => {
@@ -15,11 +16,13 @@ export const useMatches = (roundNumber = null) => {
       setLoading(true)
       let query = supabase
         .from('matches')
-        .select(`
+        .select(
+          `
           *,
           home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
           away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url)
-        `)
+        `
+        )
         .order('match_date', { ascending: true })
 
       if (roundNumber) {
@@ -37,12 +40,9 @@ export const useMatches = (roundNumber = null) => {
     }
   }
 
-  const createMatch = async (matchData) => {
+  const createMatch = async matchData => {
     try {
-      const { data, error } = await supabase
-        .from('matches')
-        .insert([matchData])
-        .select(`
+      const { data, error } = await supabase.from('matches').insert([matchData]).select(`
           *,
           home_team:teams!matches_home_team_id_fkey(*),
           away_team:teams!matches_away_team_id_fkey(*)
@@ -58,10 +58,7 @@ export const useMatches = (roundNumber = null) => {
 
   const updateMatch = async (matchId, updates) => {
     try {
-      const { data, error } = await supabase
-        .from('matches')
-        .update(updates)
-        .eq('id', matchId)
+      const { data, error } = await supabase.from('matches').update(updates).eq('id', matchId)
         .select(`
           *,
           home_team:teams!matches_home_team_id_fkey(*),
@@ -76,12 +73,9 @@ export const useMatches = (roundNumber = null) => {
     }
   }
 
-  const deleteMatch = async (matchId) => {
+  const deleteMatch = async matchId => {
     try {
-      const { error } = await supabase
-        .from('matches')
-        .delete()
-        .eq('id', matchId)
+      const { error } = await supabase.from('matches').delete().eq('id', matchId)
 
       if (error) throw error
       await fetchMatches()

@@ -8,6 +8,7 @@ export const useLeaderboard = (roundNumber = null) => {
 
   useEffect(() => {
     fetchLeaderboard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundNumber])
 
   const fetchLeaderboard = async () => {
@@ -18,7 +19,8 @@ export const useLeaderboard = (roundNumber = null) => {
         // Tabla de posiciones por fecha específica
         const { data: roundScoresData, error: roundError } = await supabase
           .from('round_scores')
-          .select(`
+          .select(
+            `
             user_id,
             total_points,
             profiles (
@@ -27,7 +29,8 @@ export const useLeaderboard = (roundNumber = null) => {
               full_name,
               avatar_url
             )
-          `)
+          `
+          )
           .eq('round_number', roundNumber)
           .order('total_points', { ascending: false })
 
@@ -40,16 +43,14 @@ export const useLeaderboard = (roundNumber = null) => {
           full_name: item.profiles.full_name,
           avatar_url: item.profiles.avatar_url,
           round_number: roundNumber,
-          total_points: item.total_points
+          total_points: item.total_points,
         }))
 
         setLeaderboard(formattedData)
       } else {
         // Tabla de posiciones general
         // Primero obtenemos todos los round_scores
-        const { data: allScores, error: scoresError } = await supabase
-          .from('round_scores')
-          .select(`
+        const { data: allScores, error: scoresError } = await supabase.from('round_scores').select(`
             user_id,
             total_points,
             round_number
@@ -63,7 +64,7 @@ export const useLeaderboard = (roundNumber = null) => {
           if (!userTotals[score.user_id]) {
             userTotals[score.user_id] = {
               total_points: 0,
-              rounds_played: new Set()
+              rounds_played: new Set(),
             }
           }
           userTotals[score.user_id].total_points += score.total_points
@@ -81,7 +82,7 @@ export const useLeaderboard = (roundNumber = null) => {
         const formattedData = profiles.map(profile => ({
           ...profile,
           total_points: userTotals[profile.id]?.total_points || 0,
-          rounds_played: userTotals[profile.id]?.rounds_played.size || 0
+          rounds_played: userTotals[profile.id]?.rounds_played.size || 0,
         }))
 
         // Ordenar por puntos

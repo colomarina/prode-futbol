@@ -12,7 +12,7 @@ export default function Login() {
 
   const { signIn, signUp } = useAuth()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -37,11 +37,36 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-background)', padding: '16px' }}>
-      <div style={{ backgroundColor: 'var(--color-surface)', padding: '24px', borderRadius: '16px', boxShadow: 'var(--shadow-lg)', width: '100%', maxWidth: '480px' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--color-background)',
+        padding: '16px',
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: 'var(--color-surface)',
+          padding: '24px',
+          borderRadius: '16px',
+          boxShadow: 'var(--shadow-lg)',
+          width: '100%',
+          maxWidth: '480px',
+        }}
+      >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚽</div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '8px' }}>
+          <h2
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: '700',
+              color: 'var(--color-primary)',
+              marginBottom: '8px',
+            }}
+          >
             Prode Chiqui Tapia
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
@@ -49,35 +74,30 @@ export default function Login() {
           </p>
         </div>
 
-        {error && (
-          <div className="alert alert-error">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert alert-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+        >
           {!isLogin && (
             <>
               <div className="form-group">
-                <label className="form-label">
-                  Username
-                </label>
+                <label className="form-label">Username</label>
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={e => setUsername(e.target.value)}
                   className="form-input"
                   required
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">
-                  Nombre Completo
-                </label>
+                <label className="form-label">Nombre Completo</label>
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={e => setFullName(e.target.value)}
                   className="form-input"
                   required
                 />
@@ -90,20 +110,18 @@ export default function Login() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               className="form-input"
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">
-              Contraseña
-            </label>
+            <label className="form-label">Contraseña</label>
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               className="form-input"
               required
               minLength={6}
@@ -126,9 +144,7 @@ export default function Login() {
             className="btn-text"
             style={{ width: '100%' }}
           >
-            {isLogin
-              ? '¿No tenés cuenta? Registrate'
-              : '¿Ya tenés cuenta? Ingresá'}
+            {isLogin ? '¿No tenés cuenta? Registrate' : '¿Ya tenés cuenta? Ingresá'}
           </button>
         </div>
       </div>

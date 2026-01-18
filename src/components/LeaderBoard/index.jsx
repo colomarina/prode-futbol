@@ -6,29 +6,32 @@ import { useRounds } from '../../hooks/useRounds'
 function RoundSelect({ value, onChange, rounds, loading }) {
   const [isOpen, setIsOpen] = useState(false)
 
-  const getStatusConfig = (status) => {
+  const getStatusConfig = status => {
     const configs = {
       closed: { icon: '🔒', label: 'Cerrada', color: '#9ca3af' },
       open: { icon: '🟢', label: 'En curso', color: '#10b981' },
-      finished: { icon: '✅', label: 'Finalizada', color: '#3b82f6' }
+      finished: { icon: '✅', label: 'Finalizada', color: '#3b82f6' },
     }
     return configs[status] || configs.closed
   }
 
-  const selectedRound = value === null
-    ? { label: '🏆 Tabla General', subtitle: 'Todas las fechas' }
-    : rounds.find(r => r.round_number === value)
+  const selectedRound =
+    value === null
+      ? { label: '🏆 Tabla General', subtitle: 'Todas las fechas' }
+      : rounds.find(r => r.round_number === value)
 
   if (loading) {
     return (
-      <div style={{
-        padding: '16px',
-        textAlign: 'center',
-        backgroundColor: 'var(--color-surface-variant)',
-        borderRadius: '12px',
-        border: '2px solid #E0E0E0'
-      }}>
-        <div className="spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }}></div>
+      <div
+        style={{
+          padding: '16px',
+          textAlign: 'center',
+          backgroundColor: 'var(--color-surface-variant)',
+          borderRadius: '12px',
+          border: '2px solid #E0E0E0',
+        }}
+      >
+        <div className="spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }} />
       </div>
     )
   }
@@ -49,12 +52,12 @@ function RoundSelect({ value, onChange, rounds, loading }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         }}
-        onMouseEnter={(e) => {
+        onMouseEnter={e => {
           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={e => {
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
         }}
       >
@@ -63,7 +66,13 @@ function RoundSelect({ value, onChange, rounds, loading }) {
             <>
               <span style={{ fontSize: '1.8rem' }}>🏆</span>
               <div style={{ textAlign: 'left' }}>
-                <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--color-text-primary)' }}>
+                <div
+                  style={{
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
                   Tabla General
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
@@ -75,15 +84,20 @@ function RoundSelect({ value, onChange, rounds, loading }) {
             <>
               <span style={{ fontSize: '1.8rem' }}>📆</span>
               <div style={{ textAlign: 'left' }}>
-                <div style={{
-                  fontWeight: '700',
-                  fontSize: '1rem',
-                  color: 'var(--color-text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <span>Fecha {selectedRound.round_number}</span>
+                <div
+                  style={{
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    color: 'var(--color-text-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span>
+                    Fecha
+                    {selectedRound.round_number}
+                  </span>
                   <span style={{ fontSize: '1.2rem' }}>
                     {getStatusConfig(selectedRound.status).icon}
                   </span>
@@ -95,12 +109,16 @@ function RoundSelect({ value, onChange, rounds, loading }) {
             </>
           ) : null}
         </div>
-        <span style={{
-          fontSize: '1.2rem',
-          color: 'var(--color-text-secondary)',
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s'
-        }}>▼</span>
+        <span
+          style={{
+            fontSize: '1.2rem',
+            color: 'var(--color-text-secondary)',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+          }}
+        >
+          ▼
+        </span>
       </button>
 
       {isOpen && (
@@ -112,7 +130,7 @@ function RoundSelect({ value, onChange, rounds, loading }) {
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 10
+              zIndex: 10,
             }}
             onClick={() => setIsOpen(false)}
           />
@@ -128,7 +146,7 @@ function RoundSelect({ value, onChange, rounds, loading }) {
               boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
               maxHeight: '400px',
               overflowY: 'auto',
-              zIndex: 20
+              zIndex: 20,
             }}
           >
             {/* Opción General */}
@@ -149,14 +167,14 @@ function RoundSelect({ value, onChange, rounds, loading }) {
                 borderBottom: '1px solid #E0E0E0',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                gap: '12px',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (value !== null) {
                   e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 if (value !== null) {
                   e.currentTarget.style.backgroundColor = 'transparent'
                 }
@@ -164,7 +182,13 @@ function RoundSelect({ value, onChange, rounds, loading }) {
             >
               <span style={{ fontSize: '1.8rem' }}>🏆</span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text-primary)' }}>
+                <div
+                  style={{
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
                   Tabla General
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
@@ -174,7 +198,7 @@ function RoundSelect({ value, onChange, rounds, loading }) {
             </button>
 
             {/* Opciones de fechas */}
-            {rounds.map((round) => {
+            {rounds.map(round => {
               const statusConfig = getStatusConfig(round.status)
               const isOpen = round.status === 'open'
 
@@ -190,8 +214,12 @@ function RoundSelect({ value, onChange, rounds, loading }) {
                     width: '100%',
                     padding: '16px 20px',
                     border: 'none',
-                    backgroundColor: value === round.round_number ? 'var(--color-surface-variant)' :
-                                   isOpen ? 'rgba(16, 185, 129, 0.05)' : 'transparent',
+                    backgroundColor:
+                      value === round.round_number
+                        ? 'var(--color-surface-variant)'
+                        : isOpen
+                          ? 'rgba(16, 185, 129, 0.05)'
+                          : 'transparent',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
                     textAlign: 'left',
@@ -199,53 +227,64 @@ function RoundSelect({ value, onChange, rounds, loading }) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
-                    borderLeft: isOpen ? '4px solid #10b981' : '4px solid transparent'
+                    borderLeft: isOpen ? '4px solid #10b981' : '4px solid transparent',
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     if (value !== round.round_number) {
                       e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     if (value !== round.round_number) {
-                      e.currentTarget.style.backgroundColor = isOpen ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
+                      e.currentTarget.style.backgroundColor = isOpen
+                        ? 'rgba(16, 185, 129, 0.05)'
+                        : 'transparent'
                     }
                   }}
                 >
                   <span style={{ fontSize: '1.8rem' }}>📆</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontWeight: '700',
-                      fontSize: '0.95rem',
-                      color: 'var(--color-text-primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      <span>Fecha {round.round_number}</span>
+                    <div
+                      style={{
+                        fontWeight: '700',
+                        fontSize: '0.95rem',
+                        color: 'var(--color-text-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span>
+                        Fecha
+                        {round.round_number}
+                      </span>
                       {isOpen && (
-                        <span style={{
-                          backgroundColor: '#10b981',
-                          color: 'white',
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          fontSize: '0.7rem',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
+                        <span
+                          style={{
+                            backgroundColor: '#10b981',
+                            color: 'white',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
                           Activa
                         </span>
                       )}
                     </div>
-                    <div style={{
-                      fontSize: '0.8rem',
-                      color: statusConfig.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontWeight: '600'
-                    }}>
+                    <div
+                      style={{
+                        fontSize: '0.8rem',
+                        color: statusConfig.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontWeight: '600',
+                      }}
+                    >
                       <span>{statusConfig.icon}</span>
                       <span>{statusConfig.label}</span>
                     </div>
@@ -270,7 +309,7 @@ export default function Leaderboard() {
       <div className="container" style={{ maxWidth: '1000px' }}>
         <div className="loading-container" style={{ minHeight: '60vh' }}>
           <div className="loading-content">
-            <div className="spinner"></div>
+            <div className="spinner" />
             <p className="loading-text">Cargando tabla de posiciones...</p>
           </div>
         </div>
@@ -281,9 +320,7 @@ export default function Leaderboard() {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1000px' }}>
-        <div className="alert alert-error">
-          ⚠️ Error: {error}
-        </div>
+        <div className="alert alert-error">⚠️ Error: {error}</div>
       </div>
     )
   }
@@ -292,17 +329,19 @@ export default function Leaderboard() {
     <div className="container" style={{ maxWidth: '1000px' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <h2 style={{
-          fontSize: '1.75rem',
-          fontWeight: '700',
-          color: 'var(--color-primary)',
-          marginBottom: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          flexWrap: 'wrap'
-        }}>
+        <h2
+          style={{
+            fontSize: '1.75rem',
+            fontWeight: '700',
+            color: 'var(--color-primary)',
+            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
           <span style={{ fontSize: '2.5rem' }}>🏆</span>
           <span>Tabla de Posiciones</span>
         </h2>
@@ -315,15 +354,17 @@ export default function Leaderboard() {
 
       {/* Selector de fecha */}
       <div className="card" style={{ marginBottom: '24px' }}>
-        <h3 style={{
-          fontSize: '1rem',
-          fontWeight: '600',
-          color: 'var(--color-text-primary)',
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
+        <h3
+          style={{
+            fontSize: '1rem',
+            fontWeight: '600',
+            color: 'var(--color-text-primary)',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
           📅 Filtrar por fecha
         </h3>
         <RoundSelect
@@ -339,12 +380,14 @@ export default function Leaderboard() {
         {leaderboard.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: '4rem', marginBottom: '16px' }}>📊</div>
-            <p style={{
-              fontSize: '1.1rem',
-              color: 'var(--color-text-primary)',
-              marginBottom: '8px',
-              fontWeight: '600'
-            }}>
+            <p
+              style={{
+                fontSize: '1.1rem',
+                color: 'var(--color-text-primary)',
+                marginBottom: '8px',
+                fontWeight: '600',
+              }}
+            >
               Todavía no hay datos para mostrar
             </p>
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
@@ -353,58 +396,70 @@ export default function Leaderboard() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse'
-            }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+              }}
+            >
               <thead>
-                <tr style={{
-                  backgroundColor: 'var(--color-surface-variant)',
-                  borderBottom: '2px solid #E0E0E0'
-                }}>
-                  <th style={{
-                    padding: '16px 12px',
-                    textAlign: 'left',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    color: 'var(--color-text-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}>
+                <tr
+                  style={{
+                    backgroundColor: 'var(--color-surface-variant)',
+                    borderBottom: '2px solid #E0E0E0',
+                  }}
+                >
+                  <th
+                    style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      color: 'var(--color-text-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
                     Pos
                   </th>
-                  <th style={{
-                    padding: '16px 12px',
-                    textAlign: 'left',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    color: 'var(--color-text-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}>
+                  <th
+                    style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      color: 'var(--color-text-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
                     Jugador
                   </th>
-                  <th style={{
-                    padding: '16px 12px',
-                    textAlign: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    color: 'var(--color-text-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}>
-                    Puntos
-                  </th>
-                  {!selectedRound && (
-                    <th style={{
+                  <th
+                    style={{
                       padding: '16px 12px',
                       textAlign: 'center',
                       fontSize: '0.75rem',
                       fontWeight: '700',
                       color: 'var(--color-text-secondary)',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Puntos
+                  </th>
+                  {!selectedRound && (
+                    <th
+                      style={{
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        color: 'var(--color-text-secondary)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
                       Fechas
                     </th>
                   )}
@@ -433,74 +488,92 @@ export default function Leaderboard() {
                       style={{
                         backgroundColor: rowBgColor,
                         borderBottom: '1px solid #E0E0E0',
-                        transition: 'background-color 0.2s'
+                        transition: 'background-color 0.2s',
                       }}
                     >
-                      <td style={{
-                        padding: '16px 12px',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}>
+                      <td
+                        style={{
+                          padding: '16px 12px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                        >
                           {positionEmoji && (
                             <span style={{ fontSize: '1.5rem' }}>{positionEmoji}</span>
                           )}
-                          <span style={{
-                            fontSize: '1.1rem',
-                            fontWeight: '700',
-                            color: 'var(--color-text-primary)'
-                          }}>
+                          <span
+                            style={{
+                              fontSize: '1.1rem',
+                              fontWeight: '700',
+                              color: 'var(--color-text-primary)',
+                            }}
+                          >
                             {position}
                           </span>
                         </div>
                       </td>
                       <td style={{ padding: '16px 12px' }}>
                         <div>
-                          <div style={{
-                            fontSize: '0.95rem',
-                            fontWeight: '600',
-                            color: 'var(--color-text-primary)',
-                            marginBottom: '2px'
-                          }}>
+                          <div
+                            style={{
+                              fontSize: '0.95rem',
+                              fontWeight: '600',
+                              color: 'var(--color-text-primary)',
+                              marginBottom: '2px',
+                            }}
+                          >
                             {player.full_name}
                           </div>
-                          <div style={{
-                            fontSize: '0.85rem',
-                            color: 'var(--color-text-secondary)'
-                          }}>
+                          <div
+                            style={{
+                              fontSize: '0.85rem',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
                             @{player.username}
                           </div>
                         </div>
                       </td>
-                      <td style={{
-                        padding: '16px 12px',
-                        textAlign: 'center'
-                      }}>
-                        <span style={{
-                          fontSize: '1.5rem',
-                          fontWeight: '700',
-                          color: 'var(--color-primary)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
+                      <td
+                        style={{
+                          padding: '16px 12px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '1.5rem',
+                            fontWeight: '700',
+                            color: 'var(--color-primary)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
                           {player.total_points}
                           <span style={{ fontSize: '1rem' }}>pts</span>
                         </span>
                       </td>
                       {!selectedRound && (
-                        <td style={{
-                          padding: '16px 12px',
-                          textAlign: 'center'
-                        }}>
-                          <span style={{
-                            fontSize: '0.9rem',
-                            color: 'var(--color-text-secondary)',
-                            fontWeight: '600'
-                          }}>
+                        <td
+                          style={{
+                            padding: '16px 12px',
+                            textAlign: 'center',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: '0.9rem',
+                              color: 'var(--color-text-secondary)',
+                              fontWeight: '600',
+                            }}
+                          >
                             {player.rounds_played || 0}
                           </span>
                         </td>
@@ -515,117 +588,164 @@ export default function Leaderboard() {
       </div>
 
       {/* Leyenda del sistema de puntos */}
-      <div className="card" style={{
-        marginTop: '24px',
-        backgroundColor: 'rgba(30, 127, 67, 0.05)',
-        border: '2px solid var(--color-primary)'
-      }}>
-        <h3 style={{
-          fontWeight: '700',
-          color: 'var(--color-primary)',
-          marginBottom: '16px',
-          fontSize: '1.1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
+      <div
+        className="card"
+        style={{
+          marginTop: '24px',
+          backgroundColor: 'rgba(30, 127, 67, 0.05)',
+          border: '2px solid var(--color-primary)',
+        }}
+      >
+        <h3
+          style={{
+            fontWeight: '700',
+            color: 'var(--color-primary)',
+            marginBottom: '16px',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
           📊 Sistema de Puntos
         </h3>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          <div style={{
-            padding: '12px',
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '8px'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginBottom: '8px'
-            }}>
-              <span style={{
-                fontSize: '2rem',
-                minWidth: '40px',
-                textAlign: 'center'
-              }}>🎯</span>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+          }}
+        >
+          <div
+            style={{
+              padding: '12px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '8px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '8px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '2rem',
+                  minWidth: '40px',
+                  textAlign: 'center',
+                }}
+              >
+                🎯
+              </span>
               <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
                 PLENO (resultado exacto):
               </strong>
             </div>
-            <div style={{
-              marginLeft: '52px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-              fontSize: '0.9rem',
-              color: 'var(--color-text-secondary)'
-            }}>
+            <div
+              style={{
+                marginLeft: '52px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                fontSize: '0.9rem',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
               <div>
-                • Más de 2 goles: <span style={{
-                  color: 'var(--color-success)',
-                  fontWeight: '700'
-                }}>2 + cantidad de goles</span>
+                • Más de 2 goles:{' '}
+                <span
+                  style={{
+                    color: 'var(--color-success)',
+                    fontWeight: '700',
+                  }}
+                >
+                  2 + cantidad de goles
+                </span>
               </div>
               <div>
-                • 2 o menos goles: <span style={{
-                  color: 'var(--color-success)',
-                  fontWeight: '700'
-                }}>2 puntos</span>
+                • 2 o menos goles:{' '}
+                <span
+                  style={{
+                    color: 'var(--color-success)',
+                    fontWeight: '700',
+                  }}
+                >
+                  2 puntos
+                </span>
               </div>
             </div>
           </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px',
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '8px'
-          }}>
-            <span style={{
-              fontSize: '2rem',
-              minWidth: '40px',
-              textAlign: 'center'
-            }}>✅</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '8px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '2rem',
+                minWidth: '40px',
+                textAlign: 'center',
+              }}
+            >
+              ✅
+            </span>
             <div>
               <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
                 Partidos de hasta 2 goles (acertar ganador/empate):
               </strong>
-              <span style={{
-                marginLeft: '8px',
-                color: 'var(--color-success)',
-                fontWeight: '700',
-                fontSize: '1.1rem'
-              }}>1 punto</span>
+              <span
+                style={{
+                  marginLeft: '8px',
+                  color: 'var(--color-success)',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                }}
+              >
+                1 punto
+              </span>
             </div>
           </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px',
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '8px'
-          }}>
-            <span style={{
-              fontSize: '2rem',
-              minWidth: '40px',
-              textAlign: 'center'
-            }}>📈</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '8px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '2rem',
+                minWidth: '40px',
+                textAlign: 'center',
+              }}
+            >
+              📈
+            </span>
             <div>
               <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
                 Más de 3 goles predichos (acertar cantidad total):
               </strong>
-              <span style={{
-                marginLeft: '8px',
-                color: 'var(--color-success)',
-                fontWeight: '700',
-                fontSize: '1.1rem'
-              }}>1 punto</span>
+              <span
+                style={{
+                  marginLeft: '8px',
+                  color: 'var(--color-success)',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                }}
+              >
+                1 punto
+              </span>
             </div>
           </div>
         </div>

@@ -16,30 +16,34 @@ export default function TeamDisplay({ team, size = 'md' }) {
   if (!team) return <span style={{ color: 'var(--color-text-secondary)' }}>-</span>
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+      }}
+    >
       {team.logo_url && (
         <img
           src={team.logo_url}
           alt={team.name}
           style={{
             ...sizes[size],
-            objectFit: 'contain'
+            objectFit: 'contain',
           }}
-          onError={(e) => {
+          onError={e => {
             // Fallback si la imagen no carga
             console.error('Error loading image:', team.logo_url, 'for team:', team.name)
             e.target.style.display = 'none'
           }}
         />
       )}
-      <span style={{
-        fontSize: textSizes[size],
-        fontWeight: '600'
-      }}>
+      <span
+        style={{
+          fontSize: textSizes[size],
+          fontWeight: '600',
+        }}
+      >
         {team.name}
       </span>
     </div>

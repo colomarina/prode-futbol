@@ -22,7 +22,7 @@ function TeamSelect({ value, onChange, teams, placeholder, disabled }) {
           justifyContent: 'space-between',
           cursor: disabled ? 'not-allowed' : 'pointer',
           backgroundColor: disabled ? '#FAFAFA' : 'var(--color-surface)',
-          textAlign: 'left'
+          textAlign: 'left',
         }}
       >
         {selectedTeam ? (
@@ -42,7 +42,7 @@ function TeamSelect({ value, onChange, teams, placeholder, disabled }) {
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 10
+              zIndex: 10,
             }}
             onClick={() => setIsOpen(false)}
           />
@@ -58,10 +58,10 @@ function TeamSelect({ value, onChange, teams, placeholder, disabled }) {
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               maxHeight: '300px',
               overflowY: 'auto',
-              zIndex: 20
+              zIndex: 20,
             }}
           >
-            {teams.map((team) => (
+            {teams.map(team => (
               <button
                 key={team.id}
                 type="button"
@@ -73,18 +73,19 @@ function TeamSelect({ value, onChange, teams, placeholder, disabled }) {
                   width: '100%',
                   padding: '12px 16px',
                   border: 'none',
-                  backgroundColor: value === team.id ? 'var(--color-surface-variant)' : 'transparent',
+                  backgroundColor:
+                    value === team.id ? 'var(--color-surface-variant)' : 'transparent',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s',
                   textAlign: 'left',
-                  borderBottom: '1px solid #E0E0E0'
+                  borderBottom: '1px solid #E0E0E0',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   if (value !== team.id) {
                     e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
                   }
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   if (value !== team.id) {
                     e.currentTarget.style.backgroundColor = 'transparent'
                   }
@@ -110,7 +111,7 @@ export default function MatchManager() {
     round_number: 1,
   })
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
 
     if (!formData.home_team_id || !formData.away_team_id) {
@@ -133,7 +134,7 @@ export default function MatchManager() {
     const { error } = await createMatch(matchData)
 
     if (error) {
-      alert('Error: ' + error.message)
+      alert(`Error: ${error.message}`)
     } else {
       alert('Partido creado!')
       setFormData({
@@ -145,7 +146,7 @@ export default function MatchManager() {
     }
   }
 
-  const handleUpdateResult = async (matchId) => {
+  const handleUpdateResult = async matchId => {
     const homeScore = prompt('Goles Local:')
     const awayScore = prompt('Goles Visitante:')
 
@@ -157,7 +158,7 @@ export default function MatchManager() {
       })
 
       if (error) {
-        alert('Error: ' + error.message)
+        alert(`Error: ${error.message}`)
       } else {
         alert('Resultado actualizado!')
       }
@@ -167,7 +168,14 @@ export default function MatchManager() {
   return (
     <div className="container" style={{ maxWidth: '1000px' }}>
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '8px' }}>
+        <h2
+          style={{
+            fontSize: '1.75rem',
+            fontWeight: '700',
+            color: 'var(--color-primary)',
+            marginBottom: '8px',
+          }}
+        >
           ⚙️ Administrar Partidos
         </h2>
         <p style={{ color: 'var(--color-text-secondary)' }}>
@@ -177,29 +185,39 @@ export default function MatchManager() {
 
       {/* Formulario para crear partido */}
       <div className="card" style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '20px' }}>
+        <h3
+          style={{
+            fontSize: '1.25rem',
+            fontWeight: '700',
+            color: 'var(--color-text-primary)',
+            marginBottom: '20px',
+          }}
+        >
           ➕ Crear Nuevo Partido
         </h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+        >
           <div className="grid grid-cols-2" style={{ gap: '16px' }}>
             <div className="form-group">
-              <label className="form-label">
-                🏠 Equipo Local
-              </label>
+              <label className="form-label">🏠 Equipo Local</label>
               {teamsLoading ? (
-                <div style={{
-                  padding: '12px',
-                  textAlign: 'center',
-                  color: 'var(--color-text-secondary)',
-                  backgroundColor: 'var(--color-surface-variant)',
-                  borderRadius: '8px'
-                }}>
+                <div
+                  style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    color: 'var(--color-text-secondary)',
+                    backgroundColor: 'var(--color-surface-variant)',
+                    borderRadius: '8px',
+                  }}
+                >
                   Cargando equipos...
                 </div>
               ) : (
                 <TeamSelect
                   value={formData.home_team_id}
-                  onChange={(teamId) => setFormData({ ...formData, home_team_id: teamId })}
+                  onChange={teamId => setFormData({ ...formData, home_team_id: teamId })}
                   teams={teams}
                   placeholder="Seleccioná un equipo"
                   disabled={false}
@@ -207,23 +225,23 @@ export default function MatchManager() {
               )}
             </div>
             <div className="form-group">
-              <label className="form-label">
-                ✈️ Equipo Visitante
-              </label>
+              <label className="form-label">✈️ Equipo Visitante</label>
               {teamsLoading ? (
-                <div style={{
-                  padding: '12px',
-                  textAlign: 'center',
-                  color: 'var(--color-text-secondary)',
-                  backgroundColor: 'var(--color-surface-variant)',
-                  borderRadius: '8px'
-                }}>
+                <div
+                  style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    color: 'var(--color-text-secondary)',
+                    backgroundColor: 'var(--color-surface-variant)',
+                    borderRadius: '8px',
+                  }}
+                >
                   Cargando equipos...
                 </div>
               ) : (
                 <TeamSelect
                   value={formData.away_team_id}
-                  onChange={(teamId) => setFormData({ ...formData, away_team_id: teamId })}
+                  onChange={teamId => setFormData({ ...formData, away_team_id: teamId })}
                   teams={teams}
                   placeholder="Seleccioná un equipo"
                   disabled={false}
@@ -234,27 +252,21 @@ export default function MatchManager() {
 
           <div className="grid grid-cols-2" style={{ gap: '16px' }}>
             <div className="form-group">
-              <label className="form-label">
-                📅 Fecha y Hora
-              </label>
+              <label className="form-label">📅 Fecha y Hora</label>
               <input
                 type="datetime-local"
                 value={formData.match_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, match_date: e.target.value })
-                }
+                onChange={e => setFormData({ ...formData, match_date: e.target.value })}
                 className="form-input"
                 required
               />
             </div>
             <div className="form-group">
-              <label className="form-label">
-                🔢 Número de Fecha
-              </label>
+              <label className="form-label">🔢 Número de Fecha</label>
               <input
                 type="number"
                 value={formData.round_number}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({
                     ...formData,
                     round_number: parseInt(e.target.value),
@@ -281,102 +293,128 @@ export default function MatchManager() {
 
       {/* Lista de partidos */}
       <div className="card">
-        <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '20px' }}>
+        <h3
+          style={{
+            fontSize: '1.25rem',
+            fontWeight: '700',
+            color: 'var(--color-text-primary)',
+            marginBottom: '20px',
+          }}
+        >
           📋 Partidos Creados
         </h3>
 
         {!matches || matches.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚽</div>
-            <p style={{ color: 'var(--color-text-secondary)' }}>
-              No hay partidos creados todavía
-            </p>
+            <p style={{ color: 'var(--color-text-secondary)' }}>No hay partidos creados todavía</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {matches.map((match) => (
+            {matches.map(match => (
               <div
                 key={match.id}
                 style={{
                   border: '2px solid #E0E0E0',
                   borderRadius: '12px',
                   padding: '16px',
-                  backgroundColor: match.is_finished ? 'var(--color-surface-variant)' : 'var(--color-surface)',
-                  transition: 'all 0.2s'
+                  backgroundColor: match.is_finished
+                    ? 'var(--color-surface-variant)'
+                    : 'var(--color-surface)',
+                  transition: 'all 0.2s',
                 }}
               >
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px'
-                }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
                   <div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: '12px',
-                      marginBottom: '12px'
-                    }}>
-                      <div style={{
+                    <div
+                      style={{
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
                         gap: '12px',
-                        flexWrap: 'wrap'
-                      }}>
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         <TeamDisplay team={match.home_team} size="md" />
-                        <span style={{
-                          fontSize: '1.2rem',
-                          fontWeight: '700',
-                          color: 'var(--color-text-secondary)'
-                        }}>vs</span>
+                        <span
+                          style={{
+                            fontSize: '1.2rem',
+                            fontWeight: '700',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          vs
+                        </span>
                         <TeamDisplay team={match.away_team} size="md" />
                       </div>
                       {match.is_finished && (
-                        <span style={{
-                          backgroundColor: 'var(--color-success)',
-                          color: 'white',
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600'
-                        }}>
+                        <span
+                          style={{
+                            backgroundColor: 'var(--color-success)',
+                            color: 'white',
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                          }}
+                        >
                           ✅ Finalizado
                         </span>
                       )}
                     </div>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: 'var(--color-text-secondary)',
-                      marginBottom: '4px'
-                    }}>
-                      📅 Fecha {match.round_number} - {new Date(match.match_date).toLocaleDateString('es-AR', {
+                    <p
+                      style={{
+                        fontSize: '0.9rem',
+                        color: 'var(--color-text-secondary)',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      📅 Fecha {match.round_number} -{' '}
+                      {new Date(match.match_date).toLocaleDateString('es-AR', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
                       })}
                     </p>
                     {match.is_finished && (
-                      <p style={{
-                        fontSize: '1.1rem',
-                        fontWeight: '700',
-                        color: 'var(--color-success)',
-                        marginTop: '8px'
-                      }}>
+                      <p
+                        style={{
+                          fontSize: '1.1rem',
+                          fontWeight: '700',
+                          color: 'var(--color-success)',
+                          marginTop: '8px',
+                        }}
+                      >
                         ⚽ Resultado: {match.home_score} - {match.away_score}
                       </p>
                     )}
                   </div>
 
-                  <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap'
-                  }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     {!match.is_finished && (
                       <button
                         onClick={() => handleUpdateResult(match.id)}

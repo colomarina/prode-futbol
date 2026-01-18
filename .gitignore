@@ -27,3 +27,5 @@ yarn-error.log*
 .idea
 *.swp
 *.swo
+*.config.js
+*.config.cjs

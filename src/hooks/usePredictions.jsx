@@ -12,7 +12,7 @@ export const usePredictions = (roundNumber = null) => {
     if (user) {
       fetchPredictions()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, roundNumber])
 
   const fetchPredictions = async () => {
@@ -22,7 +22,8 @@ export const usePredictions = (roundNumber = null) => {
       setLoading(true)
       let query = supabase
         .from('predictions')
-        .select(`
+        .select(
+          `
           *,
           matches (
             id,
@@ -36,7 +37,8 @@ export const usePredictions = (roundNumber = null) => {
             is_finished,
             round_number
           )
-        `)
+        `
+        )
         .eq('user_id', user.id)
 
       if (roundNumber) {
@@ -117,9 +119,7 @@ export const usePredictions = (roundNumber = null) => {
     }
   }
 
-  const getUserPredictionForMatch = (matchId) => {
-    return predictions.find(p => p.match_id === matchId)
-  }
+  const getUserPredictionForMatch = matchId => predictions.find(p => p.match_id === matchId)
 
   return {
     predictions,

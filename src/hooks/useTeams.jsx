@@ -27,13 +27,9 @@ export const useTeams = () => {
     }
   }
 
-  const getTeamByName = (name) => {
-    return teams.find(t => t.name === name)
-  }
+  const getTeamByName = name => teams.find(t => t.name === name)
 
-  const getTeamById = (id) => {
-    return teams.find(t => t.id === id)
-  }
+  const getTeamById = id => teams.find(t => t.id === id)
 
   return {
     teams,

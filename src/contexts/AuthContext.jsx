@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -35,13 +35,9 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const loadProfile = async (userId) => {
+  const loadProfile = async userId => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
 
       if (error) throw error
       setProfile(data)
@@ -64,15 +60,13 @@ export const AuthProvider = ({ children }) => {
 
       // 2. Crear perfil
       if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              username,
-              full_name: fullName,
-            },
-          ])
+        const { error: profileError } = await supabase.from('profiles').insert([
+          {
+            id: authData.user.id,
+            username,
+            full_name: fullName,
+          },
+        ])
 
         if (profileError) throw profileError
       }
@@ -102,9 +96,7 @@ export const AuthProvider = ({ children }) => {
     return { error }
   }
 
-  const isAdmin = () => {
-    return profile?.role === 'admin'
-  }
+  const isAdmin = () => profile?.role === 'admin'
 
   const value = {
     user,
@@ -119,8 +111,6 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {

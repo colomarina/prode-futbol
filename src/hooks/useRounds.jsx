@@ -65,14 +65,12 @@ export const useRounds = () => {
     }
   }
 
-  const isRoundOpen = (roundNumber) => {
+  const isRoundOpen = roundNumber => {
     const round = rounds.find(r => r.round_number === roundNumber)
     return round?.status === 'open'
   }
 
-  const canPredictRound = (roundNumber) => {
-    return isRoundOpen(roundNumber)
-  }
+  const canPredictRound = roundNumber => isRoundOpen(roundNumber)
 
   return {
     rounds,

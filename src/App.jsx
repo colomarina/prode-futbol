@@ -6,11 +6,11 @@ import Navigation from './components/Navigation'
 function AppContent() {
   const { user, loading } = useAuth()
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="loading-container">
         <div className="loading-content">
-          <div className="spinner"></div>
+          <div className="spinner" />
           <p className="loading-text">Cargando...</p>
         </div>
       </div>

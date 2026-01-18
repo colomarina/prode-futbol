@@ -11,10 +11,28 @@ export default function Navigation() {
   const { profile, isAdmin, signOut } = useAuth()
 
   const tabs = [
-    { id: 'predictions', label: 'Mis Pronósticos', mobileLabel: 'Pronósticos', icon: '📊', adminOnly: false },
-    { id: 'leaderboard', label: 'Tabla de Posiciones', mobileLabel: 'Tabla', icon: '🏆', adminOnly: false },
+    {
+      id: 'predictions',
+      label: 'Mis Pronósticos',
+      mobileLabel: 'Pronósticos',
+      icon: '📊',
+      adminOnly: false,
+    },
+    {
+      id: 'leaderboard',
+      label: 'Tabla de Posiciones',
+      mobileLabel: 'Tabla',
+      icon: '🏆',
+      adminOnly: false,
+    },
     // { id: 'admin', label: 'Administrar Partidos', icon: '⚙️', adminOnly: true },
-    { id: 'rounds', label: 'Gestionar Fechas', mobileLabel: 'Fechas', icon: '📅', adminOnly: true },
+    {
+      id: 'rounds',
+      label: 'Gestionar Fechas',
+      mobileLabel: 'Fechas',
+      icon: '📅',
+      adminOnly: true,
+    },
   ]
 
   const visibleTabs = tabs.filter(tab => !tab.adminOnly || isAdmin())
@@ -22,11 +40,35 @@ export default function Navigation() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
       {/* Header - Mobile First */}
-      <nav style={{ backgroundColor: 'var(--color-surface)', boxShadow: 'var(--shadow-md)', position: 'sticky', top: 0, zIndex: 100 }}>
+      <nav
+        style={{
+          backgroundColor: 'var(--color-surface)',
+          boxShadow: 'var(--shadow-md)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
         <div className="container">
           {/* Mobile Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px 0',
+            }}
+          >
+            <h1
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: 'var(--color-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
               <span>⚽</span>
               <span>Prode Chiqui Tapia</span>
             </h1>
@@ -34,19 +76,35 @@ export default function Navigation() {
             {/* Desktop User Info */}
             <div style={{ display: 'none' }} className="desktop-flex">
               <div style={{ textAlign: 'right', marginRight: '16px' }}>
-                <p style={{ fontWeight: '600', fontSize: '0.95rem', color: 'var(--color-text-primary)' }}>{profile?.full_name}</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>@{profile?.username}</p>
+                <p
+                  style={{
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
+                  {profile?.full_name}
+                </p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                  @{profile?.username}
+                </p>
                 {isAdmin() && (
-                  <span style={{ fontSize: '0.75rem', backgroundColor: 'var(--color-error)', color: 'white', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      backgroundColor: 'var(--color-error)',
+                      color: 'white',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-block',
+                      marginTop: '4px',
+                    }}
+                  >
                     Admin
                   </span>
                 )}
               </div>
-              <button
-                onClick={signOut}
-                className="btn-error"
-                style={{ padding: '8px 16px' }}
-              >
+              <button onClick={signOut} className="btn-error" style={{ padding: '8px 16px' }}>
                 Salir
               </button>
             </div>
@@ -55,7 +113,12 @@ export default function Navigation() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="mobile-menu-btn"
-              style={{ padding: '8px', backgroundColor: 'transparent', border: 'none', fontSize: '1.5rem' }}
+              style={{
+                padding: '8px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                fontSize: '1.5rem',
+              }}
             >
               {mobileMenuOpen ? '✕' : '☰'}
             </button>
@@ -63,12 +126,39 @@ export default function Navigation() {
 
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div className="mobile-menu" style={{ paddingBottom: '16px', borderTop: '1px solid #E0E0E0' }}>
-              <div style={{ padding: '16px', backgroundColor: 'var(--color-surface-variant)', marginTop: '8px', borderRadius: '8px' }}>
+            <div
+              className="mobile-menu"
+              style={{ paddingBottom: '16px', borderTop: '1px solid #E0E0E0' }}
+            >
+              <div
+                style={{
+                  padding: '16px',
+                  backgroundColor: 'var(--color-surface-variant)',
+                  marginTop: '8px',
+                  borderRadius: '8px',
+                }}
+              >
                 <p style={{ fontWeight: '600', marginBottom: '4px' }}>{profile?.full_name}</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>@{profile?.username}</p>
+                <p
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-secondary)',
+                    marginBottom: '8px',
+                  }}
+                >
+                  @{profile?.username}
+                </p>
                 {isAdmin() && (
-                  <span style={{ fontSize: '0.75rem', backgroundColor: 'var(--color-error)', color: 'white', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      backgroundColor: 'var(--color-error)',
+                      color: 'white',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-block',
+                    }}
+                  >
                     Admin
                   </span>
                 )}
@@ -84,8 +174,17 @@ export default function Navigation() {
           )}
 
           {/* Tabs - Responsive */}
-          <div className="tabs-container" style={{ display: 'flex', gap: '0px', borderBottom: '2px solid #E5E7EB', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            {visibleTabs.map((tab) => (
+          <div
+            className="tabs-container"
+            style={{
+              display: 'flex',
+              gap: '0px',
+              borderBottom: '2px solid #E5E7EB',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {visibleTabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => {
@@ -100,10 +199,14 @@ export default function Navigation() {
                   fontSize: '0.9rem',
                   backgroundColor: activeTab === tab.id ? '#f0fdf4' : 'transparent',
                   border: 'none',
-                  borderBottom: activeTab === tab.id ? '4px solid var(--color-primary)' : '4px solid transparent',
+                  borderBottom:
+                    activeTab === tab.id
+                      ? '4px solid var(--color-primary)'
+                      : '4px solid transparent',
                   borderLeft: activeTab === tab.id ? '1px solid #dcfce7' : '1px solid transparent',
                   borderRight: activeTab === tab.id ? '1px solid #dcfce7' : '1px solid transparent',
-                  color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  color:
+                    activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   whiteSpace: 'nowrap',
                   cursor: 'pointer',
@@ -114,12 +217,35 @@ export default function Navigation() {
                   justifyContent: 'center',
                   gap: '2px',
                   position: 'relative',
-                  boxShadow: activeTab === tab.id ? '0 -2px 8px rgba(16, 185, 129, 0.1)' : 'none'
+                  boxShadow: activeTab === tab.id ? '0 -2px 8px rgba(16, 185, 129, 0.1)' : 'none',
                 }}
               >
-                <span style={{ fontSize: '1.15rem', display: 'block', transform: activeTab === tab.id ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>{tab.icon}</span>
-                <span className="tab-label-desktop" style={{ fontSize: '0.8rem', fontWeight: activeTab === tab.id ? '700' : '600' }}>{tab.label}</span>
-                <span className="tab-label-mobile" style={{ display: 'none', fontSize: '0.7rem', fontWeight: activeTab === tab.id ? '700' : '600' }}>{tab.mobileLabel || tab.label}</span>
+                <span
+                  style={{
+                    fontSize: '1.15rem',
+                    display: 'block',
+                    transform: activeTab === tab.id ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                >
+                  {tab.icon}
+                </span>
+                <span
+                  className="tab-label-desktop"
+                  style={{ fontSize: '0.8rem', fontWeight: activeTab === tab.id ? '700' : '600' }}
+                >
+                  {tab.label}
+                </span>
+                <span
+                  className="tab-label-mobile"
+                  style={{
+                    display: 'none',
+                    fontSize: '0.7rem',
+                    fontWeight: activeTab === tab.id ? '700' : '600',
+                  }}
+                >
+                  {tab.mobileLabel || tab.label}
+                </span>
               </button>
             ))}
           </div>
@@ -134,7 +260,8 @@ export default function Navigation() {
         {activeTab === 'rounds' && isAdmin() && <RoundManager />}
       </div>
 
-      <style>{`
+      <style>
+        {`
         @media (max-width: 767px) {
           .mobile-hidden { display: none !important; }
           .mobile-visible { display: inline !important; }
@@ -182,7 +309,8 @@ export default function Navigation() {
           background: var(--color-text-disabled);
           border-radius: 4px;
         }
-      `}</style>
+      `}
+      </style>
     </div>
   )
 }
