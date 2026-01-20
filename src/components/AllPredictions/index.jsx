@@ -96,17 +96,14 @@ export default function AllPredictions() {
       <div style={{ marginBottom: '12px', textAlign: 'center' }}>
         <h2
           style={{
-            fontSize: '1.75rem',
+            fontSize: '1.1rem',
             fontWeight: '700',
             color: 'var(--color-primary)',
             marginBottom: '8px',
           }}
         >
-          👥 Pronósticos de Todos
+          👥 Mirá los pronósticos de los demás una vez que este en juego la fecha
         </h2>
-        <p style={{ color: 'var(--color-text-secondary)' }}>
-          Mirá los pronósticos de los demás una vez que empezó el partido
-        </p>
       </div>
 
       {/* Selectores de fecha y usuario */}
@@ -125,19 +122,24 @@ export default function AllPredictions() {
               value={selectedRound || ''}
               onChange={e => setSelectedRound(Number(e.target.value))}
               className="form-input"
-              style={{ width: '100%' }}
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                fontSize: '1rem',
+                borderRadius: '10px',
+                border: '2px solid var(--color-primary)',
+                cursor: 'pointer',
+              }}
             >
               <option value="">Seleccionar fecha...</option>
-              {rounds.map(round => (
-                <option key={round.id} value={round.round_number}>
-                  Fecha {round.round_number}{' '}
-                  {round.status === 'open'
-                    ? '(Abierta)'
-                    : round.status === 'finished'
-                      ? '(Finalizada)'
-                      : '(Cerrada)'}
-                </option>
-              ))}
+              {rounds
+                .filter(r => ['locked', 'finished'].includes(r.status))
+                .map(round => (
+                  <option key={round.id} value={round.round_number}>
+                    Fecha {round.round_number}{' '}
+                    {round.status === 'finished' ? '(Finalizada 🏁)' : '(En juego ⚽)'}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -147,7 +149,14 @@ export default function AllPredictions() {
               value={selectedUser}
               onChange={e => setSelectedUser(e.target.value)}
               className="form-input"
-              style={{ width: '100%' }}
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                fontSize: '1rem',
+                borderRadius: '10px',
+                border: '2px solid var(--color-primary)',
+                cursor: 'pointer',
+              }}
             >
               <option value="">Seleccionar usuario...</option>
               {users.map(user => (

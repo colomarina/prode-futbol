@@ -8,11 +8,12 @@ function RoundSelect({ value, onChange, rounds, loading }) {
 
   const getStatusConfig = status => {
     const configs = {
-      closed: { icon: '🔒', label: 'Cerrada', color: '#9ca3af' },
+      pending: { icon: '⏳', label: 'Pendiente', color: '#9ca3af' },
       open: { icon: '🟢', label: 'En curso', color: '#10b981' },
+      locked: { icon: '⚽', label: 'En juego', color: '#ef4444' },
       finished: { icon: '✅', label: 'Finalizada', color: '#3b82f6' },
     }
-    return configs[status] || configs.closed
+    return configs[status] || configs.pending
   }
 
   const selectedRound =
@@ -197,9 +198,9 @@ function RoundSelect({ value, onChange, rounds, loading }) {
               </div>
             </button>
 
-            {/* Opciones de fechas - Solo fechas finalizadas */}
+            {/* Opciones de fechas - Solo fechas bloqueadas o finalizadas */}
             {rounds
-              .filter(round => round.status === 'finished')
+              .filter(round => ['locked', 'finished'].includes(round.status))
               .map(round => {
                 const statusConfig = getStatusConfig(round.status)
 
@@ -311,7 +312,7 @@ export default function Leaderboard() {
       <div style={{ marginBottom: '24px', textAlign: 'center' }}>
         <h2
           style={{
-            fontSize: '1.75rem',
+            // fontSize: '1.75rem',
             fontWeight: '700',
             color: 'var(--color-primary)',
             marginBottom: '8px',
@@ -322,8 +323,7 @@ export default function Leaderboard() {
             flexWrap: 'wrap',
           }}
         >
-          <span style={{ fontSize: '2.5rem' }}>🏆</span>
-          <span>Tabla de Posiciones</span>
+          <span> 🏆Tabla de Posiciones</span>
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
           {selectedRound === null

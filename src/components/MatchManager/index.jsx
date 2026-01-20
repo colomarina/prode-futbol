@@ -9,7 +9,7 @@ export default function MatchManager() {
   const { matches, loading: matchesLoading, updateMatch } = useMatches(selectedRound)
 
   // Filtrar solo fechas cerradas
-  const closedRounds = rounds.filter(r => r.status === 'closed')
+  const closedRounds = rounds.filter(r => r.status === 'locked')
 
   const handleUpdateResult = async matchId => {
     const homeScore = prompt('Goles Local:')
@@ -33,28 +33,33 @@ export default function MatchManager() {
   return (
     <div className="container" style={{ maxWidth: '1000px' }}>
       <div style={{ marginBottom: '8px', textAlign: 'center' }}>
-        {/* <h2
+        <h2
           style={{
-            fontSize: '1.75rem',
+            fontSize: '1.25rem',
             fontWeight: '700',
             color: 'var(--color-primary)',
             marginBottom: '8px',
           }}
         >
           ⚙️ Cargar Resultados
-        </h2> */}
-        <p style={{ color: 'var(--color-text-secondary)' }}>
-          Cargá los resultados de los partidos cerrados
-        </p>
+        </h2>
       </div>
 
       {/* Selector de fecha */}
-      <div className="card" style={{ marginBottom: '24px' }}>
+      <div className="card" style={{ marginBottom: '12px' }}>
         <label className="form-label">📅 Seleccioná una Fecha Cerrada</label>
         <select
           value={selectedRound || ''}
           onChange={e => setSelectedRound(Number(e.target.value))}
           className="form-input"
+          style={{
+            width: '100%',
+            padding: '14px 16px',
+            fontSize: '1rem',
+            borderRadius: '10px',
+            border: '2px solid var(--color-primary)',
+            cursor: 'pointer',
+          }}
         >
           <option value="">Seleccionar fecha...</option>
           {closedRounds.map(round => (
@@ -94,121 +99,200 @@ export default function MatchManager() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {matches.map(match => (
-                  <div
-                    key={match.id}
-                    style={{
-                      border: '2px solid #E0E0E0',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      backgroundColor: match.is_finished
-                        ? 'var(--color-surface-variant)'
-                        : 'var(--color-surface)',
-                      transition: 'all 0.2s',
-                    }}
-                  >
+                {matches.map(match => {
+                  const matchDate = new Date(match.match_date)
+                  const formattedDate = matchDate.toLocaleDateString('es-AR', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                  })
+                  const formattedTime = matchDate.toLocaleTimeString('es-AR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                  })
+
+                  return (
                     <div
+                      key={match.id}
+                      className="card"
                       style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '16px',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
+                        padding: '8px',
                       }}
                     >
-                      <div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            gap: '12px',
-                            marginBottom: '12px',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              flexWrap: 'wrap',
-                            }}
-                          >
-                            <TeamDisplay team={match.home_team} size="md" />
-                            <span
-                              style={{
-                                fontSize: '1.2rem',
-                                fontWeight: '700',
-                                color: 'var(--color-text-secondary)',
-                              }}
-                            >
-                              vs
-                            </span>
-                            <TeamDisplay team={match.away_team} size="md" />
-                          </div>
-                          {match.is_finished && (
-                            <span
-                              style={{
-                                backgroundColor: 'var(--color-success)',
-                                color: 'white',
-                                padding: '4px 12px',
-                                borderRadius: '12px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                              }}
-                            >
-                              ✅ Finalizado
-                            </span>
-                          )}
-                        </div>
-                        <p
-                          style={{
-                            fontSize: '0.9rem',
-                            color: 'var(--color-text-secondary)',
-                            marginBottom: '4px',
-                          }}
-                        >
-                          📅{' '}
-                          {new Date(match.match_date).toLocaleDateString('es-AR', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                        {match.is_finished && (
-                          <p
-                            style={{
-                              fontSize: '1.1rem',
-                              fontWeight: '700',
-                              color: 'var(--color-success)',
-                              marginTop: '8px',
-                            }}
-                          >
-                            ⚽ Resultado: {match.home_score} - {match.away_score}
-                          </p>
-                        )}
-                      </div>
-
+                      {/* Match Number */}
                       <div
                         style={{
-                          display: 'flex',
-                          gap: '8px',
-                          flexWrap: 'wrap',
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          backgroundColor: 'var(--color-primary)',
+                          color: 'white',
+                          padding: '6px 12px',
+                          borderRadius: '12px',
+                          fontSize: '0.8rem',
+                          fontWeight: '700',
                         }}
                       >
-                        <button
-                          onClick={() => handleUpdateResult(match.id)}
-                          className="btn-success"
-                          style={{ flex: '1', minWidth: '200px' }}
-                        >
-                          {match.is_finished ? '✏️ Editar Resultado' : '⚽ Cargar Resultado'}
-                        </button>
+                        #{match.match_number || '?'}
                       </div>
+
+                      {/* Match Status Badge */}
+                      {match.is_finished && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            backgroundColor: 'var(--color-success)',
+                            color: 'white',
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                          }}
+                        >
+                          Finalizado
+                        </div>
+                      )}
+
+                      {/* Match Date and Time */}
+                      <div
+                        style={{
+                          marginTop: '36px',
+                          marginBottom: '16px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: '600',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          📅 {formattedDate} • 🕐 {formattedTime}
+                        </span>
+                      </div>
+
+                      {/* Teams and Score */}
+                      <div style={{ marginBottom: '20px' }}>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto auto auto 1fr',
+                            gap: '10px',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {/* Home Team */}
+                          <div style={{ justifySelf: 'end', textAlign: 'center' }}>
+                            <TeamDisplay team={match.home_team} size="sm" showNameBelow />
+                          </div>
+
+                          {/* Home Score */}
+                          <div
+                            style={{
+                              width: '50px',
+                              padding: '10px 6px',
+                              textAlign: 'center',
+                              fontSize: '1.4rem',
+                              fontWeight: '700',
+                              borderRadius: '10px',
+                              border: match.is_finished
+                                ? '3px solid var(--color-success)'
+                                : '3px solid #E0E0E0',
+                              backgroundColor: match.is_finished
+                                ? 'var(--color-surface)'
+                                : '#FAFAFA',
+                              color: match.is_finished
+                                ? 'var(--color-success)'
+                                : 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {match.is_finished ? match.home_score : '-'}
+                          </div>
+
+                          {/* Separator */}
+                          <span
+                            style={{
+                              fontSize: '1.4rem',
+                              fontWeight: '700',
+                              color: 'var(--color-text-secondary)',
+                              padding: '0 2px',
+                            }}
+                          >
+                            -
+                          </span>
+
+                          {/* Away Score */}
+                          <div
+                            style={{
+                              width: '50px',
+                              padding: '10px 6px',
+                              textAlign: 'center',
+                              fontSize: '1.4rem',
+                              fontWeight: '700',
+                              borderRadius: '10px',
+                              border: match.is_finished
+                                ? '3px solid var(--color-success)'
+                                : '3px solid #E0E0E0',
+                              backgroundColor: match.is_finished
+                                ? 'var(--color-surface)'
+                                : '#FAFAFA',
+                              color: match.is_finished
+                                ? 'var(--color-success)'
+                                : 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {match.is_finished ? match.away_score : '-'}
+                          </div>
+
+                          {/* Away Team */}
+                          <div style={{ justifySelf: 'start', textAlign: 'center' }}>
+                            <TeamDisplay team={match.away_team} size="sm" showNameBelow />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Button */}
+                      <button
+                        onClick={() => handleUpdateResult(match.id)}
+                        className="btn-success"
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        {match.is_finished ? (
+                          <>
+                            <span>✏️</span>
+                            <span>Editar Resultado</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>⚽</span>
+                            <span>Cargar Resultado</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

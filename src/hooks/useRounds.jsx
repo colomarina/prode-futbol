@@ -48,16 +48,47 @@ export const useRounds = () => {
     }
   }
 
+  const lockRound = async roundNumber => {
+    try {
+      const { error } = await supabase
+        .from('rounds')
+        .update({ status: 'locked', updated_at: new Date().toISOString() })
+        .eq('round_number', roundNumber)
+
+      if (error) throw error
+      await fetchRounds()
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
+  }
+
+  const finishRound = async roundNumber => {
+    try {
+      const { error } = await supabase
+        .from('rounds')
+        .update({ status: 'finished', updated_at: new Date().toISOString() })
+        .eq('round_number', roundNumber)
+
+      if (error) throw error
+      await fetchRounds()
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
+  }
+
   const openNextRound = async () => {
     try {
-      // Cerrar la fecha actual
-      if (activeRound) {
-        await updateRoundStatus(activeRound.round_number, 'finished')
+      // Buscar la primera fecha en estado 'pending'
+      const pendingRound = rounds.find(r => r.status === 'pending')
+
+      if (!pendingRound) {
+        throw new Error('No hay fechas pendientes para abrir')
       }
 
-      // Abrir la siguiente
-      const nextRoundNumber = activeRound ? activeRound.round_number + 1 : 1
-      await updateRoundStatus(nextRoundNumber, 'open')
+      // Abrir la fecha pending
+      await updateRoundStatus(pendingRound.round_number, 'open')
 
       return { error: null }
     } catch (error) {
@@ -80,6 +111,8 @@ export const useRounds = () => {
     fetchRounds,
     updateRoundStatus,
     openNextRound,
+    lockRound,
+    finishRound,
     isRoundOpen,
     canPredictRound,
   }

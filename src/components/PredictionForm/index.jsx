@@ -15,10 +15,20 @@ export default function PredictionForm() {
 
   // Auto-seleccionar la fecha activa al cargar
   useEffect(() => {
-    if (activeRound && !selectedRound) {
-      setSelectedRound(activeRound.round_number)
+    if (!selectedRound && rounds && rounds.length > 0) {
+      // Filtrar fechas válidas
+      const validRounds = rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))
+
+      if (validRounds.length > 0) {
+        // Prioridad: fecha activa > primera fecha válida
+        if (activeRound && ['open', 'locked', 'finished'].includes(activeRound.status)) {
+          setSelectedRound(activeRound.round_number)
+        } else {
+          setSelectedRound(validRounds[0].round_number)
+        }
+      }
     }
-  }, [activeRound, selectedRound])
+  }, [activeRound, selectedRound, rounds])
 
   // Mientras carga la información de fechas
   if (roundsLoading) {
@@ -67,16 +77,18 @@ export default function PredictionForm() {
             onChange={e => setSelectedRound(Number(e.target.value))}
             className="form-input"
           >
-            {rounds.map(round => (
-              <option key={round.id} value={round.round_number}>
-                Fecha {round.round_number}{' '}
-                {round.status === 'open'
-                  ? '(Abierta ✅)'
-                  : round.status === 'finished'
-                    ? '(Finalizada 🏁)'
-                    : '(Cerrada 🔒)'}
-              </option>
-            ))}
+            {rounds
+              .filter(r => ['open', 'locked', 'finished'].includes(r.status))
+              .map(round => (
+                <option key={round.id} value={round.round_number}>
+                  Fecha {round.round_number}{' '}
+                  {round.status === 'open'
+                    ? '(Abierta ✅)'
+                    : round.status === 'finished'
+                      ? '(Finalizada 🏁)'
+                      : '(En juego ⚽)'}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -97,7 +109,7 @@ export default function PredictionForm() {
   const currentRound = rounds.find(r => r.round_number === selectedRound)
   const isRoundOpen = currentRound?.status === 'open'
   const isRoundFinished = currentRound?.status === 'finished'
-  const isRoundClosed = currentRound?.status === 'closed'
+  const isRoundLocked = currentRound?.status === 'locked'
 
   const handleValueChange = (matchId, field, value) => {
     setPredictionValues(prev => ({
@@ -169,8 +181,8 @@ export default function PredictionForm() {
     }
     return {
       color: '#ef4444',
-      text: 'Cerrada 🔒',
-      description: 'Esta fecha no acepta pronósticos',
+      text: 'En juego ⚽',
+      description: 'Esta fecha está en juego. No se pueden modificar pronósticos.',
     }
   }
 
@@ -179,8 +191,13 @@ export default function PredictionForm() {
   return (
     <div className="container" style={{ maxWidth: '900px' }}>
       {/* Selector de fechas */}
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <label className="form-label">📅 Seleccioná una Fecha</label>
+      <div className="card" style={{ marginBottom: '16px', padding: '0px' }}>
+        <label
+          className="form-label"
+          style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '12px', display: 'block' }}
+        >
+          📅 Seleccioná una Fecha
+        </label>
         <select
           value={selectedRound || ''}
           onChange={e => {
@@ -188,78 +205,73 @@ export default function PredictionForm() {
             setPredictionValues({}) // Limpiar valores al cambiar de fecha
           }}
           className="form-input"
+          style={{
+            width: '100%',
+            padding: '14px 16px',
+            fontSize: '1rem',
+            borderRadius: '10px',
+            border: '2px solid var(--color-primary)',
+            cursor: 'pointer',
+          }}
         >
-          {rounds.map(round => (
-            <option key={round.id} value={round.round_number}>
-              Fecha {round.round_number}{' '}
-              {round.status === 'open'
-                ? '(Abierta ✅)'
-                : round.status === 'finished'
-                  ? '(Finalizada 🏁)'
-                  : '(Cerrada 🔒)'}
-            </option>
-          ))}
+          {rounds
+            .filter(r => ['open', 'locked', 'finished'].includes(r.status))
+            .map(round => (
+              <option key={round.id} value={round.round_number}>
+                Fecha {round.round_number}{' '}
+                {round.status === 'open'
+                  ? '(Abierta ✅)'
+                  : round.status === 'finished'
+                    ? '(Finalizada 🏁)'
+                    : '(En juego ⚽)'}
+              </option>
+            ))}
         </select>
       </div>
 
       {/* Header con estado de la fecha */}
-      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <div
+      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+        {/* <h2
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '12px',
-            marginBottom: '12px',
+            fontSize: '2rem',
+            fontWeight: '700',
+            color: 'var(--color-primary)',
+            margin: '0 0 16px 0',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.75rem',
-              fontWeight: '700',
-              color: 'var(--color-primary)',
-              margin: 0,
-            }}
-          >
-            Pronósticos - Fecha {selectedRound}
-          </h2>
+          Fecha {selectedRound}
+        </h2> */}
+        <div
+          style={{
+            display: 'inline-flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '16px 24px',
+            borderRadius: '12px',
+            backgroundColor: `${statusBadge.color}15`,
+            border: `2px solid ${statusBadge.color}`,
+          }}
+        >
           <span
             style={{
               background: statusBadge.color,
               color: 'white',
-              padding: '4px 12px',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
-              fontWeight: '600',
+              padding: '6px 16px',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              fontWeight: '700',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
             }}
           >
             {statusBadge.text}
           </span>
-        </div>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
-          {statusBadge.description}
-        </p>
-      </div>
-
-      {/* Alerta informativa según estado */}
-      {isRoundClosed && (
-        <div
-          style={{
-            background: '#fef2f2',
-            border: '2px solid #fecaca',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ color: '#dc2626', fontWeight: '600', margin: 0 }}>
-            🔒 Esta fecha está cerrada. Solo podés ver tus pronósticos.
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+            {statusBadge.description}
           </p>
         </div>
-      )}
+      </div>
 
       {isRoundFinished && (
         <div
@@ -344,8 +356,8 @@ export default function PredictionForm() {
         </div>
       )}
 
-      {/* Mensaje cuando la fecha está cerrada/finalizada */}
-      {(isRoundClosed || isRoundFinished) && (
+      {/* Mensaje cuando la fecha está bloqueada/finalizada */}
+      {(isRoundLocked || isRoundFinished) && (
         <div
           style={{
             marginTop: '24px',
@@ -358,7 +370,7 @@ export default function PredictionForm() {
           <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
             {isRoundFinished
               ? '🏁 Esta fecha ya finalizó. Los resultados están calculados.'
-              : '🔒 Esta fecha está cerrada. No se pueden modificar pronósticos.'}
+              : '⚽ Esta fecha está en juego. No se pueden modificar pronósticos.'}
           </p>
         </div>
       )}
