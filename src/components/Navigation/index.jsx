@@ -4,6 +4,7 @@ import PredictionForm from '../PredictionForm'
 import Leaderboard from '../LeaderBoard'
 import MatchManager from '../MatchManager'
 import RoundManager from '../RoundManager'
+import AllPredictions from '../AllPredictions'
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('predictions')
@@ -19,13 +20,26 @@ export default function Navigation() {
       adminOnly: false,
     },
     {
+      id: 'all-predictions',
+      label: 'Ver Pronósticos',
+      mobileLabel: 'Rivales',
+      icon: '👀',
+      adminOnly: false,
+    },
+    {
       id: 'leaderboard',
       label: 'Tabla de Posiciones',
       mobileLabel: 'Tabla',
       icon: '🏆',
       adminOnly: false,
     },
-    // { id: 'admin', label: 'Administrar Partidos', icon: '⚙️', adminOnly: true },
+    {
+      id: 'admin',
+      label: 'Administrar Partidos',
+      mobileLabel: 'Partidos',
+      icon: '⚙️',
+      adminOnly: true,
+    },
     {
       id: 'rounds',
       label: 'Gestionar Fechas',
@@ -85,7 +99,12 @@ export default function Navigation() {
                 >
                   {profile?.full_name}
                 </p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                <p
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
                   @{profile?.username}
                 </p>
                 {isAdmin() && (
@@ -232,7 +251,10 @@ export default function Navigation() {
                 </span>
                 <span
                   className="tab-label-desktop"
-                  style={{ fontSize: '0.8rem', fontWeight: activeTab === tab.id ? '700' : '600' }}
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: activeTab === tab.id ? '700' : '600',
+                  }}
                 >
                   {tab.label}
                 </span>
@@ -255,6 +277,7 @@ export default function Navigation() {
       {/* Content */}
       <div style={{ paddingTop: '24px', paddingBottom: '24px' }}>
         {activeTab === 'predictions' && <PredictionForm roundNumber={1} />}
+        {activeTab === 'all-predictions' && <AllPredictions />}
         {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'admin' && isAdmin() && <MatchManager />}
         {activeTab === 'rounds' && isAdmin() && <RoundManager />}

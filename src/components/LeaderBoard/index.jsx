@@ -197,101 +197,81 @@ function RoundSelect({ value, onChange, rounds, loading }) {
               </div>
             </button>
 
-            {/* Opciones de fechas */}
-            {rounds.map(round => {
-              const statusConfig = getStatusConfig(round.status)
-              const isOpen = round.status === 'open'
+            {/* Opciones de fechas - Solo fechas finalizadas */}
+            {rounds
+              .filter(round => round.status === 'finished')
+              .map(round => {
+                const statusConfig = getStatusConfig(round.status)
 
-              return (
-                <button
-                  key={round.round_number}
-                  type="button"
-                  onClick={() => {
-                    onChange(round.round_number)
-                    setIsOpen(false)
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    border: 'none',
-                    backgroundColor:
-                      value === round.round_number
-                        ? 'var(--color-surface-variant)'
-                        : isOpen
-                          ? 'rgba(16, 185, 129, 0.05)'
+                return (
+                  <button
+                    key={round.round_number}
+                    type="button"
+                    onClick={() => {
+                      onChange(round.round_number)
+                      setIsOpen(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '16px 20px',
+                      border: 'none',
+                      backgroundColor:
+                        value === round.round_number
+                          ? 'var(--color-surface-variant)'
                           : 'transparent',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                    textAlign: 'left',
-                    borderBottom: '1px solid #E0E0E0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    borderLeft: isOpen ? '4px solid #10b981' : '4px solid transparent',
-                  }}
-                  onMouseEnter={e => {
-                    if (value !== round.round_number) {
-                      e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (value !== round.round_number) {
-                      e.currentTarget.style.backgroundColor = isOpen
-                        ? 'rgba(16, 185, 129, 0.05)'
-                        : 'transparent'
-                    }
-                  }}
-                >
-                  <span style={{ fontSize: '1.8rem' }}>📆</span>
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: '700',
-                        fontSize: '0.95rem',
-                        color: 'var(--color-text-primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span>
-                        Fecha
-                        {round.round_number}
-                      </span>
-                      {isOpen && (
-                        <span
-                          style={{
-                            backgroundColor: '#10b981',
-                            color: 'white',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                          }}
-                        >
-                          Activa
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s',
+                      textAlign: 'left',
+                      borderBottom: '1px solid #E0E0E0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                    }}
+                    onMouseEnter={e => {
+                      if (value !== round.round_number) {
+                        e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (value !== round.round_number) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }
+                    }}
+                  >
+                    <span style={{ fontSize: '1.8rem' }}>📆</span>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontWeight: '700',
+                          fontSize: '0.95rem',
+                          color: 'var(--color-text-primary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span>
+                          Fecha
+                          {round.round_number}
                         </span>
-                      )}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '0.8rem',
+                          color: statusConfig.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        <span>{statusConfig.icon}</span>
+                        <span>{statusConfig.label}</span>
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        fontSize: '0.8rem',
-                        color: statusConfig.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontWeight: '600',
-                      }}
-                    >
-                      <span>{statusConfig.icon}</span>
-                      <span>{statusConfig.label}</span>
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
+                  </button>
+                )
+              })}
           </div>
         </>
       )}

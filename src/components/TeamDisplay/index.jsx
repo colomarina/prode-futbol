@@ -1,4 +1,4 @@
-export default function TeamDisplay({ team, size = 'md' }) {
+export default function TeamDisplay({ team, size = 'md', showNameBelow = false }) {
   const sizes = {
     sm: { width: '24px', height: '24px' },
     md: { width: '32px', height: '32px' },
@@ -14,6 +14,45 @@ export default function TeamDisplay({ team, size = 'md' }) {
   }
 
   if (!team) return <span style={{ color: 'var(--color-text-secondary)' }}>-</span>
+
+  if (showNameBelow) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        {team.logo_url && (
+          <img
+            src={team.logo_url}
+            alt={team.name}
+            style={{
+              ...sizes[size],
+              objectFit: 'contain',
+            }}
+            onError={e => {
+              console.error('Error loading image:', team.logo_url, 'for team:', team.name)
+              e.target.style.display = 'none'
+            }}
+          />
+        )}
+        <span
+          style={{
+            fontSize: textSizes[size],
+            fontWeight: '600',
+            textAlign: 'center',
+            lineHeight: '1.2',
+            maxWidth: '80px',
+          }}
+        >
+          {team.name}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div

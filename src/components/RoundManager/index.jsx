@@ -74,7 +74,7 @@ export default function RoundManager() {
   return (
     <div className="container" style={{ maxWidth: '1000px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
         <h2
           style={{
             fontSize: '1.75rem',
@@ -245,26 +245,7 @@ export default function RoundManager() {
 
       {/* Rounds List */}
       <div className="card" style={{ padding: '0' }}>
-        <div
-          style={{
-            padding: '20px 24px',
-            borderBottom: '2px solid #E0E0E0',
-            backgroundColor: 'var(--color-surface-variant)',
-          }}
-        >
-          <h3
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: '700',
-              color: 'var(--color-text-primary)',
-              margin: 0,
-            }}
-          >
-            Todas las Fechas
-          </h3>
-        </div>
-
-        <div style={{ padding: '16px' }}>
+        <div style={{ padding: '0' }}>
           <div
             style={{
               display: 'grid',

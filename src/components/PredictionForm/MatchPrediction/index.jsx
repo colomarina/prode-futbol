@@ -1,25 +1,25 @@
-// MatchPrediction.jsx
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import TeamDisplay from '../../TeamDisplay'
 
 export default function MatchPrediction({
   match,
-  createPrediction,
-  updatePrediction,
   predictions,
   isRoundOpen,
+  predictionValues,
+  onValueChange,
 }) {
   const existingPrediction = useMemo(
     () => predictions?.find(p => p.match_id === match.id),
     [predictions, match.id]
   )
 
-  const initialHomeScore = existingPrediction?.home_prediction?.toString() || ''
-  const initialAwayScore = existingPrediction?.away_prediction?.toString() || ''
-
-  const [homeScore, setHomeScore] = useState(initialHomeScore)
-  const [awayScore, setAwayScore] = useState(initialAwayScore)
-  const [saving, setSaving] = useState(false)
+  // Inicializar valores desde predicción existente
+  useEffect(() => {
+    if (existingPrediction && !predictionValues[match.id]) {
+      onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
+      onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
+    }
+  }, [existingPrediction, match.id, predictionValues, onValueChange])
 
   const canPredict = matchDate => {
     const cutoffTime = new Date(new Date(matchDate).getTime() - 60 * 60 * 1000)
@@ -29,35 +29,29 @@ export default function MatchPrediction({
   // Solo se puede predecir si la fecha está abierta Y falta más de 1 hora para el partido
   const canPredictMatch = isRoundOpen && canPredict(match.match_date)
 
-  const handleInputChange = (value, setter) => {
+  const handleInputChange = (field, value) => {
+    // Solo permitir cambios si se puede predecir
+    if (!canPredictMatch) return
+
     // Permitir vacío o solo números
     if (value === '' || /^\d+$/.test(value)) {
-      setter(value)
+      onValueChange(match.id, field, value)
     }
   }
 
-  const handleSavePrediction = async () => {
-    // Convertir a números, usando 0 si está vacío
-    const home = homeScore === '' ? 0 : parseInt(homeScore)
-    const away = awayScore === '' ? 0 : parseInt(awayScore)
+  const homeScore = predictionValues[match.id]?.home || ''
+  const awayScore = predictionValues[match.id]?.away || ''
 
-    setSaving(true)
-    let result
+  // Si no se puede editar, mostrar valor guardado o placeholder
+  const displayHomeValue = canPredictMatch
+    ? homeScore
+    : existingPrediction?.home_prediction?.toString() || '-'
 
-    if (existingPrediction) {
-      result = await updatePrediction(existingPrediction.id, home, away)
-    } else {
-      result = await createPrediction(match.id, home, away)
-    }
+  const displayAwayValue = canPredictMatch
+    ? awayScore
+    : existingPrediction?.away_prediction?.toString() || '-'
 
-    if (result.error) {
-      alert(`Error: ${result.error.message}` || result.error)
-    } else {
-      alert('Predicción guardada!')
-    }
-    setSaving(false)
-  }
-
+  // Formatear fecha
   const matchDate = new Date(match.match_date)
   const formattedDate = matchDate.toLocaleDateString('es-AR', {
     weekday: 'short',
@@ -76,11 +70,34 @@ export default function MatchPrediction({
     <div
       className="card"
       style={{
-        opacity: !canPredictMatch && !match.is_finished ? 0.7 : 1,
+        opacity: !canPredictMatch && !match.is_finished && !existingPrediction ? 0.7 : 1,
         position: 'relative',
         overflow: 'hidden',
+        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        padding: '8px',
       }}
     >
+      {/* Match Number (ID visible) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '12px',
+          left: '12px',
+          backgroundColor: 'var(--color-primary)',
+          color: 'white',
+          padding: '6px 12px',
+          borderRadius: '12px',
+          fontSize: '0.8rem',
+          fontWeight: '700',
+        }}
+      >
+        #{match.match_number || '?'}
+      </div>
+
       {/* Match Status Badge */}
       {match.is_finished && (
         <div
@@ -103,156 +120,139 @@ export default function MatchPrediction({
       {/* Match Date and Time */}
       <div
         style={{
+          marginTop: '36px',
           marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          flexWrap: 'wrap',
+          textAlign: 'center',
         }}
       >
         <span
           style={{
-            backgroundColor: 'var(--color-surface-variant)',
-            padding: '4px 12px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
+            fontSize: '0.9rem',
             fontWeight: '600',
             color: 'var(--color-text-secondary)',
           }}
         >
-          📅 {formattedDate}
-        </span>
-        <span
-          style={{
-            backgroundColor: 'var(--color-surface-variant)',
-            padding: '4px 12px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            fontWeight: '600',
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          🕐 {formattedTime}
+          📅 {formattedDate} • 🕐 {formattedTime}
         </span>
       </div>
 
       {/* Teams and Score */}
       <div style={{ marginBottom: '20px' }}>
+        {/* Diseño horizontal compacto */}
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto auto auto 1fr',
+            gap: '10px',
+            alignItems: 'center',
           }}
         >
-          {/* Home Team Row */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              gap: '16px',
-              alignItems: 'center',
-            }}
-          >
-            <TeamDisplay team={match.home_team} size="md" />
+          {/* Home Team */}
+          <div style={{ justifySelf: 'end', textAlign: 'center' }}>
+            <TeamDisplay team={match.home_team} size="sm" showNameBelow />
+          </div>
+
+          {/* Home Score Input */}
+          {canPredictMatch ? (
             <input
               type="tel"
               inputMode="numeric"
               pattern="[0-9]*"
               value={homeScore}
-              onChange={e => handleInputChange(e.target.value, setHomeScore)}
+              onChange={e => handleInputChange('home', e.target.value)}
               onFocus={e => e.target.select()}
-              disabled={!canPredictMatch || match.is_finished}
-              placeholder="0"
+              placeholder="-"
               style={{
-                width: '64px',
-                padding: '14px 12px',
+                width: '50px',
+                padding: '10px 6px',
                 textAlign: 'center',
-                fontSize: '1.75rem',
+                fontSize: '1.4rem',
                 fontWeight: '700',
-                borderRadius: '12px',
+                borderRadius: '10px',
                 border: '3px solid var(--color-primary)',
-                backgroundColor:
-                  !canPredictMatch || match.is_finished ? '#FAFAFA' : 'var(--color-surface)',
+                backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-primary)',
                 outline: 'none',
                 transition: 'all 0.2s',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               }}
             />
-          </div>
-
-          {/* VS Divider */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
+          ) : (
             <div
               style={{
-                flex: 1,
-                height: '2px',
-                background: 'linear-gradient(to right, transparent, #E0E0E0, transparent)',
-              }}
-            />
-            <span
-              style={{
-                fontSize: '1rem',
+                width: '50px',
+                padding: '10px 6px',
+                textAlign: 'center',
+                fontSize: '1.4rem',
                 fontWeight: '700',
-                color: 'var(--color-text-secondary)',
-                padding: '4px 12px',
-                backgroundColor: 'var(--color-surface-variant)',
-                borderRadius: '8px',
+                borderRadius: '10px',
+                border: '3px solid #E0E0E0',
+                backgroundColor: '#FAFAFA',
+                color: existingPrediction ? 'var(--color-primary)' : 'var(--color-text-secondary)',
               }}
             >
-              VS
-            </span>
-            <div
-              style={{
-                flex: 1,
-                height: '2px',
-                background: 'linear-gradient(to right, transparent, #E0E0E0, transparent)',
-              }}
-            />
-          </div>
+              {displayHomeValue}
+            </div>
+          )}
 
-          {/* Away Team Row */}
-          <div
+          {/* Separator */}
+          <span
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              gap: '16px',
-              alignItems: 'center',
+              fontSize: '1.4rem',
+              fontWeight: '700',
+              color: 'var(--color-text-secondary)',
+              padding: '0 2px',
             }}
           >
-            <TeamDisplay team={match.away_team} size="md" />
+            -
+          </span>
+
+          {/* Away Score Input */}
+          {canPredictMatch ? (
             <input
               type="tel"
               inputMode="numeric"
               pattern="[0-9]*"
               value={awayScore}
-              onChange={e => handleInputChange(e.target.value, setAwayScore)}
+              onChange={e => handleInputChange('away', e.target.value)}
               onFocus={e => e.target.select()}
-              disabled={!canPredictMatch || match.is_finished}
-              placeholder="0"
+              placeholder="-"
               style={{
-                width: '64px',
-                padding: '14px 12px',
+                width: '50px',
+                padding: '10px 6px',
                 textAlign: 'center',
-                fontSize: '1.75rem',
+                fontSize: '1.4rem',
                 fontWeight: '700',
-                borderRadius: '12px',
+                borderRadius: '10px',
                 border: '3px solid var(--color-primary)',
-                backgroundColor:
-                  !canPredictMatch || match.is_finished ? '#FAFAFA' : 'var(--color-surface)',
+                backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-primary)',
                 outline: 'none',
                 transition: 'all 0.2s',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               }}
             />
+          ) : (
+            <div
+              style={{
+                width: '50px',
+                padding: '10px 6px',
+                textAlign: 'center',
+                fontSize: '1.4rem',
+                fontWeight: '700',
+                borderRadius: '10px',
+                border: '3px solid #E0E0E0',
+                backgroundColor: '#FAFAFA',
+                color: existingPrediction ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+              }}
+            >
+              {displayAwayValue}
+            </div>
+          )}
+
+          {/* Away Team */}
+          <div style={{ justifySelf: 'start', textAlign: 'center' }}>
+            <TeamDisplay team={match.away_team} size="sm" showNameBelow />
           </div>
         </div>
       </div>
@@ -329,22 +329,21 @@ export default function MatchPrediction({
         </div>
       )}
 
-      {/* Warnings and Actions */}
-      {!isRoundOpen && !match.is_finished && (
+      {/* Warnings */}
+      {!isRoundOpen && !match.is_finished && !existingPrediction && (
         <div
           style={{
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             border: '2px solid #ef4444',
             borderRadius: '12px',
             padding: '12px 16px',
-            marginBottom: '12px',
             textAlign: 'center',
             color: '#dc2626',
             fontWeight: '600',
             fontSize: '0.9rem',
           }}
         >
-          🔒 La fecha está cerrada, no se pueden cargar pronósticos
+          🔒 No cargaste pronóstico para este partido
         </div>
       )}
 
@@ -355,7 +354,6 @@ export default function MatchPrediction({
             border: '2px solid #f59e0b',
             borderRadius: '12px',
             padding: '12px 16px',
-            marginBottom: '12px',
             textAlign: 'center',
             color: '#d97706',
             fontWeight: '600',
@@ -366,54 +364,24 @@ export default function MatchPrediction({
         </div>
       )}
 
-      {canPredictMatch && !match.is_finished && (
-        <>
-          <button
-            onClick={handleSavePrediction}
-            disabled={saving || homeScore === '' || awayScore === ''}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '16px',
-              fontSize: '1rem',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: saving || homeScore === '' || awayScore === '' ? 0.6 : 1,
-              cursor: saving || homeScore === '' || awayScore === '' ? 'not-allowed' : 'pointer',
-            }}
-          >
-            <span style={{ fontSize: '1.3rem' }}>
-              {saving ? '⏳' : existingPrediction ? '🔄' : '💾'}
-            </span>
-            <span>
-              {saving
-                ? 'Guardando...'
-                : existingPrediction
-                  ? 'Actualizar Pronóstico'
-                  : 'Guardar Pronóstico'}
-            </span>
-          </button>
-          {existingPrediction && (
-            <p
-              style={{
-                textAlign: 'center',
-                marginTop: '12px',
-                fontSize: '0.85rem',
-                color: 'var(--color-text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px',
-              }}
-            >
-              <span>✓</span>
-              <span>Ya tenés un pronóstico guardado</span>
-            </p>
-          )}
-        </>
+      {/* Indicador de pronóstico guardado */}
+      {canPredictMatch && existingPrediction && (
+        <p
+          style={{
+            textAlign: 'center',
+            marginTop: '12px',
+            fontSize: '0.85rem',
+            color: 'var(--color-success)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            fontWeight: '600',
+          }}
+        >
+          <span>✓</span>
+          <span>Pronóstico guardado (se actualizará al guardar todos)</span>
+        </p>
       )}
     </div>
   )
