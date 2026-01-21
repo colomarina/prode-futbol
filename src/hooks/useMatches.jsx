@@ -23,6 +23,7 @@ export const useMatches = (roundNumber = null) => {
           away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url)
         `
         )
+        .order('match_number', { ascending: true })
         .order('match_date', { ascending: true })
 
       if (roundNumber) {

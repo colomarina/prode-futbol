@@ -319,7 +319,7 @@ export default function PredictionForm() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {matches.map(match => (
           <MatchPrediction
-            key={match.id}
+            key={`${match.round_number}-${match.match_number}-${match.id}`}
             match={match}
             predictions={predictions}
             isRoundOpen={isRoundOpen}

@@ -45,6 +45,15 @@ export default function RoundManager() {
 
   // const handleOpenNextRound = async () => {
   //   if (confirm('¿Abrir la siguiente fecha pendiente?')) {
+  //     // Si hay una fecha activa, bloquearla primero
+  //     if (activeRound) {
+  //       const { error: lockError } = await updateRoundStatus(activeRound.round_number, 'locked')
+  //       if (lockError) {
+  //         alert(`Error al bloquear fecha activa: ${lockError.message}`)
+  //         return
+  //       }
+  //     }
+  //
   //     const { error } = await openNextRound()
   //     if (error) {
   //       alert(`Error: ${error.message}`)
@@ -99,7 +108,24 @@ export default function RoundManager() {
     }
   }
 
-  const handleChangeStatus = async (roundNumber, newStatus) => {
+  const handleChangeStatus = async (roundNumber, newStatus, currentStatus, roundId) => {
+    // Prevenir modificación de fechas finalizadas
+    if (currentStatus === 'finished') {
+      alert('❌ No se puede modificar una fecha finalizada')
+      return
+    }
+
+    // Prevenir abrir una fecha si ya hay otra abierta
+    if (newStatus === 'open') {
+      const openRound = rounds.find(r => r.status === 'open' && r.id !== roundId)
+      if (openRound) {
+        alert(
+          `❌ Ya hay una fecha abierta (Fecha ${openRound.round_number}). Bloqueala o finalizala antes de abrir otra.`
+        )
+        return
+      }
+    }
+
     const statusNames = {
       pending: 'Pendiente',
       open: 'Abierta',
@@ -439,7 +465,10 @@ export default function RoundManager() {
                   {/* Status Selector */}
                   <select
                     value={round.status}
-                    onChange={e => handleChangeStatus(round.round_number, e.target.value)}
+                    onChange={e =>
+                      handleChangeStatus(round.round_number, e.target.value, round.status, round.id)
+                    }
+                    disabled={round.status === 'finished'}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -449,7 +478,8 @@ export default function RoundManager() {
                       color: 'var(--color-text-primary)',
                       fontWeight: '600',
                       fontSize: '0.9rem',
-                      cursor: 'pointer',
+                      cursor: round.status === 'finished' ? 'not-allowed' : 'pointer',
+                      opacity: round.status === 'finished' ? 0.6 : 1,
                       outline: 'none',
                       transition: 'all 0.2s',
                       marginBottom: round.status === 'locked' ? '12px' : '0',

@@ -1,41 +1,89 @@
 import { useState } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
-import TeamDisplay from '../TeamDisplay'
+import MatchResult from './MatchResult'
 
 export default function MatchManager() {
   const { rounds } = useRounds()
   const [selectedRound, setSelectedRound] = useState(null)
   const { matches, loading: matchesLoading, updateMatch } = useMatches(selectedRound)
+  const [resultValues, setResultValues] = useState({})
+  const [saving, setSaving] = useState(false)
 
   // Filtrar solo fechas cerradas
   const closedRounds = rounds.filter(r => r.status === 'locked')
 
-  const handleUpdateResult = async matchId => {
-    const homeScore = prompt('Goles Local:')
-    const awayScore = prompt('Goles Visitante:')
+  const handleValueChange = (matchId, field, value) => {
+    setResultValues(prev => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId],
+        [field]: value,
+      },
+    }))
+  }
 
-    if (homeScore !== null && awayScore !== null) {
-      const { error } = await updateMatch(matchId, {
-        home_score: parseInt(homeScore),
-        away_score: parseInt(awayScore),
-        is_finished: true,
+  const handleSaveAll = async () => {
+    setSaving(true)
+
+    const validMatches = matches.filter(match => {
+      const values = resultValues[match.id]
+      return (
+        values?.home !== undefined &&
+        values?.home !== '' &&
+        values?.away !== undefined &&
+        values?.away !== ''
+      )
+    })
+
+    if (validMatches.length === 0) {
+      alert('⚠️ No hay resultados para guardar')
+      setSaving(false)
+      return
+    }
+
+    const results = await Promise.all(
+      validMatches.map(async match => {
+        const values = resultValues[match.id]
+        const home = parseInt(values.home, 10)
+        const away = parseInt(values.away, 10)
+
+        return updateMatch(match.id, {
+          home_score: home,
+          away_score: away,
+          is_finished: true,
+        })
       })
+    )
 
-      if (error) {
-        alert(`Error: ${error.message}`)
-      } else {
-        alert('Resultado actualizado!')
-      }
+    const successCount = results.filter(result => !result.error).length
+    const errorCount = results.filter(result => result.error).length
+
+    setSaving(false)
+
+    if (successCount > 0 && errorCount === 0) {
+      alert(`✅ ${successCount} resultado(s) guardado(s) correctamente`)
+      setResultValues({}) // Limpiar valores después de guardar
+    } else if (successCount > 0 && errorCount > 0) {
+      alert(
+        `⚠️ ${successCount} resultado(s) guardado(s), ${errorCount} fallaron. Revisá los errores.`
+      )
+    } else if (errorCount > 0) {
+      alert(`❌ Error al guardar resultados. Intentá de nuevo.`)
     }
   }
 
+  // Verificar si hay al menos un resultado para guardar
+  const hasValidResults = Object.values(resultValues).some(
+    v => v?.home !== undefined && v?.home !== '' && v?.away !== undefined && v?.away !== ''
+  )
+
   return (
-    <div className="container" style={{ maxWidth: '1000px' }}>
-      <div style={{ marginBottom: '8px', textAlign: 'center' }}>
+    <div className="container" style={{ maxWidth: '900px' }}>
+      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
         <h2
           style={{
-            fontSize: '1.25rem',
+            fontSize: '1.5rem',
             fontWeight: '700',
             color: 'var(--color-primary)',
             marginBottom: '8px',
@@ -43,14 +91,25 @@ export default function MatchManager() {
         >
           ⚙️ Cargar Resultados
         </h2>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
+          Seleccioná una fecha cerrada y cargá los resultados de los partidos
+        </p>
       </div>
 
       {/* Selector de fecha */}
-      <div className="card" style={{ marginBottom: '12px' }}>
-        <label className="form-label">📅 Seleccioná una Fecha Cerrada</label>
+      <div className="card" style={{ marginBottom: '16px', padding: '0px' }}>
+        <label
+          className="form-label"
+          style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '12px', display: 'block' }}
+        >
+          📅 Seleccioná una Fecha Cerrada
+        </label>
         <select
           value={selectedRound || ''}
-          onChange={e => setSelectedRound(Number(e.target.value))}
+          onChange={e => {
+            setSelectedRound(Number(e.target.value))
+            setResultValues({}) // Limpiar valores al cambiar de fecha
+          }}
           className="form-input"
           style={{
             width: '100%',
@@ -77,225 +136,55 @@ export default function MatchManager() {
             <div className="spinner" style={{ margin: '0 auto 16px' }} />
             <p style={{ color: 'var(--color-text-secondary)' }}>Cargando partidos...</p>
           </div>
-        ) : (
-          <div className="card">
-            <h3
-              style={{
-                fontSize: '1.25rem',
-                fontWeight: '700',
-                color: 'var(--color-text-primary)',
-                marginBottom: '20px',
-              }}
-            >
-              ⚽ Partidos de la Fecha {selectedRound}
+        ) : !matches || matches.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 16px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚽</div>
+            <h3 style={{ color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+              No hay partidos en esta fecha
             </h3>
-
-            {!matches || matches.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚽</div>
-                <p style={{ color: 'var(--color-text-secondary)' }}>
-                  No hay partidos en esta fecha
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {matches.map(match => {
-                  const matchDate = new Date(match.match_date)
-                  const formattedDate = matchDate.toLocaleDateString('es-AR', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    timeZone: 'America/Argentina/Buenos_Aires',
-                  })
-                  const formattedTime = matchDate.toLocaleTimeString('es-AR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                    timeZone: 'America/Argentina/Buenos_Aires',
-                  })
-
-                  return (
-                    <div
-                      key={match.id}
-                      className="card"
-                      style={{
-                        position: 'relative',
-                        overflow: 'hidden',
-                        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '16px',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
-                        padding: '8px',
-                      }}
-                    >
-                      {/* Match Number */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          left: '12px',
-                          backgroundColor: 'var(--color-primary)',
-                          color: 'white',
-                          padding: '6px 12px',
-                          borderRadius: '12px',
-                          fontSize: '0.8rem',
-                          fontWeight: '700',
-                        }}
-                      >
-                        #{match.match_number || '?'}
-                      </div>
-
-                      {/* Match Status Badge */}
-                      {match.is_finished && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            backgroundColor: 'var(--color-success)',
-                            color: 'white',
-                            padding: '4px 12px',
-                            borderRadius: '12px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                          }}
-                        >
-                          Finalizado
-                        </div>
-                      )}
-
-                      {/* Match Date and Time */}
-                      <div
-                        style={{
-                          marginTop: '36px',
-                          marginBottom: '16px',
-                          textAlign: 'center',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '0.9rem',
-                            fontWeight: '600',
-                            color: 'var(--color-text-secondary)',
-                          }}
-                        >
-                          📅 {formattedDate} • 🕐 {formattedTime}
-                        </span>
-                      </div>
-
-                      {/* Teams and Score */}
-                      <div style={{ marginBottom: '20px' }}>
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto auto auto 1fr',
-                            gap: '10px',
-                            alignItems: 'center',
-                          }}
-                        >
-                          {/* Home Team */}
-                          <div style={{ justifySelf: 'end', textAlign: 'center' }}>
-                            <TeamDisplay team={match.home_team} size="sm" showNameBelow />
-                          </div>
-
-                          {/* Home Score */}
-                          <div
-                            style={{
-                              width: '50px',
-                              padding: '10px 6px',
-                              textAlign: 'center',
-                              fontSize: '1.4rem',
-                              fontWeight: '700',
-                              borderRadius: '10px',
-                              border: match.is_finished
-                                ? '3px solid var(--color-success)'
-                                : '3px solid #E0E0E0',
-                              backgroundColor: match.is_finished
-                                ? 'var(--color-surface)'
-                                : '#FAFAFA',
-                              color: match.is_finished
-                                ? 'var(--color-success)'
-                                : 'var(--color-text-secondary)',
-                            }}
-                          >
-                            {match.is_finished ? match.home_score : '-'}
-                          </div>
-
-                          {/* Separator */}
-                          <span
-                            style={{
-                              fontSize: '1.4rem',
-                              fontWeight: '700',
-                              color: 'var(--color-text-secondary)',
-                              padding: '0 2px',
-                            }}
-                          >
-                            -
-                          </span>
-
-                          {/* Away Score */}
-                          <div
-                            style={{
-                              width: '50px',
-                              padding: '10px 6px',
-                              textAlign: 'center',
-                              fontSize: '1.4rem',
-                              fontWeight: '700',
-                              borderRadius: '10px',
-                              border: match.is_finished
-                                ? '3px solid var(--color-success)'
-                                : '3px solid #E0E0E0',
-                              backgroundColor: match.is_finished
-                                ? 'var(--color-surface)'
-                                : '#FAFAFA',
-                              color: match.is_finished
-                                ? 'var(--color-success)'
-                                : 'var(--color-text-secondary)',
-                            }}
-                          >
-                            {match.is_finished ? match.away_score : '-'}
-                          </div>
-
-                          {/* Away Team */}
-                          <div style={{ justifySelf: 'start', textAlign: 'center' }}>
-                            <TeamDisplay team={match.away_team} size="sm" showNameBelow />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Button */}
-                      <button
-                        onClick={() => handleUpdateResult(match.id)}
-                        className="btn-success"
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                        }}
-                      >
-                        {match.is_finished ? (
-                          <>
-                            <span>✏️</span>
-                            <span>Editar Resultado</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>⚽</span>
-                            <span>Cargar Resultado</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            <p style={{ color: 'var(--color-text-secondary)' }}>
+              Todavía no se cargaron partidos para esta fecha.
+            </p>
           </div>
+        ) : (
+          <>
+            {/* Lista de partidos */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {matches.map(match => (
+                <MatchResult
+                  key={`${match.round_number}-${match.match_number}-${match.id}`}
+                  match={match}
+                  resultValues={resultValues}
+                  onValueChange={handleValueChange}
+                />
+              ))}
+            </div>
+
+            {/* Botón para guardar todos */}
+            <div style={{ marginTop: '24px', position: 'sticky', bottom: '20px', zIndex: 10 }}>
+              <button
+                onClick={handleSaveAll}
+                disabled={saving || !hasValidResults}
+                className="btn-success"
+                style={{
+                  width: '100%',
+                  padding: '18px',
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  opacity: saving || !hasValidResults ? 0.6 : 1,
+                  cursor: saving || !hasValidResults ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                }}
+              >
+                <span style={{ fontSize: '1.5rem' }}>{saving ? '⏳' : '💾'}</span>
+                <span>{saving ? 'Guardando...' : 'Guardar Todos los Resultados'}</span>
+              </button>
+            </div>
+          </>
         )
       ) : (
         <div style={{ textAlign: 'center', padding: '48px 16px' }}>
