@@ -8,7 +8,6 @@ import AllPredictions from '../AllPredictions'
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('predictions')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { profile, isAdmin, signOut } = useAuth()
 
   const tabs = [
@@ -70,128 +69,160 @@ export default function Navigation() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              padding: '16px 0',
+              padding: '12px 0',
             }}
           >
-            <h1
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: 'var(--color-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span>⚽</span>
-              <span>Prode Chiqui Tapia</span>
-            </h1>
+            <div>
+              <h1
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: '700',
+                  color: 'var(--color-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '6px',
+                }}
+              >
+                <span>⚽</span>
+                <span className="desktop-title">Prode Chiqui Tapia</span>
+                <span className="mobile-title" style={{ display: 'none' }}>
+                  Prode Chiqui Tapia
+                </span>
+              </h1>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    borderRadius: '6px',
+                    padding: '3px 8px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span style={{ fontSize: '0.7rem' }}>Equipo: </span>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      color: 'var(--color-primary)',
+                    }}
+                  >
+                    {profile?.username}
+                  </span>
+                </div>
+                {isAdmin() && (
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      backgroundColor: 'var(--color-error)',
+                      color: 'white',
+                      padding: '3px 7px',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    Admin
+                  </span>
+                )}
+              </div>
+            </div>
 
             {/* Desktop User Info */}
-            <div style={{ display: 'none' }} className="desktop-flex">
+            <div className="desktop-flex">
               <div style={{ textAlign: 'right', marginRight: '16px' }}>
                 <p
                   style={{
                     fontWeight: '600',
-                    fontSize: '0.95rem',
+                    fontSize: '0.9rem',
                     color: 'var(--color-text-primary)',
+                    marginBottom: '2px',
                   }}
                 >
                   {profile?.full_name}
                 </p>
                 <p
                   style={{
-                    fontSize: '0.85rem',
+                    fontSize: '0.8rem',
                     color: 'var(--color-text-secondary)',
                   }}
                 >
                   @{profile?.username}
+                  {isAdmin() && (
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        backgroundColor: 'var(--color-error)',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        marginLeft: '6px',
+                      }}
+                    >
+                      Admin
+                    </span>
+                  )}
                 </p>
-                {isAdmin() && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      backgroundColor: 'var(--color-error)',
-                      color: 'white',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block',
-                      marginTop: '4px',
-                    }}
-                  >
-                    Admin
-                  </span>
-                )}
-              </div>
-              <button onClick={signOut} className="btn-error" style={{ padding: '8px 16px' }}>
-                Salir
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="mobile-menu-btn"
-              style={{
-                padding: '8px',
-                backgroundColor: 'transparent',
-                border: 'none',
-                fontSize: '1.5rem',
-              }}
-            >
-              {mobileMenuOpen ? '✕' : '☰'}
-            </button>
-          </div>
-
-          {/* Mobile Menu Dropdown */}
-          {mobileMenuOpen && (
-            <div
-              className="mobile-menu"
-              style={{ paddingBottom: '16px', borderTop: '1px solid #E0E0E0' }}
-            >
-              <div
-                style={{
-                  padding: '16px',
-                  backgroundColor: 'var(--color-surface-variant)',
-                  marginTop: '8px',
-                  borderRadius: '8px',
-                }}
-              >
-                <p style={{ fontWeight: '600', marginBottom: '4px' }}>{profile?.full_name}</p>
-                <p
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--color-text-secondary)',
-                    marginBottom: '8px',
-                  }}
-                >
-                  @{profile?.username}
-                </p>
-                {isAdmin() && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      backgroundColor: 'var(--color-error)',
-                      color: 'white',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      display: 'inline-block',
-                    }}
-                  >
-                    Admin
-                  </span>
-                )}
               </div>
               <button
                 onClick={signOut}
-                className="btn-error"
-                style={{ width: '100%', marginTop: '12px' }}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.85rem',
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-error)',
+                  border: '2px solid var(--color-error)',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--color-error)'
+                  e.currentTarget.style.color = 'white'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = 'var(--color-error)'
+                }}
               >
-                Cerrar Sesión
+                <span>Salir</span>
               </button>
             </div>
-          )}
 
+            {/* Mobile Logout Button */}
+            <button
+              onClick={signOut}
+              className="mobile-menu-btn"
+              style={{
+                padding: '8px 14px',
+                fontSize: '0.75rem',
+                backgroundColor: 'transparent',
+                color: 'var(--color-error)',
+                border: '2px solid var(--color-error)',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>Salir</span>
+            </button>
+          </div>
           {/* Tabs - Responsive */}
           <div
             className="tabs-container"
@@ -206,10 +237,7 @@ export default function Navigation() {
             {visibleTabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id)
-                  setMobileMenuOpen(false)
-                }}
+                onClick={() => setActiveTab(tab.id)}
                 className="tab-button"
                 style={{
                   flex: '1',
@@ -295,12 +323,14 @@ export default function Navigation() {
           .tab-button {
             min-width: 90px;
           }
+          .desktop-title { display: none !important; }
+          .mobile-title { display: inline !important; }
         }
 
         @media (min-width: 768px) {
           .mobile-hidden { display: inline !important; }
           .mobile-visible { display: none !important; }
-          .desktop-flex { display: flex !important; }
+          .desktop-flex { display: flex !important; align-items: center; }
           .mobile-menu-btn { display: none !important; }
           .mobile-menu { display: none !important; }
           .tab-label-desktop { display: inline; }
@@ -309,6 +339,8 @@ export default function Navigation() {
             flex-direction: row !important;
             gap: 8px !important;
           }
+          .desktop-title { display: inline !important; }
+          .mobile-title { display: none !important; }
         }
 
         .tab-button:hover {

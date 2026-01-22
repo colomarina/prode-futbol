@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import Toast from '../Toast'
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true)
@@ -9,6 +10,7 @@ export default function Login() {
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState(null)
 
   const { signIn, signUp } = useAuth()
 
@@ -27,7 +29,10 @@ export default function Login() {
         }
         const { error } = await signUp(email, password, username, fullName)
         if (error) throw error
-        alert('Usuario creado! Por favor verifica tu email.')
+        setToast({
+          message: 'Usuario creado! Por favor verifica tu email.',
+          type: 'success',
+        })
       }
     } catch (error) {
       setError(error.message)
@@ -82,47 +87,143 @@ export default function Login() {
         >
           {!isLogin && (
             <>
-              <div className="form-group">
-                <label className="form-label">Username</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
+                  Nombre del Equipo
+                </label>
                 <input
                   type="text"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    fontSize: '1rem',
+                    borderRadius: '10px',
+                    border: '2px solid #e2e8f0',
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = 'var(--color-primary)'
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                  }}
                   required
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">Nombre Completo</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
+                  Nombre Completo
+                </label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    fontSize: '1rem',
+                    borderRadius: '10px',
+                    border: '2px solid #e2e8f0',
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = 'var(--color-primary)'
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                  }}
                   required
                 />
               </div>
             </>
           )}
 
-          <div className="form-group">
-            <label className="form-label">Email</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label
+              style={{
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="form-input"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '1rem',
+                borderRadius: '10px',
+                border: '2px solid #e2e8f0',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-primary)',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={e => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)'
+              }}
+              onBlur={e => {
+                e.currentTarget.style.borderColor = '#e2e8f0'
+              }}
               required
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Contraseña</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label
+              style={{
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              Contraseña
+            </label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="form-input"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '1rem',
+                borderRadius: '10px',
+                border: '2px solid #e2e8f0',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-primary)',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={e => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)'
+              }}
+              onBlur={e => {
+                e.currentTarget.style.borderColor = '#e2e8f0'
+              }}
               required
               minLength={6}
             />
@@ -148,6 +249,9 @@ export default function Login() {
           </button>
         </div>
       </div>
+
+      {/* Toast notifications */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

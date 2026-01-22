@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import MatchResult from './MatchResult'
+import Toast from '../Toast'
 
 export default function MatchManager() {
   const { rounds } = useRounds()
@@ -9,6 +10,7 @@ export default function MatchManager() {
   const { matches, loading: matchesLoading, updateMatch } = useMatches(selectedRound)
   const [resultValues, setResultValues] = useState({})
   const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState(null)
 
   // Filtrar solo fechas cerradas
   const closedRounds = rounds.filter(r => r.status === 'locked')
@@ -37,7 +39,10 @@ export default function MatchManager() {
     })
 
     if (validMatches.length === 0) {
-      alert('⚠️ No hay resultados para guardar')
+      setToast({
+        message: 'No hay resultados para guardar',
+        type: 'warning',
+      })
       setSaving(false)
       return
     }
@@ -62,14 +67,21 @@ export default function MatchManager() {
     setSaving(false)
 
     if (successCount > 0 && errorCount === 0) {
-      alert(`✅ ${successCount} resultado(s) guardado(s) correctamente`)
+      setToast({
+        message: `${successCount} resultado${successCount > 1 ? 's' : ''} guardado${successCount > 1 ? 's' : ''} correctamente`,
+        type: 'success',
+      })
       setResultValues({}) // Limpiar valores después de guardar
     } else if (successCount > 0 && errorCount > 0) {
-      alert(
-        `⚠️ ${successCount} resultado(s) guardado(s), ${errorCount} fallaron. Revisá los errores.`
-      )
+      setToast({
+        message: `${successCount} guardado${successCount > 1 ? 's' : ''}, ${errorCount} fallaron`,
+        type: 'warning',
+      })
     } else if (errorCount > 0) {
-      alert(`❌ Error al guardar resultados. Intentá de nuevo.`)
+      setToast({
+        message: 'Error al guardar resultados. Intentá de nuevo.',
+        type: 'error',
+      })
     }
   }
 
@@ -196,6 +208,15 @@ export default function MatchManager() {
             Elegí una fecha cerrada para cargar los resultados
           </p>
         </div>
+      )}
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
 import MatchPrediction from './MatchPrediction'
+import Toast from '../Toast'
 
 export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
@@ -12,6 +13,7 @@ export default function PredictionForm() {
 
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState(null)
 
   // Auto-seleccionar la fecha activa al cargar
   useEffect(() => {
@@ -150,13 +152,20 @@ export default function PredictionForm() {
     setSaving(false)
 
     if (successCount > 0 && errorCount === 0) {
-      alert(`✅ ${successCount} pronóstico(s) guardado(s) correctamente`)
+      setToast({
+        message: `${successCount} pronóstico${successCount > 1 ? 's' : ''} guardado${successCount > 1 ? 's' : ''} correctamente`,
+        type: 'success',
+      })
     } else if (successCount > 0 && errorCount > 0) {
-      alert(
-        `⚠️ ${successCount} pronóstico(s) guardado(s), ${errorCount} fallaron. Revisá los errores.`
-      )
+      setToast({
+        message: `${successCount} guardado${successCount > 1 ? 's' : ''}, ${errorCount} fallaron`,
+        type: 'warning',
+      })
     } else if (errorCount > 0) {
-      alert(`❌ Error al guardar pronósticos. Intentá de nuevo.`)
+      setToast({
+        message: 'Error al guardar pronósticos. Intentá de nuevo.',
+        type: 'error',
+      })
     }
   }
 
@@ -374,6 +383,9 @@ export default function PredictionForm() {
           </p>
         </div>
       )}
+
+      {/* Toast notifications */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

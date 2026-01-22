@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { supabase } from '../../lib/supabase'
+import Toast from '../Toast'
 
 export default function RoundManager() {
   const { rounds, activeRound, updateRoundStatus, lockRound, finishRound, loading } = useRounds()
   const [matchesByRound, setMatchesByRound] = useState({})
+  const [roundNumber, setRoundNumber] = useState(1)
+  const [adminLoading, setAdminLoading] = useState(false)
+  const [toast, setToast] = useState(null)
 
   // Cargar información de partidos para cada fecha
   useEffect(() => {
@@ -43,29 +47,62 @@ export default function RoundManager() {
     fetchMatchesInfo()
   }, [rounds])
 
-  // const handleOpenNextRound = async () => {
-  //   if (confirm('¿Abrir la siguiente fecha pendiente?')) {
-  //     // Si hay una fecha activa, bloquearla primero
-  //     if (activeRound) {
-  //       const { error: lockError } = await updateRoundStatus(activeRound.round_number, 'locked')
-  //       if (lockError) {
-  //         alert(`Error al bloquear fecha activa: ${lockError.message}`)
-  //         return
-  //       }
-  //     }
-  //
-  //     const { error } = await openNextRound()
-  //     if (error) {
-  //       alert(`Error: ${error.message}`)
-  //     } else {
-  //       alert('✅ Fecha abierta correctamente!')
-  //     }
-  //   }
-  // }
+  // Funciones administrativas
+  const callRpcFunction = async (functionName, params) => {
+    setAdminLoading(true)
+
+    try {
+      const { data, error } = await supabase.rpc(functionName, params)
+
+      if (error) throw error
+
+      setToast({
+        message: data.message || 'Operación completada',
+        type: 'success',
+      })
+    } catch (error) {
+      console.error('Error:', error)
+      setToast({
+        message: `Error: ${error.message}`,
+        type: 'error',
+      })
+    } finally {
+      setAdminLoading(false)
+    }
+  }
+
+  const handleRecalculate = () => {
+    if (confirm(`¿Recalcular puntos de la Fecha ${roundNumber}?`)) {
+      callRpcFunction('recalculate_round', { round_num: roundNumber })
+    }
+  }
+
+  const handleReset = () => {
+    if (
+      confirm(
+        `⚠️ ¿RESETEAR COMPLETAMENTE la Fecha ${roundNumber}?\n\nEsto eliminará:\n• Puntos de round_scores\n• Reseteará predicciones\n• Limpiará resultados de partidos`
+      )
+    ) {
+      callRpcFunction('reset_round', { round_num: roundNumber })
+    }
+  }
+
+  const handleForceFinish = () => {
+    if (
+      confirm(
+        `¿Forzar finalización de Fecha ${roundNumber}?\n\nLos partidos sin resultado pasarán a 0-0`
+      )
+    ) {
+      callRpcFunction('force_finish_round', { round_num: roundNumber })
+    }
+  }
 
   const handleLockRound = async () => {
     if (!activeRound) {
-      alert('No hay fecha activa para bloquear')
+      setToast({
+        message: 'No hay fecha activa para bloquear',
+        type: 'warning',
+      })
       return
     }
     if (
@@ -75,9 +112,15 @@ export default function RoundManager() {
     ) {
       const { error } = await lockRound(activeRound.round_number)
       if (error) {
-        alert(`Error: ${error.message}`)
+        setToast({
+          message: `Error: ${error.message}`,
+          type: 'error',
+        })
       } else {
-        alert('✅ Fecha bloqueada correctamente!')
+        setToast({
+          message: 'Fecha bloqueada correctamente',
+          type: 'success',
+        })
       }
     }
   }
@@ -87,23 +130,33 @@ export default function RoundManager() {
     const matchInfo = matchesByRound[roundNumber]
 
     if (!matchInfo || matchInfo.total === 0) {
-      alert('⚠️ Esta fecha no tiene partidos cargados.')
+      setToast({
+        message: 'Esta fecha no tiene partidos cargados',
+        type: 'warning',
+      })
       return
     }
 
     if (matchInfo.finished < matchInfo.total) {
-      alert(
-        `⚠️ No se puede finalizar la fecha.\n\nPartidos finalizados: ${matchInfo.finished}/${matchInfo.total}\n\nDebés cargar todos los resultados antes de finalizar.`
-      )
+      setToast({
+        message: `No se puede finalizar. Partidos finalizados: ${matchInfo.finished}/${matchInfo.total}`,
+        type: 'warning',
+      })
       return
     }
 
     if (confirm(`¿Finalizar la Fecha ${roundNumber}? Se calcularán los puntajes.`)) {
       const { error } = await finishRound(roundNumber)
       if (error) {
-        alert(`Error: ${error.message}`)
+        setToast({
+          message: `Error: ${error.message}`,
+          type: 'error',
+        })
       } else {
-        alert('✅ Fecha finalizada correctamente!')
+        setToast({
+          message: 'Fecha finalizada correctamente',
+          type: 'success',
+        })
       }
     }
   }
@@ -111,7 +164,10 @@ export default function RoundManager() {
   const handleChangeStatus = async (roundNumber, newStatus, currentStatus, roundId) => {
     // Prevenir modificación de fechas finalizadas
     if (currentStatus === 'finished') {
-      alert('❌ No se puede modificar una fecha finalizada')
+      setToast({
+        message: 'No se puede modificar una fecha finalizada',
+        type: 'error',
+      })
       return
     }
 
@@ -119,9 +175,10 @@ export default function RoundManager() {
     if (newStatus === 'open') {
       const openRound = rounds.find(r => r.status === 'open' && r.id !== roundId)
       if (openRound) {
-        alert(
-          `❌ Ya hay una fecha abierta (Fecha ${openRound.round_number}). Bloqueala o finalizala antes de abrir otra.`
-        )
+        setToast({
+          message: `Ya hay una fecha abierta (Fecha ${openRound.round_number}). Bloqueala o finalizala antes.`,
+          type: 'error',
+        })
         return
       }
     }
@@ -136,9 +193,15 @@ export default function RoundManager() {
     if (confirm(`¿Cambiar estado de Fecha ${roundNumber} a "${statusNames[newStatus]}"?`)) {
       const { error } = await updateRoundStatus(roundNumber, newStatus)
       if (error) {
-        alert(`Error: ${error.message}`)
+        setToast({
+          message: `Error: ${error.message}`,
+          type: 'error',
+        })
       } else {
-        alert('✅ Estado actualizado!')
+        setToast({
+          message: 'Estado actualizado',
+          type: 'success',
+        })
       }
     }
   }
@@ -361,43 +424,187 @@ export default function RoundManager() {
         </div>
       )}
 
-      {/* Botón para abrir siguiente fecha */}
-      {/* <div className="card" style={{ marginBottom: '24px', padding: '24px', textAlign: 'center' }}>
+      {/* Panel de Administración */}
+      <div
+        className="card"
+        style={{
+          marginBottom: '24px',
+          padding: '24px',
+          backgroundColor: 'rgba(239, 68, 68, 0.05)',
+          border: '2px solid #ef4444',
+        }}
+      >
         <h3
-          style={{ marginBottom: '16px', color: 'var(--color-text-primary)', fontSize: '1.1rem' }}
-        >
-          ⚡ Acciones Rápidas
-        </h3>
-        <button
-          onClick={handleOpenNextRound}
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: 'white',
-            padding: '16px 32px',
-            borderRadius: '14px',
-            border: 'none',
+            marginBottom: '16px',
+            color: '#b91c1c',
+            fontSize: '1.1rem',
             fontWeight: '700',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 6px 16px rgba(16, 185, 129, 0.35)',
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
-            e.currentTarget.style.boxShadow = '0 10px 24px rgba(16, 185, 129, 0.45)'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.35)'
+            gap: '10px',
           }}
         >
-          <span>Abrir Siguiente Fecha</span>
-          <span style={{ fontSize: '1.4rem', marginLeft: '4px' }}>→</span>
-        </button>
-      </div> */}
+          <span style={{ fontSize: '1.4rem' }}>🔧</span>
+          <span>Panel de Administración</span>
+        </h3>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label
+            style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: '600',
+              color: 'var(--color-text-primary)',
+              fontSize: '0.9rem',
+            }}
+          >
+            Número de Fecha:
+          </label>
+          <input
+            type="number"
+            value={roundNumber}
+            onChange={e => setRoundNumber(parseInt(e.target.value) || 1)}
+            min="1"
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '1rem',
+              borderRadius: '8px',
+              border: '2px solid #E0E0E0',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text-primary)',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={e => {
+              e.currentTarget.style.borderColor = 'var(--color-primary)'
+            }}
+            onBlur={e => {
+              e.currentTarget.style.borderColor = '#E0E0E0'
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <button
+            onClick={handleRecalculate}
+            disabled={adminLoading}
+            style={{
+              flex: '1 1 auto',
+              minWidth: '150px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              color: 'white',
+              padding: '14px 20px',
+              borderRadius: '10px',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.95rem',
+              cursor: adminLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: adminLoading ? 0.6 : 1,
+            }}
+            onMouseEnter={e => {
+              if (!adminLoading) {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.45)'
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.35)'
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>🔄</span>
+            <span>{adminLoading ? 'Procesando...' : 'Recalcular Puntos'}</span>
+          </button>
+
+          <button
+            onClick={handleReset}
+            disabled={adminLoading}
+            style={{
+              flex: '1 1 auto',
+              minWidth: '150px',
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white',
+              padding: '14px 20px',
+              borderRadius: '10px',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.95rem',
+              cursor: adminLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: adminLoading ? 0.6 : 1,
+            }}
+            onMouseEnter={e => {
+              if (!adminLoading) {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.45)'
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.35)'
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>🗑️</span>
+            <span>{adminLoading ? 'Procesando...' : 'Resetear Fecha'}</span>
+          </button>
+
+          <button
+            onClick={handleForceFinish}
+            disabled={adminLoading}
+            style={{
+              flex: '1 1 auto',
+              minWidth: '150px',
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: 'white',
+              padding: '14px 20px',
+              borderRadius: '10px',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.95rem',
+              cursor: adminLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: adminLoading ? 0.6 : 1,
+            }}
+            onMouseEnter={e => {
+              if (!adminLoading) {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.45)'
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.35)'
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>🏁</span>
+            <span>{adminLoading ? 'Procesando...' : 'Forzar Finalización'}</span>
+          </button>
+        </div>
+      </div>
 
       {/* Rounds List */}
       <div className="card" style={{ padding: '0' }}>
@@ -630,6 +837,9 @@ export default function RoundManager() {
           </div>
         </div>
       </div>
+
+      {/* Toast notifications */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

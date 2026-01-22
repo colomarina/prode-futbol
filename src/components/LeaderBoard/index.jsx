@@ -506,17 +506,19 @@ export default function Leaderboard() {
                               fontWeight: '600',
                               color: 'var(--color-text-primary)',
                               marginBottom: '2px',
+                              textTransform: 'capitalize',
                             }}
                           >
-                            {player.full_name}
+                            {player.username}
                           </div>
                           <div
                             style={{
                               fontSize: '0.85rem',
                               color: 'var(--color-text-secondary)',
+                              textTransform: 'capitalize',
                             }}
                           >
-                            @{player.username}
+                            {player.full_name}
                           </div>
                         </div>
                       </td>
