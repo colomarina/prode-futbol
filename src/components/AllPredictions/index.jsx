@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { supabase } from '../../lib/supabase'
@@ -33,20 +33,26 @@ export default function AllPredictions() {
   }, [])
 
   // Obtener el round actual seleccionado
-  const currentRound = rounds.find(r => r.round_number === selectedRound)
+  const currentRound = useMemo(
+    () => rounds.find(r => r.round_number === selectedRound),
+    [rounds, selectedRound]
+  )
+
   const isRoundOpen = currentRound?.status === 'open'
 
-  // Cargar predicciones cuando se seleccionan fecha Y usuario (y la fecha NO está abierta)
-  useEffect(() => {
-    if (selectedRound && selectedUser && !isRoundOpen) {
-      fetchPredictionsForRound()
-    } else {
-      setRoundPredictions({})
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRound, selectedUser, isRoundOpen])
+  // Filtrar fechas disponibles para ver
+  const availableRounds = useMemo(
+    () => rounds.filter(r => ['locked', 'finished'].includes(r.status)),
+    [rounds]
+  )
 
-  const fetchPredictionsForRound = async () => {
+  // Usuario seleccionado memoizado
+  const selectedUserData = useMemo(
+    () => users.find(u => u.id === selectedUser),
+    [users, selectedUser]
+  )
+
+  const fetchPredictionsForRound = useCallback(async () => {
     if (!selectedRound || !selectedUser || !matches.length) return
 
     setLoading(true)
@@ -74,15 +80,21 @@ export default function AllPredictions() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedRound, selectedUser, matches])
+
+  // Cargar predicciones cuando se seleccionan fecha Y usuario (y la fecha NO está abierta)
+  useEffect(() => {
+    if (selectedRound && selectedUser && !isRoundOpen) {
+      fetchPredictionsForRound()
+    } else {
+      setRoundPredictions({})
+    }
+  }, [selectedRound, selectedUser, isRoundOpen, fetchPredictionsForRound])
 
   // Verificar si el partido ya empezó
-  const hasMatchStarted = match => {
+  const hasMatchStarted = useCallback(match => {
     return new Date() >= new Date(match.match_date)
-  }
-
-  // Filtrar fechas disponibles para ver
-  const availableRounds = rounds.filter(r => ['locked', 'finished'].includes(r.status))
+  }, [])
 
   if (roundsLoading) {
     return (
@@ -226,8 +238,7 @@ export default function AllPredictions() {
                 textAlign: 'center',
               }}
             >
-              Pronósticos de {users.find(u => u.id === selectedUser)?.full_name || 'Usuario'} -
-              Fecha {selectedRound}
+              Pronósticos de {selectedUserData?.full_name || 'Usuario'} - Fecha {selectedRound}
             </h3>
 
             {loading ? (

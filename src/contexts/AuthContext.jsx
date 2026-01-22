@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
@@ -7,6 +7,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  const loadProfile = useCallback(async userId => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
+
+      if (error) throw error
+      setProfile(data)
+    } catch (error) {
+      console.error('Error cargando perfil:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     // Verificar sesión actual
@@ -33,22 +46,9 @@ export function AuthProvider({ children }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [loadProfile])
 
-  const loadProfile = async userId => {
-    try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
-
-      if (error) throw error
-      setProfile(data)
-    } catch (error) {
-      console.error('Error cargando perfil:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const signUp = async (email, password, username, fullName) => {
+  const signUp = useCallback(async (email, password, username, fullName) => {
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -66,9 +66,9 @@ export function AuthProvider({ children }) {
     } catch (error) {
       return { data: null, error }
     }
-  }
+  }, [])
 
-  const signIn = async (email, password) => {
+  const signIn = useCallback(async (email, password) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -80,24 +80,27 @@ export function AuthProvider({ children }) {
     } catch (error) {
       return { data: null, error }
     }
-  }
+  }, [])
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut()
     return { error }
-  }
+  }, [])
 
-  const isAdmin = () => profile?.role === 'admin'
+  const isAdmin = useCallback(() => profile?.role === 'admin', [profile])
 
-  const value = {
-    user,
-    profile,
-    loading,
-    signUp,
-    signIn,
-    signOut,
-    isAdmin,
-  }
+  const value = useMemo(
+    () => ({
+      user,
+      profile,
+      loading,
+      signUp,
+      signIn,
+      signOut,
+      isAdmin,
+    }),
+    [user, profile, loading, signUp, signIn, signOut, isAdmin]
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

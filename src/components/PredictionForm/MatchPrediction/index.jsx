@@ -1,16 +1,21 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useCallback, memo } from 'react'
 import TeamDisplay from '../../TeamDisplay'
 
-export default function MatchPrediction({
-  match,
-  predictions,
-  isRoundOpen,
-  predictionValues,
-  onValueChange,
-}) {
+const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, onValueChange }) => {
   const existingPrediction = useMemo(
     () => predictions?.find(p => p.match_id === match.id),
     [predictions, match.id]
+  )
+
+  const canPredict = useCallback(matchDate => {
+    const cutoffTime = new Date(new Date(matchDate).getTime() - 60 * 60 * 1000)
+    return new Date() < cutoffTime
+  }, [])
+
+  // Solo se puede predecir si la fecha está abierta Y falta más de 1 hora para el partido
+  const canPredictMatch = useMemo(
+    () => isRoundOpen && canPredict(match.match_date),
+    [isRoundOpen, canPredict, match.match_date]
   )
 
   // Inicializar valores desde predicción existente
@@ -19,25 +24,21 @@ export default function MatchPrediction({
       onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
       onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
     }
-  }, [existingPrediction, match.id, predictionValues, onValueChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingPrediction, match.id, predictionValues])
 
-  const canPredict = matchDate => {
-    const cutoffTime = new Date(new Date(matchDate).getTime() - 60 * 60 * 1000)
-    return new Date() < cutoffTime
-  }
+  const handleInputChange = useCallback(
+    (field, value) => {
+      // Solo permitir cambios si se puede predecir
+      if (!canPredictMatch) return
 
-  // Solo se puede predecir si la fecha está abierta Y falta más de 1 hora para el partido
-  const canPredictMatch = isRoundOpen && canPredict(match.match_date)
-
-  const handleInputChange = (field, value) => {
-    // Solo permitir cambios si se puede predecir
-    if (!canPredictMatch) return
-
-    // Permitir vacío o solo números
-    if (value === '' || /^\d+$/.test(value)) {
-      onValueChange(match.id, field, value)
-    }
-  }
+      // Permitir vacío o solo números
+      if (value === '' || /^\d+$/.test(value)) {
+        onValueChange(match.id, field, value)
+      }
+    },
+    [canPredictMatch, onValueChange, match.id]
+  )
 
   const homeScore = predictionValues[match.id]?.home || ''
   const awayScore = predictionValues[match.id]?.away || ''
@@ -386,3 +387,5 @@ export default function MatchPrediction({
     </div>
   )
 }
+
+export default memo(MatchPrediction)

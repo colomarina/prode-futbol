@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import MatchResult from './MatchResult'
@@ -13,9 +13,9 @@ export default function MatchManager() {
   const [toast, setToast] = useState(null)
 
   // Filtrar solo fechas cerradas
-  const closedRounds = rounds.filter(r => r.status === 'locked')
+  const closedRounds = useMemo(() => rounds.filter(r => r.status === 'locked'), [rounds])
 
-  const handleValueChange = (matchId, field, value) => {
+  const handleValueChange = useCallback((matchId, field, value) => {
     setResultValues(prev => ({
       ...prev,
       [matchId]: {
@@ -23,9 +23,9 @@ export default function MatchManager() {
         [field]: value,
       },
     }))
-  }
+  }, [])
 
-  const handleSaveAll = async () => {
+  const handleSaveAll = useCallback(async () => {
     setSaving(true)
 
     const validMatches = matches.filter(match => {
@@ -83,11 +83,15 @@ export default function MatchManager() {
         type: 'error',
       })
     }
-  }
+  }, [matches, resultValues, updateMatch])
 
   // Verificar si hay al menos un resultado para guardar
-  const hasValidResults = Object.values(resultValues).some(
-    v => v?.home !== undefined && v?.home !== '' && v?.away !== undefined && v?.away !== ''
+  const hasValidResults = useMemo(
+    () =>
+      Object.values(resultValues).some(
+        v => v?.home !== undefined && v?.home !== '' && v?.away !== undefined && v?.away !== ''
+      ),
+    [resultValues]
   )
 
   return (
@@ -211,13 +215,7 @@ export default function MatchManager() {
       )}
 
       {/* Toast notifications */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

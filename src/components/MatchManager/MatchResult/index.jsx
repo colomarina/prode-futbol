@@ -1,12 +1,16 @@
+import { useCallback, memo } from 'react'
 import TeamDisplay from '../../TeamDisplay'
 
-export default function MatchResult({ match, resultValues, onValueChange }) {
-  const handleInputChange = (field, value) => {
-    // Permitir vacío o solo números
-    if (value === '' || /^\d+$/.test(value)) {
-      onValueChange(match.id, field, value)
-    }
-  }
+const MatchResult = ({ match, resultValues, onValueChange }) => {
+  const handleInputChange = useCallback(
+    (field, value) => {
+      // Permitir vacío o solo números
+      if (value === '' || /^\d+$/.test(value)) {
+        onValueChange(match.id, field, value)
+      }
+    },
+    [onValueChange, match.id]
+  )
 
   const homeScore = resultValues[match.id]?.home || ''
   const awayScore = resultValues[match.id]?.away || ''
@@ -214,3 +218,5 @@ export default function MatchResult({ match, resultValues, onValueChange }) {
     </div>
   )
 }
+
+export default memo(MatchResult)

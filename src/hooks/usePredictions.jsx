@@ -89,7 +89,12 @@ export const usePredictions = (roundNumber = null) => {
         .select()
 
       if (error) throw error
-      await fetchPredictions()
+
+      // Actualizar estado local en lugar de refetch completo
+      if (data && data[0]) {
+        setPredictions(prev => [...prev, data[0]])
+      }
+
       return { data, error: null }
     } catch (error) {
       return { data: null, error }
@@ -112,7 +117,59 @@ export const usePredictions = (roundNumber = null) => {
         .select()
 
       if (error) throw error
-      await fetchPredictions()
+
+      // Actualizar estado local en lugar de refetch completo
+      if (data && data[0]) {
+        setPredictions(prev => prev.map(p => (p.id === predictionId ? data[0] : p)))
+      }
+
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  // Nueva función para operaciones batch (mucho más eficiente)
+  const batchUpsertPredictions = async predictionsData => {
+    if (!user) return { data: null, error: 'No autenticado' }
+
+    try {
+      const now = new Date().toISOString()
+      const predictions = predictionsData.map(({ matchId, homePrediction, awayPrediction }) => ({
+        user_id: user.id,
+        match_id: matchId,
+        home_prediction: homePrediction,
+        away_prediction: awayPrediction,
+        updated_at: now,
+      }))
+
+      // Upsert: inserta si no existe, actualiza si existe
+      const { data, error } = await supabase
+        .from('predictions')
+        .upsert(predictions, {
+          onConflict: 'user_id,match_id',
+          ignoreDuplicates: false,
+        })
+        .select()
+
+      if (error) throw error
+
+      // Actualizar estado local eficientemente
+      if (data) {
+        setPredictions(prev => {
+          const updated = [...prev]
+          data.forEach(newPred => {
+            const index = updated.findIndex(p => p.match_id === newPred.match_id)
+            if (index >= 0) {
+              updated[index] = newPred
+            } else {
+              updated.push(newPred)
+            }
+          })
+          return updated
+        })
+      }
+
       return { data, error: null }
     } catch (error) {
       return { data: null, error }
@@ -128,6 +185,7 @@ export const usePredictions = (roundNumber = null) => {
     fetchPredictions,
     createPrediction,
     updatePrediction,
+    batchUpsertPredictions,
     getUserPredictionForMatch,
   }
 }

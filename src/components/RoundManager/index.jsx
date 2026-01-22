@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { supabase } from '../../lib/supabase'
 import Toast from '../Toast'
@@ -47,166 +47,7 @@ export default function RoundManager() {
     fetchMatchesInfo()
   }, [rounds])
 
-  // Funciones administrativas
-  const callRpcFunction = async (functionName, params) => {
-    setAdminLoading(true)
-
-    try {
-      const { data, error } = await supabase.rpc(functionName, params)
-
-      if (error) throw error
-
-      setToast({
-        message: data.message || 'Operación completada',
-        type: 'success',
-      })
-    } catch (error) {
-      console.error('Error:', error)
-      setToast({
-        message: `Error: ${error.message}`,
-        type: 'error',
-      })
-    } finally {
-      setAdminLoading(false)
-    }
-  }
-
-  const handleRecalculate = () => {
-    if (confirm(`¿Recalcular puntos de la Fecha ${roundNumber}?`)) {
-      callRpcFunction('recalculate_round', { round_num: roundNumber })
-    }
-  }
-
-  const handleReset = () => {
-    if (
-      confirm(
-        `⚠️ ¿RESETEAR COMPLETAMENTE la Fecha ${roundNumber}?\n\nEsto eliminará:\n• Puntos de round_scores\n• Reseteará predicciones\n• Limpiará resultados de partidos`
-      )
-    ) {
-      callRpcFunction('reset_round', { round_num: roundNumber })
-    }
-  }
-
-  const handleForceFinish = () => {
-    if (
-      confirm(
-        `¿Forzar finalización de Fecha ${roundNumber}?\n\nLos partidos sin resultado pasarán a 0-0`
-      )
-    ) {
-      callRpcFunction('force_finish_round', { round_num: roundNumber })
-    }
-  }
-
-  const handleLockRound = async () => {
-    if (!activeRound) {
-      setToast({
-        message: 'No hay fecha activa para bloquear',
-        type: 'warning',
-      })
-      return
-    }
-    if (
-      confirm(
-        `¿Bloquear la Fecha ${activeRound.round_number}? Los usuarios no podrán editar sus pronósticos.`
-      )
-    ) {
-      const { error } = await lockRound(activeRound.round_number)
-      if (error) {
-        setToast({
-          message: `Error: ${error.message}`,
-          type: 'error',
-        })
-      } else {
-        setToast({
-          message: 'Fecha bloqueada correctamente',
-          type: 'success',
-        })
-      }
-    }
-  }
-
-  const handleFinishRound = async roundNumber => {
-    // Validar que todos los partidos estén finalizados
-    const matchInfo = matchesByRound[roundNumber]
-
-    if (!matchInfo || matchInfo.total === 0) {
-      setToast({
-        message: 'Esta fecha no tiene partidos cargados',
-        type: 'warning',
-      })
-      return
-    }
-
-    if (matchInfo.finished < matchInfo.total) {
-      setToast({
-        message: `No se puede finalizar. Partidos finalizados: ${matchInfo.finished}/${matchInfo.total}`,
-        type: 'warning',
-      })
-      return
-    }
-
-    if (confirm(`¿Finalizar la Fecha ${roundNumber}? Se calcularán los puntajes.`)) {
-      const { error } = await finishRound(roundNumber)
-      if (error) {
-        setToast({
-          message: `Error: ${error.message}`,
-          type: 'error',
-        })
-      } else {
-        setToast({
-          message: 'Fecha finalizada correctamente',
-          type: 'success',
-        })
-      }
-    }
-  }
-
-  const handleChangeStatus = async (roundNumber, newStatus, currentStatus, roundId) => {
-    // Prevenir modificación de fechas finalizadas
-    if (currentStatus === 'finished') {
-      setToast({
-        message: 'No se puede modificar una fecha finalizada',
-        type: 'error',
-      })
-      return
-    }
-
-    // Prevenir abrir una fecha si ya hay otra abierta
-    if (newStatus === 'open') {
-      const openRound = rounds.find(r => r.status === 'open' && r.id !== roundId)
-      if (openRound) {
-        setToast({
-          message: `Ya hay una fecha abierta (Fecha ${openRound.round_number}). Bloqueala o finalizala antes.`,
-          type: 'error',
-        })
-        return
-      }
-    }
-
-    const statusNames = {
-      pending: 'Pendiente',
-      open: 'Abierta',
-      locked: 'Bloqueada',
-      finished: 'Finalizada',
-    }
-
-    if (confirm(`¿Cambiar estado de Fecha ${roundNumber} a "${statusNames[newStatus]}"?`)) {
-      const { error } = await updateRoundStatus(roundNumber, newStatus)
-      if (error) {
-        setToast({
-          message: `Error: ${error.message}`,
-          type: 'error',
-        })
-      } else {
-        setToast({
-          message: 'Estado actualizado',
-          type: 'success',
-        })
-      }
-    }
-  }
-
-  const getStatusConfig = status => {
+  const getStatusConfig = useCallback(status => {
     const configs = {
       pending: {
         bg: 'rgba(156, 163, 175, 0.1)',
@@ -238,7 +79,172 @@ export default function RoundManager() {
       },
     }
     return configs[status] || configs.pending
-  }
+  }, [])
+
+  // Funciones administrativas
+  const callRpcFunction = useCallback(async (functionName, params) => {
+    setAdminLoading(true)
+
+    try {
+      const { data, error } = await supabase.rpc(functionName, params)
+
+      if (error) throw error
+
+      setToast({
+        message: data.message || 'Operación completada',
+        type: 'success',
+      })
+    } catch (error) {
+      console.error('Error:', error)
+      setToast({
+        message: `Error: ${error.message}`,
+        type: 'error',
+      })
+    } finally {
+      setAdminLoading(false)
+    }
+  }, [])
+
+  const handleRecalculate = useCallback(() => {
+    if (confirm(`¿Recalcular puntos de la Fecha ${roundNumber}?`)) {
+      callRpcFunction('recalculate_round', { round_num: roundNumber })
+    }
+  }, [roundNumber, callRpcFunction])
+
+  const handleReset = useCallback(() => {
+    if (
+      confirm(
+        `⚠️ ¿RESETEAR COMPLETAMENTE la Fecha ${roundNumber}?\n\nEsto eliminará:\n• Puntos de round_scores\n• Reseteará predicciones\n• Limpiará resultados de partidos`
+      )
+    ) {
+      callRpcFunction('reset_round', { round_num: roundNumber })
+    }
+  }, [roundNumber, callRpcFunction])
+
+  const handleForceFinish = useCallback(() => {
+    if (
+      confirm(
+        `¿Forzar finalización de Fecha ${roundNumber}?\n\nLos partidos sin resultado pasarán a 0-0`
+      )
+    ) {
+      callRpcFunction('force_finish_round', { round_num: roundNumber })
+    }
+  }, [roundNumber, callRpcFunction])
+
+  const handleLockRound = useCallback(async () => {
+    if (!activeRound) {
+      setToast({
+        message: 'No hay fecha activa para bloquear',
+        type: 'warning',
+      })
+      return
+    }
+    if (
+      confirm(
+        `¿Bloquear la Fecha ${activeRound.round_number}? Los usuarios no podrán editar sus pronósticos.`
+      )
+    ) {
+      const { error } = await lockRound(activeRound.round_number)
+      if (error) {
+        setToast({
+          message: `Error: ${error.message}`,
+          type: 'error',
+        })
+      } else {
+        setToast({
+          message: 'Fecha bloqueada correctamente',
+          type: 'success',
+        })
+      }
+    }
+  }, [activeRound, lockRound])
+
+  const handleFinishRound = useCallback(
+    async roundNumber => {
+      // Validar que todos los partidos estén finalizados
+      const matchInfo = matchesByRound[roundNumber]
+
+      if (!matchInfo || matchInfo.total === 0) {
+        setToast({
+          message: 'Esta fecha no tiene partidos cargados',
+          type: 'warning',
+        })
+        return
+      }
+
+      if (matchInfo.finished < matchInfo.total) {
+        setToast({
+          message: `No se puede finalizar. Partidos finalizados: ${matchInfo.finished}/${matchInfo.total}`,
+          type: 'warning',
+        })
+        return
+      }
+
+      if (confirm(`¿Finalizar la Fecha ${roundNumber}? Se calcularán los puntajes.`)) {
+        const { error } = await finishRound(roundNumber)
+        if (error) {
+          setToast({
+            message: `Error: ${error.message}`,
+            type: 'error',
+          })
+        } else {
+          setToast({
+            message: 'Fecha finalizada correctamente',
+            type: 'success',
+          })
+        }
+      }
+    },
+    [matchesByRound, finishRound]
+  )
+
+  const handleChangeStatus = useCallback(
+    async (roundNumber, newStatus, currentStatus, roundId) => {
+      // Prevenir modificación de fechas finalizadas
+      if (currentStatus === 'finished') {
+        setToast({
+          message: 'No se puede modificar una fecha finalizada',
+          type: 'error',
+        })
+        return
+      }
+
+      // Prevenir abrir una fecha si ya hay otra abierta
+      if (newStatus === 'open') {
+        const openRound = rounds.find(r => r.status === 'open' && r.id !== roundId)
+        if (openRound) {
+          setToast({
+            message: `Ya hay una fecha abierta (Fecha ${openRound.round_number}). Bloqueala o finalizala antes.`,
+            type: 'error',
+          })
+          return
+        }
+      }
+
+      const statusNames = {
+        pending: 'Pendiente',
+        open: 'Abierta',
+        locked: 'Bloqueada',
+        finished: 'Finalizada',
+      }
+
+      if (confirm(`¿Cambiar estado de Fecha ${roundNumber} a "${statusNames[newStatus]}"?`)) {
+        const { error } = await updateRoundStatus(roundNumber, newStatus)
+        if (error) {
+          setToast({
+            message: `Error: ${error.message}`,
+            type: 'error',
+          })
+        } else {
+          setToast({
+            message: 'Estado actualizado',
+            type: 'success',
+          })
+        }
+      }
+    },
+    [rounds, updateRoundStatus]
+  )
 
   if (loading) {
     return (

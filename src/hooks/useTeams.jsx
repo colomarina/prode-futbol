@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export const useTeams = () => {
@@ -6,11 +6,7 @@ export const useTeams = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchTeams()
-  }, [])
-
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -25,11 +21,15 @@ export const useTeams = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const getTeamByName = name => teams.find(t => t.name === name)
+  useEffect(() => {
+    fetchTeams()
+  }, [fetchTeams])
 
-  const getTeamById = id => teams.find(t => t.id === id)
+  const getTeamByName = useCallback(name => teams.find(t => t.name === name), [teams])
+
+  const getTeamById = useCallback(id => teams.find(t => t.id === id), [teams])
 
   return {
     teams,

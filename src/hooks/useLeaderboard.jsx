@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export const useLeaderboard = (roundNumber = null) => {
@@ -6,12 +6,7 @@ export const useLeaderboard = (roundNumber = null) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchLeaderboard()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundNumber])
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -48,52 +43,12 @@ export const useLeaderboard = (roundNumber = null) => {
 
         setLeaderboard(formattedData)
       } else {
-        // Tabla de posiciones general
-        // Primero obtenemos todos los round_scores
-        const { data: allScores, error: scoresError } = await supabase.from('round_scores').select(`
-            user_id,
-            total_points,
-            round_number
-          `)
+        // Tabla de posiciones general - usar vista optimizada
+        const { data, error: viewError } = await supabase.from('general_leaderboard').select('*')
 
-        if (scoresError) throw scoresError
+        if (viewError) throw viewError
 
-        // Agrupar por usuario y sumar puntos
-        const userTotals = {}
-        allScores.forEach(score => {
-          if (!userTotals[score.user_id]) {
-            userTotals[score.user_id] = {
-              total_points: 0,
-              rounds_played: new Set(),
-            }
-          }
-          userTotals[score.user_id].total_points += score.total_points
-          userTotals[score.user_id].rounds_played.add(score.round_number)
-        })
-
-        // Obtener información de perfiles
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-
-        if (profilesError) throw profilesError
-
-        // Combinar datos
-        const formattedData = profiles.map(profile => ({
-          ...profile,
-          total_points: userTotals[profile.id]?.total_points || 0,
-          rounds_played: userTotals[profile.id]?.rounds_played.size || 0,
-        }))
-
-        // Ordenar por puntos
-        formattedData.sort((a, b) => {
-          if (b.total_points !== a.total_points) {
-            return b.total_points - a.total_points
-          }
-          return a.username.localeCompare(b.username)
-        })
-
-        setLeaderboard(formattedData)
+        setLeaderboard(data || [])
       }
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
@@ -101,7 +56,11 @@ export const useLeaderboard = (roundNumber = null) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [roundNumber])
+
+  useEffect(() => {
+    fetchLeaderboard()
+  }, [fetchLeaderboard])
 
   return {
     leaderboard,

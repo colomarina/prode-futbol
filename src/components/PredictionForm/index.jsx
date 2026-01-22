@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
@@ -9,11 +9,101 @@ export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
   const [selectedRound, setSelectedRound] = useState(null)
   const { matches, loading: matchesLoading } = useMatches(selectedRound)
-  const { predictions, createPrediction, updatePrediction } = usePredictions(selectedRound)
+  const { predictions, batchUpsertPredictions } = usePredictions(selectedRound)
 
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+
+  // Obtener info de la fecha seleccionada - DEBE ESTAR ANTES DE LOS RETURNS
+  const currentRound = useMemo(
+    () => rounds?.find(r => r.round_number === selectedRound),
+    [rounds, selectedRound]
+  )
+
+  const isRoundOpen = currentRound?.status === 'open'
+  const isRoundFinished = currentRound?.status === 'finished'
+  const isRoundLocked = currentRound?.status === 'locked'
+
+  const handleValueChange = useCallback((matchId, field, value) => {
+    setPredictionValues(prev => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId],
+        [field]: value,
+      },
+    }))
+  }, [])
+
+  const handleSaveAll = useCallback(async () => {
+    setSaving(true)
+
+    // Preparar datos para batch upsert
+    const predictionsData = matches
+      .filter(match => {
+        const values = predictionValues[match.id]
+        return values?.home && values?.away
+      })
+      .map(match => {
+        const values = predictionValues[match.id]
+        return {
+          matchId: match.id,
+          homePrediction: parseInt(values.home, 10),
+          awayPrediction: parseInt(values.away, 10),
+        }
+      })
+
+    if (predictionsData.length === 0) {
+      setSaving(false)
+      return
+    }
+
+    // Una sola llamada batch en lugar de múltiples individuales
+    const { error } = await batchUpsertPredictions(predictionsData)
+
+    setSaving(false)
+
+    if (!error) {
+      setToast({
+        message: `${predictionsData.length} pronóstico${predictionsData.length > 1 ? 's' : ''} guardado${predictionsData.length > 1 ? 's' : ''} correctamente`,
+        type: 'success',
+      })
+    } else {
+      setToast({
+        message: 'Error al guardar pronósticos. Intentá de nuevo.',
+        type: 'error',
+      })
+    }
+  }, [matches, predictionValues, batchUpsertPredictions])
+
+  // Verificar si hay al menos un pronóstico para guardar
+  const hasValidPredictions = useMemo(
+    () => Object.values(predictionValues).some(v => v?.home && v?.away),
+    [predictionValues]
+  )
+
+  // Obtener estado visual
+  const statusBadge = useMemo(() => {
+    if (isRoundOpen) {
+      return {
+        color: '#10b981',
+        text: 'Abierta ✅',
+        description: 'Cargá tus pronósticos y guardalos todos al final',
+      }
+    }
+    if (isRoundFinished) {
+      return {
+        color: '#3b82f6',
+        text: 'Finalizada 🏁',
+        description: 'Mirá tus resultados y puntos obtenidos',
+      }
+    }
+    return {
+      color: '#ef4444',
+      text: 'En juego ⚽',
+      description: 'Esta fecha está en juego. No se pueden modificar pronósticos.',
+    }
+  }, [isRoundOpen, isRoundFinished])
 
   // Auto-seleccionar la fecha activa al cargar
   useEffect(() => {
@@ -106,96 +196,6 @@ export default function PredictionForm() {
       </div>
     )
   }
-
-  // Obtener info de la fecha seleccionada
-  const currentRound = rounds.find(r => r.round_number === selectedRound)
-  const isRoundOpen = currentRound?.status === 'open'
-  const isRoundFinished = currentRound?.status === 'finished'
-  const isRoundLocked = currentRound?.status === 'locked'
-
-  const handleValueChange = (matchId, field, value) => {
-    setPredictionValues(prev => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [field]: value,
-      },
-    }))
-  }
-
-  const handleSaveAll = async () => {
-    setSaving(true)
-
-    const validMatches = matches.filter(match => {
-      const values = predictionValues[match.id]
-      return values?.home && values?.away
-    })
-
-    const results = await Promise.all(
-      validMatches.map(async match => {
-        const values = predictionValues[match.id]
-        const home = parseInt(values.home, 10)
-        const away = parseInt(values.away, 10)
-
-        const existingPrediction = predictions?.find(p => p.match_id === match.id)
-
-        if (existingPrediction) {
-          return updatePrediction(existingPrediction.id, home, away)
-        }
-        return createPrediction(match.id, home, away)
-      })
-    )
-
-    const successCount = results.filter(result => !result.error).length
-    const errorCount = results.filter(result => result.error).length
-
-    setSaving(false)
-
-    if (successCount > 0 && errorCount === 0) {
-      setToast({
-        message: `${successCount} pronóstico${successCount > 1 ? 's' : ''} guardado${successCount > 1 ? 's' : ''} correctamente`,
-        type: 'success',
-      })
-    } else if (successCount > 0 && errorCount > 0) {
-      setToast({
-        message: `${successCount} guardado${successCount > 1 ? 's' : ''}, ${errorCount} fallaron`,
-        type: 'warning',
-      })
-    } else if (errorCount > 0) {
-      setToast({
-        message: 'Error al guardar pronósticos. Intentá de nuevo.',
-        type: 'error',
-      })
-    }
-  }
-
-  // Verificar si hay al menos un pronóstico para guardar
-  const hasValidPredictions = Object.values(predictionValues).some(v => v?.home && v?.away)
-
-  // Obtener estado visual
-  const getStatusBadge = () => {
-    if (isRoundOpen) {
-      return {
-        color: '#10b981',
-        text: 'Abierta ✅',
-        description: 'Cargá tus pronósticos y guardalos todos al final',
-      }
-    }
-    if (isRoundFinished) {
-      return {
-        color: '#3b82f6',
-        text: 'Finalizada 🏁',
-        description: 'Mirá tus resultados y puntos obtenidos',
-      }
-    }
-    return {
-      color: '#ef4444',
-      text: 'En juego ⚽',
-      description: 'Esta fecha está en juego. No se pueden modificar pronósticos.',
-    }
-  }
-
-  const statusBadge = getStatusBadge()
 
   return (
     <div className="container" style={{ maxWidth: '900px' }}>

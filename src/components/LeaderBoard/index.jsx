@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useState, useCallback, useMemo, memo } from 'react'
 import { useLeaderboard } from '../../hooks/useLeaderboard'
 import { useRounds } from '../../hooks/useRounds'
 
 // Custom Round Select Component
-function RoundSelect({ value, onChange, rounds, loading }) {
+const RoundSelect = memo(function RoundSelect({ value, onChange, rounds, loading }) {
   const [isOpen, setIsOpen] = useState(false)
 
-  const getStatusConfig = status => {
+  const getStatusConfig = useCallback(status => {
     const configs = {
       pending: { icon: '⏳', label: 'Pendiente', color: '#9ca3af' },
       open: { icon: '🟢', label: 'En curso', color: '#10b981' },
@@ -14,12 +14,19 @@ function RoundSelect({ value, onChange, rounds, loading }) {
       finished: { icon: '✅', label: 'Finalizada', color: '#3b82f6' },
     }
     return configs[status] || configs.pending
-  }
+  }, [])
 
-  const selectedRound =
-    value === null
-      ? { label: '🏆 Tabla General', subtitle: 'Todas las fechas' }
-      : rounds.find(r => r.round_number === value)
+  const selectedRound = useMemo(() => {
+    if (value === null) {
+      return { label: '🏆 Tabla General', subtitle: 'Todas las fechas' }
+    }
+    return rounds.find(r => r.round_number === value)
+  }, [value, rounds])
+
+  const availableRounds = useMemo(
+    () => rounds.filter(round => ['locked', 'finished'].includes(round.status)),
+    [rounds]
+  )
 
   if (loading) {
     return (
@@ -199,86 +206,82 @@ function RoundSelect({ value, onChange, rounds, loading }) {
             </button>
 
             {/* Opciones de fechas - Solo fechas bloqueadas o finalizadas */}
-            {rounds
-              .filter(round => ['locked', 'finished'].includes(round.status))
-              .map(round => {
-                const statusConfig = getStatusConfig(round.status)
+            {availableRounds.map(round => {
+              const statusConfig = getStatusConfig(round.status)
 
-                return (
-                  <button
-                    key={round.round_number}
-                    type="button"
-                    onClick={() => {
-                      onChange(round.round_number)
-                      setIsOpen(false)
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '16px 20px',
-                      border: 'none',
-                      backgroundColor:
-                        value === round.round_number
-                          ? 'var(--color-surface-variant)'
-                          : 'transparent',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                      textAlign: 'left',
-                      borderBottom: '1px solid #E0E0E0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                    }}
-                    onMouseEnter={e => {
-                      if (value !== round.round_number) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (value !== round.round_number) {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                      }
-                    }}
-                  >
-                    <span style={{ fontSize: '1.8rem' }}>📆</span>
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          fontWeight: '700',
-                          fontSize: '0.95rem',
-                          color: 'var(--color-text-primary)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                        }}
-                      >
-                        <span>
-                          Fecha
-                          {round.round_number}
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '0.8rem',
-                          color: statusConfig.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontWeight: '600',
-                        }}
-                      >
-                        <span>{statusConfig.icon}</span>
-                        <span>{statusConfig.label}</span>
-                      </div>
+              return (
+                <button
+                  key={round.round_number}
+                  type="button"
+                  onClick={() => {
+                    onChange(round.round_number)
+                    setIsOpen(false)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    border: 'none',
+                    backgroundColor:
+                      value === round.round_number ? 'var(--color-surface-variant)' : 'transparent',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    textAlign: 'left',
+                    borderBottom: '1px solid #E0E0E0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                  onMouseEnter={e => {
+                    if (value !== round.round_number) {
+                      e.currentTarget.style.backgroundColor = 'var(--color-surface-variant)'
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (value !== round.round_number) {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
+                >
+                  <span style={{ fontSize: '1.8rem' }}>📆</span>
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontWeight: '700',
+                        fontSize: '0.95rem',
+                        color: 'var(--color-text-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span>
+                        Fecha
+                        {round.round_number}
+                      </span>
                     </div>
-                  </button>
-                )
-              })}
+                    <div
+                      style={{
+                        fontSize: '0.8rem',
+                        color: statusConfig.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontWeight: '600',
+                      }}
+                    >
+                      <span>{statusConfig.icon}</span>
+                      <span>{statusConfig.label}</span>
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </>
       )}
     </div>
   )
-}
+})
 
 export default function Leaderboard() {
   const [selectedRound, setSelectedRound] = useState(null) // null = general

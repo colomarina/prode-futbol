@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export const useMatches = (roundNumber = null) => {
@@ -6,12 +6,7 @@ export const useMatches = (roundNumber = null) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchMatches()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundNumber])
-
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
     try {
       setLoading(true)
       let query = supabase
@@ -39,7 +34,11 @@ export const useMatches = (roundNumber = null) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [roundNumber])
+
+  useEffect(() => {
+    fetchMatches()
+  }, [fetchMatches])
 
   const createMatch = async matchData => {
     try {
@@ -50,7 +49,14 @@ export const useMatches = (roundNumber = null) => {
         `)
 
       if (error) throw error
-      await fetchMatches()
+      if (data && data.length > 0) {
+        setMatches(prev =>
+          [...prev, ...data].sort((a, b) => {
+            if (a.match_number !== b.match_number) return a.match_number - b.match_number
+            return new Date(a.match_date) - new Date(b.match_date)
+          })
+        )
+      }
       return { data, error: null }
     } catch (error) {
       return { data: null, error }
@@ -67,7 +73,9 @@ export const useMatches = (roundNumber = null) => {
         `)
 
       if (error) throw error
-      await fetchMatches()
+      if (data && data.length > 0) {
+        setMatches(prev => prev.map(match => (match.id === matchId ? data[0] : match)))
+      }
       return { data, error: null }
     } catch (error) {
       return { data: null, error }
@@ -79,7 +87,7 @@ export const useMatches = (roundNumber = null) => {
       const { error } = await supabase.from('matches').delete().eq('id', matchId)
 
       if (error) throw error
-      await fetchMatches()
+      setMatches(prev => prev.filter(match => match.id !== matchId))
       return { error: null }
     } catch (error) {
       return { error }
