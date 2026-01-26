@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useCallback, memo } from 'react'
+import { useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import TeamDisplay from '../../TeamDisplay'
 
 const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, onValueChange }) => {
+  const awayInputRef = useRef(null)
+
   const existingPrediction = useMemo(
     () => predictions?.find(p => p.match_id === match.id),
     [predictions, match.id]
@@ -32,9 +34,14 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
       // Solo permitir cambios si se puede predecir
       if (!canPredictMatch) return
 
-      // Permitir vacío o solo números
-      if (value === '' || /^\d+$/.test(value)) {
+      // Permitir vacío o solo un dígito (0-9)
+      if (value === '' || /^[0-9]$/.test(value)) {
         onValueChange(match.id, field, value)
+
+        // Si se ingresó un valor en el input home, pasar al away
+        if (field === 'home' && value !== '' && awayInputRef.current) {
+          awayInputRef.current.focus()
+        }
       }
     },
     [canPredictMatch, onValueChange, match.id]
@@ -211,6 +218,7 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
           {/* Away Score Input */}
           {canPredictMatch ? (
             <input
+              ref={awayInputRef}
               type="tel"
               inputMode="numeric"
               pattern="[0-9]*"

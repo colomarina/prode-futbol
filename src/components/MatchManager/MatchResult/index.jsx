@@ -1,12 +1,19 @@
-import { useCallback, memo } from 'react'
+import { useCallback, memo, useRef } from 'react'
 import TeamDisplay from '../../TeamDisplay'
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
+  const awayInputRef = useRef(null)
+
   const handleInputChange = useCallback(
     (field, value) => {
-      // Permitir vacío o solo números
-      if (value === '' || /^\d+$/.test(value)) {
+      // Permitir vacío o solo un dígito (0-9)
+      if (value === '' || /^[0-9]$/.test(value)) {
         onValueChange(match.id, field, value)
+
+        // Si se ingresó un valor en el input home, pasar al away
+        if (field === 'home' && value !== '' && awayInputRef.current) {
+          awayInputRef.current.focus()
+        }
       }
     },
     [onValueChange, match.id]
@@ -164,6 +171,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
 
           {/* Away Score Input */}
           <input
+            ref={awayInputRef}
             type="tel"
             inputMode="numeric"
             pattern="[0-9]*"

@@ -39,7 +39,17 @@ const RoundSelect = memo(function RoundSelect({ value, onChange, rounds, loading
           border: '2px solid #E0E0E0',
         }}
       >
-        <div className="spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }} />
+        <div
+          style={{
+            width: '24px',
+            height: '24px',
+            margin: '0 auto',
+            border: '3px solid rgba(30, 127, 67, 0.1)',
+            borderTop: '3px solid var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
       </div>
     )
   }
@@ -290,13 +300,30 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="container" style={{ maxWidth: '1000px' }}>
-        <div className="loading-container" style={{ minHeight: '60vh' }}>
-          <div className="loading-content">
-            <div className="spinner" />
-            <p className="loading-text">Cargando tabla de posiciones...</p>
-          </div>
-        </div>
+      <div
+        className="container"
+        style={{ maxWidth: '1000px', textAlign: 'center', padding: '48px 16px' }}
+      >
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            margin: '0 auto 20px',
+            border: '4px solid rgba(30, 127, 67, 0.1)',
+            borderTop: '4px solid var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
+        <p
+          style={{
+            color: 'var(--color-text-secondary)',
+            fontSize: '1rem',
+            fontWeight: '500',
+          }}
+        >
+          Cargando tabla de posiciones...
+        </p>
       </div>
     )
   }
@@ -647,7 +674,7 @@ export default function Leaderboard() {
                     fontWeight: '700',
                   }}
                 >
-                  2 + cantidad de goles
+                  puntos = cantidad de goles
                 </span>
               </div>
               <div>

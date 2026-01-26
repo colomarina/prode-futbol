@@ -122,12 +122,30 @@ export default function PredictionForm() {
     }
   }, [activeRound, selectedRound, rounds])
 
-  // Mientras carga la información de fechas
+  // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div className="spinner" style={{ margin: '0 auto 16px' }} />
-        <p style={{ color: 'var(--color-text-secondary)' }}>Cargando información...</p>
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            margin: '0 auto 20px',
+            border: '4px solid rgba(30, 127, 67, 0.1)',
+            borderTop: '4px solid var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
+        <p
+          style={{
+            color: 'var(--color-text-secondary)',
+            fontSize: '1rem',
+            fontWeight: '500',
+          }}
+        >
+          Cargando información...
+        </p>
       </div>
     )
   }
@@ -151,8 +169,54 @@ export default function PredictionForm() {
   if (matchesLoading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div className="spinner" style={{ margin: '0 auto 16px' }} />
-        <p style={{ color: 'var(--color-text-secondary)' }}>Cargando partidos...</p>
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            margin: '0 auto 20px',
+            border: '4px solid rgba(30, 127, 67, 0.1)',
+            borderTop: '4px solid var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
+        <p
+          style={{
+            color: 'var(--color-text-secondary)',
+            fontSize: '1rem',
+            fontWeight: '500',
+          }}
+        >
+          Cargando partidos...
+        </p>
+      </div>
+    )
+  }
+
+  // No renderizar hasta que haya una fecha seleccionada
+  if (!selectedRound) {
+    return (
+      <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            margin: '0 auto 20px',
+            border: '4px solid rgba(30, 127, 67, 0.1)',
+            borderTop: '4px solid var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
+        <p
+          style={{
+            color: 'var(--color-text-secondary)',
+            fontSize: '1rem',
+            fontWeight: '500',
+          }}
+        >
+          Preparando información...
+        </p>
       </div>
     )
   }
