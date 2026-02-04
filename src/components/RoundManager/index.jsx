@@ -4,10 +4,10 @@ import { supabase } from '../../lib/supabase'
 import Toast from '../Toast'
 
 export default function RoundManager() {
-  const { rounds, activeRound, updateRoundStatus, lockRound, finishRound, loading } = useRounds()
+  const { rounds, activeRound, updateRoundStatus, finishRound, loading } = useRounds()
   const [matchesByRound, setMatchesByRound] = useState({})
-  const [roundNumber, setRoundNumber] = useState(1)
-  const [adminLoading, setAdminLoading] = useState(false)
+  // const [roundNumber, setRoundNumber] = useState(1)
+  // const [adminLoading, setAdminLoading] = useState(false)
   const [toast, setToast] = useState(null)
   const [usersPredictions, setUsersPredictions] = useState([])
   const [showDetails, setShowDetails] = useState(false)
@@ -120,82 +120,82 @@ export default function RoundManager() {
   }, [])
 
   // Funciones administrativas
-  const callRpcFunction = useCallback(async (functionName, params) => {
-    setAdminLoading(true)
+  // const callRpcFunction = useCallback(async (functionName, params) => {
+  //   setAdminLoading(true)
 
-    try {
-      const { data, error } = await supabase.rpc(functionName, params)
+  //   try {
+  //     const { data, error } = await supabase.rpc(functionName, params)
 
-      if (error) throw error
+  //     if (error) throw error
 
-      setToast({
-        message: data.message || 'Operación completada',
-        type: 'success',
-      })
-    } catch (error) {
-      console.error('Error:', error)
-      setToast({
-        message: `Error: ${error.message}`,
-        type: 'error',
-      })
-    } finally {
-      setAdminLoading(false)
-    }
-  }, [])
+  //     setToast({
+  //       message: data.message || 'Operación completada',
+  //       type: 'success',
+  //     })
+  //   } catch (error) {
+  //     console.error('Error:', error)
+  //     setToast({
+  //       message: `Error: ${error.message}`,
+  //       type: 'error',
+  //     })
+  //   } finally {
+  //     setAdminLoading(false)
+  //   }
+  // }, [])
 
-  const handleRecalculate = useCallback(() => {
-    if (confirm(`¿Recalcular puntos de la Fecha ${roundNumber}?`)) {
-      callRpcFunction('recalculate_round', { round_num: roundNumber })
-    }
-  }, [roundNumber, callRpcFunction])
+  // const handleRecalculate = useCallback(() => {
+  //   if (confirm(`¿Recalcular puntos de la Fecha ${roundNumber}?`)) {
+  //     callRpcFunction('recalculate_round', { round_num: roundNumber })
+  //   }
+  // }, [roundNumber, callRpcFunction])
 
-  const handleReset = useCallback(() => {
-    if (
-      confirm(
-        `⚠️ ¿RESETEAR COMPLETAMENTE la Fecha ${roundNumber}?\n\nEsto eliminará:\n• Puntos de round_scores\n• Reseteará predicciones\n• Limpiará resultados de partidos`
-      )
-    ) {
-      callRpcFunction('reset_round', { round_num: roundNumber })
-    }
-  }, [roundNumber, callRpcFunction])
+  // const handleReset = useCallback(() => {
+  //   if (
+  //     confirm(
+  //       `⚠️ ¿RESETEAR COMPLETAMENTE la Fecha ${roundNumber}?\n\nEsto eliminará:\n• Puntos de round_scores\n• Reseteará predicciones\n• Limpiará resultados de partidos`
+  //     )
+  //   ) {
+  //     callRpcFunction('reset_round', { round_num: roundNumber })
+  //   }
+  // }, [roundNumber, callRpcFunction])
 
-  const handleForceFinish = useCallback(() => {
-    if (
-      confirm(
-        `¿Forzar finalización de Fecha ${roundNumber}?\n\nLos partidos sin resultado pasarán a 0-0`
-      )
-    ) {
-      callRpcFunction('force_finish_round', { round_num: roundNumber })
-    }
-  }, [roundNumber, callRpcFunction])
+  // const handleForceFinish = useCallback(() => {
+  //   if (
+  //     confirm(
+  //       `¿Forzar finalización de Fecha ${roundNumber}?\n\nLos partidos sin resultado pasarán a 0-0`
+  //     )
+  //   ) {
+  //     callRpcFunction('force_finish_round', { round_num: roundNumber })
+  //   }
+  // }, [roundNumber, callRpcFunction])
 
-  const handleLockRound = useCallback(async () => {
-    if (!activeRound) {
-      setToast({
-        message: 'No hay fecha activa para bloquear',
-        type: 'warning',
-      })
-      return
-    }
-    if (
-      confirm(
-        `¿Bloquear la Fecha ${activeRound.round_number}? Los usuarios no podrán editar sus pronósticos.`
-      )
-    ) {
-      const { error } = await lockRound(activeRound.round_number)
-      if (error) {
-        setToast({
-          message: `Error: ${error.message}`,
-          type: 'error',
-        })
-      } else {
-        setToast({
-          message: 'Fecha bloqueada correctamente',
-          type: 'success',
-        })
-      }
-    }
-  }, [activeRound, lockRound])
+  // const handleLockRound = useCallback(async () => {
+  //   if (!activeRound) {
+  //     setToast({
+  //       message: 'No hay fecha activa para bloquear',
+  //       type: 'warning',
+  //     })
+  //     return
+  //   }
+  //   if (
+  //     confirm(
+  //       `¿Bloquear la Fecha ${activeRound.round_number}? Los usuarios no podrán editar sus pronósticos.`
+  //     )
+  //   ) {
+  //     const { error } = await lockRound(activeRound.round_number)
+  //     if (error) {
+  //       setToast({
+  //         message: `Error: ${error.message}`,
+  //         type: 'error',
+  //       })
+  //     } else {
+  //       setToast({
+  //         message: 'Fecha bloqueada correctamente',
+  //         type: 'success',
+  //       })
+  //     }
+  //   }
+  // }, [activeRound, lockRound])
 
   const handleFinishRound = useCallback(
     async roundNumber => {
@@ -935,7 +935,7 @@ export default function RoundManager() {
       </div>
 
       {/* Info Card */}
-      <div
+      {/* <div
         className="card"
         style={{
           marginTop: '24px',
@@ -989,10 +989,10 @@ export default function RoundManager() {
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Botón Bloquear Fecha - Movido aquí */}
-      {activeRound && (
+      {/* {activeRound && (
         <div style={{ marginTop: '24px' }}>
           <button
             onClick={handleLockRound}
@@ -1026,10 +1026,10 @@ export default function RoundManager() {
             <span>Bloquear Fecha {activeRound.round_number}</span>
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Panel de Administración */}
-      <div
+      {/* <div
         className="card"
         style={{
           marginTop: '24px',
@@ -1209,7 +1209,7 @@ export default function RoundManager() {
             <span>{adminLoading ? 'Procesando...' : 'Forzar Finalización'}</span>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Toast notifications */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

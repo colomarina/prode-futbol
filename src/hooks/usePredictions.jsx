@@ -18,9 +18,16 @@ export const usePredictions = (roundNumber = null) => {
   const fetchPredictions = async () => {
     if (!user) return
 
+    // Si no hay roundNumber, no traer nada
+    if (!roundNumber) {
+      setPredictions([])
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
-      let query = supabase
+      const { data, error } = await supabase
         .from('predictions')
         .select(
           `
@@ -40,12 +47,7 @@ export const usePredictions = (roundNumber = null) => {
         `
         )
         .eq('user_id', user.id)
-
-      if (roundNumber) {
-        query = query.eq('matches.round_number', roundNumber)
-      }
-
-      const { data, error } = await query
+        .eq('matches.round_number', roundNumber)
 
       if (error) throw error
       setPredictions(data)

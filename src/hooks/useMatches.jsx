@@ -7,9 +7,16 @@ export const useMatches = (roundNumber = null) => {
   const [error, setError] = useState(null)
 
   const fetchMatches = useCallback(async () => {
+    // Si no hay roundNumber, no traer nada
+    if (!roundNumber) {
+      setMatches([])
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
-      let query = supabase
+      const { data, error } = await supabase
         .from('matches')
         .select(
           `
@@ -18,17 +25,12 @@ export const useMatches = (roundNumber = null) => {
           away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url)
         `
         )
+        .eq('round_number', roundNumber)
         .order('match_number', { ascending: true })
         .order('match_date', { ascending: true })
 
-      if (roundNumber) {
-        query = query.eq('round_number', roundNumber)
-      }
-
-      const { data, error } = await query
-
       if (error) throw error
-      setMatches(data)
+      setMatches(data || [])
     } catch (error) {
       setError(error.message)
     } finally {

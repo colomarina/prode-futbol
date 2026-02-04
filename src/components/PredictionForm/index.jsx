@@ -7,7 +7,10 @@ import Toast from '../Toast'
 
 export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
-  const [selectedRound, setSelectedRound] = useState(null)
+
+  // Inicializar selectedRound con activeRound cuando esté disponible
+  const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
+
   const { matches, loading: matchesLoading } = useMatches(selectedRound)
   const { predictions, batchUpsertPredictions } = usePredictions(selectedRound)
 
@@ -107,20 +110,10 @@ export default function PredictionForm() {
 
   // Auto-seleccionar la fecha activa al cargar
   useEffect(() => {
-    if (!selectedRound && rounds && rounds.length > 0) {
-      // Filtrar fechas válidas
-      const validRounds = rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))
-
-      if (validRounds.length > 0) {
-        // Prioridad: fecha activa > primera fecha válida
-        if (activeRound && ['open', 'locked', 'finished'].includes(activeRound.status)) {
-          setSelectedRound(activeRound.round_number)
-        } else {
-          setSelectedRound(validRounds[0].round_number)
-        }
-      }
+    if (!selectedRound && activeRound?.round_number) {
+      setSelectedRound(activeRound.round_number)
     }
-  }, [activeRound, selectedRound, rounds])
+  }, [activeRound, selectedRound])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {

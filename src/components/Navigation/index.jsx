@@ -5,6 +5,7 @@ import Leaderboard from '../LeaderBoard'
 import MatchManager from '../MatchManager'
 import RoundManager from '../RoundManager'
 import AllPredictions from '../AllPredictions'
+import Info from '../Info'
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('predictions')
@@ -33,6 +34,13 @@ export default function Navigation() {
       adminOnly: false,
     },
     {
+      id: 'info',
+      label: 'Información',
+      mobileLabel: 'Info',
+      icon: 'ℹ️',
+      adminOnly: false,
+    },
+    {
       id: 'admin',
       label: 'Administrar Partidos',
       mobileLabel: 'Partidos',
@@ -56,7 +64,7 @@ export default function Navigation() {
       <nav
         style={{
           backgroundColor: 'var(--color-surface)',
-          boxShadow: 'var(--shadow-md)',
+          // boxShadow: 'var(--shadow-md)',
           position: 'sticky',
           top: 0,
           zIndex: 100,
@@ -225,12 +233,12 @@ export default function Navigation() {
           </div>
           {/* Tabs - Responsive */}
           <div
-            className="tabs-container"
+            className={`tabs-container ${visibleTabs.length > 3 ? 'tabs-compact' : ''}`}
             style={{
               display: 'flex',
               gap: '0px',
               borderBottom: '2px solid #E5E7EB',
-              overflowX: 'auto',
+              overflowX: visibleTabs.length > 3 ? 'visible' : 'auto',
               WebkitOverflowScrolling: 'touch',
             }}
           >
@@ -307,6 +315,7 @@ export default function Navigation() {
         {activeTab === 'predictions' && <PredictionForm roundNumber={1} />}
         {activeTab === 'all-predictions' && <AllPredictions />}
         {activeTab === 'leaderboard' && <Leaderboard />}
+        {activeTab === 'info' && <Info />}
         {activeTab === 'admin' && isAdmin() && <MatchManager />}
         {activeTab === 'rounds' && isAdmin() && <RoundManager />}
       </div>
@@ -325,6 +334,16 @@ export default function Navigation() {
           }
           .desktop-title { display: none !important; }
           .mobile-title { display: inline !important; }
+
+          /* Cuando hay más de 3 tabs, mostrar solo iconos */
+          .tabs-compact .tab-label-mobile { display: none !important; }
+          .tabs-compact .tab-button {
+            min-width: 60px;
+            padding: 10px 6px;
+          }
+          .tabs-compact .tab-button span:first-child {
+            font-size: 1.5rem;
+          }
         }
 
         @media (min-width: 768px) {

@@ -117,7 +117,7 @@ export default function AllPredictions() {
             marginBottom: '8px',
           }}
         >
-          👥 Mirá los pronósticos de los demás una vez que este en juego la fecha
+          👥 Espia como vienen los rivales
         </h2>
       </div>
 

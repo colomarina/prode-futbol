@@ -107,7 +107,7 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
       </div>
 
       {/* Match Status Badge */}
-      {match.is_finished && (
+      {match.is_finished ? (
         <div
           style={{
             position: 'absolute',
@@ -123,7 +123,24 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
         >
           Finalizado
         </div>
-      )}
+      ) : !canPredict(match.match_date) ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            backgroundColor: '#f59e0b',
+            color: 'white',
+            padding: '4px 12px',
+            borderRadius: '12px',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }}
+        >
+          ⚽ En Juego
+        </div>
+      ) : null}
 
       {/* Match Date and Time */}
       <div

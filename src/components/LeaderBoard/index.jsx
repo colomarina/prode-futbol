@@ -16,13 +16,6 @@ const RoundSelect = memo(function RoundSelect({ value, onChange, rounds, loading
     return configs[status] || configs.pending
   }, [])
 
-  const selectedRound = useMemo(() => {
-    if (value === null) {
-      return { label: '🏆 Tabla General', subtitle: 'Todas las fechas' }
-    }
-    return rounds.find(r => r.round_number === value)
-  }, [value, rounds])
-
   const availableRounds = useMemo(
     () => rounds.filter(round => ['locked', 'finished'].includes(round.status)),
     [rounds]
@@ -61,76 +54,25 @@ const RoundSelect = memo(function RoundSelect({ value, onChange, rounds, loading
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '100%',
-          padding: '16px 20px',
-          borderRadius: '12px',
-          border: '2px solid var(--color-primary)',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          border: '1.5px solid var(--color-primary)',
           backgroundColor: 'var(--color-surface)',
           cursor: 'pointer',
           transition: 'all 0.2s',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+          justifyContent: 'center',
+          gap: '6px',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          color: 'var(--color-text-primary)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {value === null ? (
-            <>
-              <span style={{ fontSize: '1.8rem' }}>🏆</span>
-              <div style={{ textAlign: 'left' }}>
-                <div
-                  style={{
-                    fontWeight: '700',
-                    fontSize: '1rem',
-                    color: 'var(--color-text-primary)',
-                  }}
-                >
-                  Tabla General
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                  Todas las fechas
-                </div>
-              </div>
-            </>
-          ) : selectedRound ? (
-            <>
-              <span style={{ fontSize: '1.8rem' }}>📆</span>
-              <div style={{ textAlign: 'left' }}>
-                <div
-                  style={{
-                    fontWeight: '700',
-                    fontSize: '1rem',
-                    color: 'var(--color-text-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <span>
-                    Fecha
-                    {selectedRound.round_number}
-                  </span>
-                  <span style={{ fontSize: '1.2rem' }}>
-                    {getStatusConfig(selectedRound.status).icon}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                  {getStatusConfig(selectedRound.status).label}
-                </div>
-              </div>
-            </>
-          ) : null}
-        </div>
+        {value === null ? '🏆 General' : `📅 Fecha ${value}`}
         <span
           style={{
-            fontSize: '1.2rem',
-            color: 'var(--color-text-secondary)',
+            fontSize: '0.7rem',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s',
           }}
@@ -157,7 +99,7 @@ const RoundSelect = memo(function RoundSelect({ value, onChange, rounds, loading
               position: 'absolute',
               top: 'calc(100% + 8px)',
               left: 0,
-              right: 0,
+              width: '100%',
               backgroundColor: 'var(--color-surface)',
               border: '2px solid var(--color-primary)',
               borderRadius: '12px',
@@ -337,46 +279,36 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '1000px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+    <div className="container" style={{ maxWidth: '1000px', overflow: 'hidden' }}>
+      {/* Header compacto con selector integrado */}
+      <div style={{ marginBottom: '16px' }}>
         <h2
           style={{
-            // fontSize: '1.75rem',
             fontWeight: '700',
             color: 'var(--color-primary)',
-            marginBottom: '8px',
+            margin: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '12px',
-            flexWrap: 'wrap',
-          }}
-        >
-          <span> 🏆Tabla de Posiciones</span>
-        </h2>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
-          {selectedRound === null
-            ? 'Clasificación general del torneo'
-            : `Resultados de la Fecha ${selectedRound}`}
-        </p>
-      </div>
-
-      {/* Selector de fecha */}
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <h3
-          style={{
-            fontSize: '1rem',
-            fontWeight: '600',
-            color: 'var(--color-text-primary)',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
             gap: '8px',
+            fontSize: '1.5rem',
           }}
         >
-          📅 Filtrar por fecha
-        </h3>
+          <span>🏆</span>
+          <span>Tabla de Posiciones</span>
+        </h2>
+        <p
+          style={{
+            color: 'var(--color-text-secondary)',
+            fontSize: '0.85rem',
+            margin: '4px 0 12px 0',
+            textAlign: 'center',
+          }}
+        >
+          {selectedRound === null ? 'Clasificación general' : `Fecha ${selectedRound}`}
+        </p>
+
+        {/* Selector compacto */}
         <RoundSelect
           value={selectedRound}
           onChange={setSelectedRound}
@@ -388,20 +320,20 @@ export default function Leaderboard() {
       {/* Tabla */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
         {leaderboard.length === 0 ? (
-          <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '16px' }}>📊</div>
+          <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📊</div>
             <p
               style={{
-                fontSize: '1.1rem',
+                fontSize: '1rem',
                 color: 'var(--color-text-primary)',
-                marginBottom: '8px',
+                marginBottom: '4px',
                 fontWeight: '600',
               }}
             >
-              Todavía no hay datos para mostrar
+              No hay datos disponibles
             </p>
-            <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-              Los puntos se calculan automáticamente cuando se cargan los resultados
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+              Los puntos se calculan al cargar resultados
             </p>
           </div>
         ) : (
@@ -417,13 +349,16 @@ export default function Leaderboard() {
                   style={{
                     backgroundColor: 'var(--color-surface-variant)',
                     borderBottom: '2px solid #E0E0E0',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
                   }}
                 >
                   <th
                     style={{
-                      padding: '16px 12px',
+                      padding: '12px 8px',
                       textAlign: 'left',
-                      fontSize: '0.75rem',
+                      fontSize: '0.7rem',
                       fontWeight: '700',
                       color: 'var(--color-text-secondary)',
                       textTransform: 'uppercase',
@@ -434,9 +369,9 @@ export default function Leaderboard() {
                   </th>
                   <th
                     style={{
-                      padding: '16px 12px',
+                      padding: '12px 8px',
                       textAlign: 'left',
-                      fontSize: '0.75rem',
+                      fontSize: '0.7rem',
                       fontWeight: '700',
                       color: 'var(--color-text-secondary)',
                       textTransform: 'uppercase',
@@ -447,30 +382,30 @@ export default function Leaderboard() {
                   </th>
                   <th
                     style={{
-                      padding: '16px 12px',
+                      padding: '12px 8px',
                       textAlign: 'center',
-                      fontSize: '0.75rem',
+                      fontSize: '0.7rem',
                       fontWeight: '700',
                       color: 'var(--color-text-secondary)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}
                   >
-                    Puntos
+                    Pts
                   </th>
                   {!selectedRound && (
                     <th
                       style={{
-                        padding: '16px 12px',
+                        padding: '12px 8px',
                         textAlign: 'center',
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
                         fontWeight: '700',
                         color: 'var(--color-text-secondary)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}
                     >
-                      Fechas
+                      Fch
                     </th>
                   )}
                 </tr>
@@ -503,7 +438,7 @@ export default function Leaderboard() {
                     >
                       <td
                         style={{
-                          padding: '16px 12px',
+                          padding: '12px 8px',
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -511,15 +446,15 @@ export default function Leaderboard() {
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px',
+                            gap: '6px',
                           }}
                         >
                           {positionEmoji && (
-                            <span style={{ fontSize: '1.5rem' }}>{positionEmoji}</span>
+                            <span style={{ fontSize: '1.3rem' }}>{positionEmoji}</span>
                           )}
                           <span
                             style={{
-                              fontSize: '1.1rem',
+                              fontSize: '1rem',
                               fontWeight: '700',
                               color: 'var(--color-text-primary)',
                             }}
@@ -528,11 +463,11 @@ export default function Leaderboard() {
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px 12px' }}>
+                      <td style={{ padding: '12px 8px' }}>
                         <div>
                           <div
                             style={{
-                              fontSize: '0.95rem',
+                              fontSize: '0.9rem',
                               fontWeight: '600',
                               color: 'var(--color-text-primary)',
                               marginBottom: '2px',
@@ -543,7 +478,7 @@ export default function Leaderboard() {
                           </div>
                           <div
                             style={{
-                              fontSize: '0.85rem',
+                              fontSize: '0.8rem',
                               color: 'var(--color-text-secondary)',
                               textTransform: 'capitalize',
                             }}
@@ -554,13 +489,13 @@ export default function Leaderboard() {
                       </td>
                       <td
                         style={{
-                          padding: '16px 12px',
+                          padding: '12px 8px',
                           textAlign: 'center',
                         }}
                       >
                         <span
                           style={{
-                            fontSize: '1.5rem',
+                            fontSize: '1.3rem',
                             fontWeight: '700',
                             color: 'var(--color-primary)',
                             display: 'inline-flex',
@@ -569,19 +504,19 @@ export default function Leaderboard() {
                           }}
                         >
                           {player.total_points}
-                          <span style={{ fontSize: '1rem' }}>pts</span>
+                          <span style={{ fontSize: '0.85rem' }}>pts</span>
                         </span>
                       </td>
                       {!selectedRound && (
                         <td
                           style={{
-                            padding: '16px 12px',
+                            padding: '12px 8px',
                             textAlign: 'center',
                           }}
                         >
                           <span
                             style={{
-                              fontSize: '0.9rem',
+                              fontSize: '0.85rem',
                               color: 'var(--color-text-secondary)',
                               fontWeight: '600',
                             }}
@@ -597,170 +532,6 @@ export default function Leaderboard() {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Leyenda del sistema de puntos */}
-      <div
-        className="card"
-        style={{
-          marginTop: '24px',
-          backgroundColor: 'rgba(30, 127, 67, 0.05)',
-          border: '2px solid var(--color-primary)',
-        }}
-      >
-        <h3
-          style={{
-            fontWeight: '700',
-            color: 'var(--color-primary)',
-            marginBottom: '16px',
-            fontSize: '1.1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          📊 Sistema de Puntos
-        </h3>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-          }}
-        >
-          <div
-            style={{
-              padding: '12px',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '8px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '8px',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '2rem',
-                  minWidth: '40px',
-                  textAlign: 'center',
-                }}
-              >
-                🎯
-              </span>
-              <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
-                PLENO (resultado exacto):
-              </strong>
-            </div>
-            <div
-              style={{
-                marginLeft: '52px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                fontSize: '0.9rem',
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              <div>
-                • Más de 2 goles:{' '}
-                <span
-                  style={{
-                    color: 'var(--color-success)',
-                    fontWeight: '700',
-                  }}
-                >
-                  puntos = cantidad de goles
-                </span>
-              </div>
-              <div>
-                • 2 o menos goles:{' '}
-                <span
-                  style={{
-                    color: 'var(--color-success)',
-                    fontWeight: '700',
-                  }}
-                >
-                  2 puntos
-                </span>
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '8px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '2rem',
-                minWidth: '40px',
-                textAlign: 'center',
-              }}
-            >
-              ✅
-            </span>
-            <div>
-              <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
-                Partidos de hasta 2 goles (acertar ganador/empate):
-              </strong>
-              <span
-                style={{
-                  marginLeft: '8px',
-                  color: 'var(--color-success)',
-                  fontWeight: '700',
-                  fontSize: '1.1rem',
-                }}
-              >
-                1 punto
-              </span>
-            </div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '8px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '2rem',
-                minWidth: '40px',
-                textAlign: 'center',
-              }}
-            >
-              📈
-            </span>
-            <div>
-              <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
-                Más de 3 goles predichos (acertar cantidad total):
-              </strong>
-              <span
-                style={{
-                  marginLeft: '8px',
-                  color: 'var(--color-success)',
-                  fontWeight: '700',
-                  fontSize: '1.1rem',
-                }}
-              >
-                1 punto
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
