@@ -10,7 +10,7 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
   )
 
   const canPredict = useCallback(matchDate => {
-    const cutoffTime = new Date(new Date(matchDate).getTime() - 60 * 60 * 1000)
+    const cutoffTime = new Date(new Date(matchDate).getTime() - 20 * 60 * 1000)
     return new Date() < cutoffTime
   }, [])
 
