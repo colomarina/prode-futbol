@@ -108,12 +108,18 @@ export default function PredictionForm() {
     }
   }, [isRoundOpen, isRoundFinished])
 
-  // Auto-seleccionar la fecha activa al cargar
+  // Auto-seleccionar siempre la ultima fecha disponible al cargar
   useEffect(() => {
-    if (!selectedRound && activeRound?.round_number) {
-      setSelectedRound(activeRound.round_number)
+    if (selectedRound) return
+
+    if (rounds?.length) {
+      const available = rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))
+      const lastAvailable = available.sort((a, b) => b.round_number - a.round_number)[0]
+      if (lastAvailable) {
+        setSelectedRound(lastAvailable.round_number)
+      }
     }
-  }, [activeRound, selectedRound])
+  }, [activeRound, rounds, selectedRound])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {
