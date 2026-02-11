@@ -14,6 +14,10 @@ const RoundManager = lazy(() => import('../RoundManager'))
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('predictions')
+  const [allPredictionsSelection, setAllPredictionsSelection] = useState({
+    roundNumber: null,
+    userId: '',
+  })
   const { profile, isAdmin, signOut } = useAuth()
 
   // Filtrar tabs visibles según permisos
@@ -30,13 +34,21 @@ export default function Navigation() {
       case 'all-predictions':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <AllPredictions />
+            <AllPredictions
+              initialRound={allPredictionsSelection.roundNumber}
+              initialUser={allPredictionsSelection.userId}
+            />
           </Suspense>
         )
       case 'leaderboard':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <Leaderboard />
+            <Leaderboard
+              onViewPredictions={({ userId, roundNumber }) => {
+                setAllPredictionsSelection({ roundNumber, userId })
+                setActiveTab('all-predictions')
+              }}
+            />
           </Suspense>
         )
       case 'info':

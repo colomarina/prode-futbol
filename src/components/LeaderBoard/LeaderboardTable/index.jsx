@@ -3,7 +3,11 @@ import LeaderboardRow from '../LeaderboardRow'
 import EmptyState from '../EmptyState'
 import { TABLE_COLUMNS } from '../leaderboard.config'
 
-const LeaderboardTable = memo(function LeaderboardTable({ leaderboard, selectedRound }) {
+const LeaderboardTable = memo(function LeaderboardTable({
+  leaderboard,
+  selectedRound,
+  onViewPredictions,
+}) {
   const columns = useMemo(() => TABLE_COLUMNS[selectedRound ? 'round' : 'general'], [selectedRound])
 
   if (leaderboard.length === 0) {
@@ -26,6 +30,9 @@ const LeaderboardTable = memo(function LeaderboardTable({ leaderboard, selectedR
               player={player}
               position={index + 1}
               showRoundsColumn={!selectedRound}
+              showViewColumn={Boolean(selectedRound)}
+              onViewPredictions={onViewPredictions}
+              selectedRound={selectedRound}
             />
           ))}
         </tbody>
@@ -52,7 +59,11 @@ const TableHeader = memo(function TableHeader({ columns }) {
             style={{
               padding: '12px 8px',
               textAlign:
-                index === 0 ? 'left' : column === 'Pts' || column === 'Fch' ? 'center' : 'left',
+                index === 0
+                  ? 'left'
+                  : column === 'Pts' || column === 'Fch' || column === 'Ver'
+                    ? 'center'
+                    : 'left',
               fontSize: '0.7rem',
               fontWeight: '700',
               color: 'var(--color-text-secondary)',

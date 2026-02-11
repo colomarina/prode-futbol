@@ -5,6 +5,9 @@ const LeaderboardRow = memo(function LeaderboardRow({
   player,
   position,
   showRoundsColumn = false,
+  showViewColumn = false,
+  onViewPredictions,
+  selectedRound,
 }) {
   const positionConfig = POSITION_CONFIG[position] || {}
   const { emoji, bgColor } = positionConfig
@@ -21,6 +24,13 @@ const LeaderboardRow = memo(function LeaderboardRow({
       <PlayerCell player={player} />
       <PointsCell points={player.total_points} />
       {showRoundsColumn && <RoundsCell rounds={player.rounds_played || 0} />}
+      {showViewColumn && (
+        <ViewCell
+          player={player}
+          selectedRound={selectedRound}
+          onViewPredictions={onViewPredictions}
+        />
+      )}
     </tr>
   )
 })
@@ -126,6 +136,39 @@ const RoundsCell = memo(function RoundsCell({ rounds }) {
       >
         {rounds}
       </span>
+    </td>
+  )
+})
+
+const ViewCell = memo(function ViewCell({ player, selectedRound, onViewPredictions }) {
+  const handleClick = () => {
+    if (!onViewPredictions || !selectedRound) return
+    onViewPredictions({ userId: player.id, roundNumber: selectedRound })
+  }
+
+  return (
+    <td
+      style={{
+        textAlign: 'center',
+      }}
+    >
+      <button
+        type="button"
+        onClick={handleClick}
+        className="btn-success"
+        style={{
+          backgroundColor: 'transparent',
+          padding: '4px 4px',
+          fontSize: '0.8rem',
+          borderRadius: '8px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+        aria-label={`Ver pronosticos de ${player.username} en fecha ${selectedRound}`}
+      >
+        <span aria-hidden="true">👀</span>
+      </button>
     </td>
   )
 })

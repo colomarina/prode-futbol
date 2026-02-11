@@ -4,7 +4,7 @@ import { useMatches } from '../../hooks/useMatches'
 import { supabase } from '../../lib/supabase'
 import TeamDisplay from '../TeamDisplay'
 
-export default function AllPredictions() {
+export default function AllPredictions({ initialRound = null, initialUser = '' }) {
   const { rounds, loading: roundsLoading } = useRounds()
   const [selectedRound, setSelectedRound] = useState(null)
   const { matches, loading: matchesLoading } = useMatches(selectedRound)
@@ -12,6 +12,18 @@ export default function AllPredictions() {
   const [users, setUsers] = useState([])
   const [selectedUser, setSelectedUser] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (initialRound && initialRound !== selectedRound) {
+      setSelectedRound(initialRound)
+    }
+  }, [initialRound, selectedRound])
+
+  useEffect(() => {
+    if (initialUser && initialUser !== selectedUser) {
+      setSelectedUser(initialUser)
+    }
+  }, [initialUser, selectedUser])
 
   // Cargar usuarios
   useEffect(() => {

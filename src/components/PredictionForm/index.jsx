@@ -18,6 +18,11 @@ export default function PredictionForm() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
 
+  const predictionsByMatchId = useMemo(() => {
+    if (!predictions?.length) return new Map()
+    return new Map(predictions.map(prediction => [prediction.match_id, prediction]))
+  }, [predictions])
+
   // Obtener info de la fecha seleccionada - DEBE ESTAR ANTES DE LOS RETURNS
   const currentRound = useMemo(
     () => rounds?.find(r => r.round_number === selectedRound),
@@ -393,9 +398,9 @@ export default function PredictionForm() {
           <MatchPrediction
             key={`${match.round_number}-${match.match_number}-${match.id}`}
             match={match}
-            predictions={predictions}
             isRoundOpen={isRoundOpen}
-            predictionValues={predictionValues}
+            predictionValue={predictionValues[match.id]}
+            existingPrediction={predictionsByMatchId.get(match.id)}
             onValueChange={handleValueChange}
           />
         ))}

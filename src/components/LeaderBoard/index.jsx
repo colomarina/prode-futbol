@@ -6,7 +6,7 @@ import LeaderboardTable from './LeaderboardTable'
 import LoadingSpinner from './LoadingSpinner'
 import ErrorMessage from './ErrorMessage'
 
-export default function Leaderboard() {
+export default function Leaderboard({ onViewPredictions }) {
   const [selectedRound, setSelectedRound] = useState(null)
   const { leaderboard, loading, error } = useLeaderboard(selectedRound)
   const { rounds, loading: roundsLoading } = useRounds()
@@ -37,7 +37,11 @@ export default function Leaderboard() {
       />
 
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <LeaderboardTable leaderboard={leaderboard} selectedRound={selectedRound} />
+        <LeaderboardTable
+          leaderboard={leaderboard}
+          selectedRound={selectedRound}
+          onViewPredictions={onViewPredictions}
+        />
       </div>
     </div>
   )

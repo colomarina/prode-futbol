@@ -1,33 +1,36 @@
-import { useEffect, useMemo, useCallback, memo, useRef } from 'react'
+import { useEffect, useCallback, memo, useRef, useState } from 'react'
 import TeamDisplay from '../../TeamDisplay'
 
-const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, onValueChange }) => {
+const MatchPrediction = ({
+  match,
+  existingPrediction,
+  isRoundOpen,
+  predictionValue,
+  onValueChange,
+}) => {
   const awayInputRef = useRef(null)
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
 
-  const existingPrediction = useMemo(
-    () => predictions?.find(p => p.match_id === match.id),
-    [predictions, match.id]
-  )
+  const isGameOfTheRound = match.round_number === match.match_number
 
   const canPredict = useCallback(matchDate => {
     const cutoffTime = new Date(new Date(matchDate).getTime() - 20 * 60 * 1000)
     return new Date() < cutoffTime
   }, [])
 
+  const hasStatusBadge = match.is_finished || !canPredict(match.match_date)
+
   // Solo se puede predecir si la fecha está abierta Y falta más de 1 hora para el partido
-  const canPredictMatch = useMemo(
-    () => isRoundOpen && canPredict(match.match_date),
-    [isRoundOpen, canPredict, match.match_date]
-  )
+  const canPredictMatch = isRoundOpen && canPredict(match.match_date)
 
   // Inicializar valores desde predicción existente
   useEffect(() => {
-    if (existingPrediction && !predictionValues[match.id]) {
+    if (existingPrediction && !predictionValue) {
       onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
       onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingPrediction, match.id, predictionValues])
+  }, [existingPrediction, match.id, predictionValue])
 
   const handleInputChange = useCallback(
     (field, value) => {
@@ -47,8 +50,8 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
     [canPredictMatch, onValueChange, match.id]
   )
 
-  const homeScore = predictionValues[match.id]?.home || ''
-  const awayScore = predictionValues[match.id]?.away || ''
+  const homeScore = predictionValue?.home || ''
+  const awayScore = predictionValue?.away || ''
 
   // Si no se puede editar, mostrar valor guardado o placeholder
   const displayHomeValue = canPredictMatch
@@ -81,7 +84,9 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
         opacity: !canPredictMatch && !match.is_finished && !existingPrediction ? 0.7 : 1,
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
+        background: isGameOfTheRound
+          ? 'var(--color-match-highlight)'
+          : 'linear-gradient(to bottom, #ffffff, #fafafa)',
         border: '1px solid #e2e8f0',
         borderRadius: '16px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
@@ -106,12 +111,75 @@ const MatchPrediction = ({ match, predictions, isRoundOpen, predictionValues, on
         #{match.match_number || '?'}
       </div>
 
+      {isGameOfTheRound && (
+        <div
+          style={{
+            position: 'absolute',
+            top: hasStatusBadge ? '44px' : '12px',
+            right: '12px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+          }}
+        >
+          <button
+            type="button"
+            aria-label="Partido de la fecha"
+            onClick={e => {
+              e.stopPropagation()
+              setIsInfoOpen(prev => !prev)
+            }}
+            onMouseEnter={() => setIsInfoOpen(true)}
+            onMouseLeave={() => setIsInfoOpen(false)}
+            onBlur={() => setIsInfoOpen(false)}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '999px',
+              border: '2px solid var(--color-primary)',
+              backgroundColor: 'white',
+              color: 'var(--color-primary)',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              lineHeight: '1',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            i
+          </button>
+          {isInfoOpen && (
+            <div
+              role="tooltip"
+              style={{
+                position: 'absolute',
+                top: '36px',
+                right: 0,
+                backgroundColor: 'white',
+                color: 'var(--color-text-primary)',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '8px 10px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
+                pointerEvents: 'none',
+              }}
+            >
+              Partido de la fecha
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Match Status Badge */}
       {match.is_finished ? (
         <div
           style={{
             position: 'absolute',
-            top: '12px',
+            top: hasStatusBadge ? '44px' : '12px',
             right: '12px',
             backgroundColor: 'var(--color-success)',
             color: 'white',
