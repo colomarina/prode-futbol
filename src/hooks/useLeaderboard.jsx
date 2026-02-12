@@ -51,7 +51,6 @@ export const useLeaderboard = (roundNumber = null) => {
         setLeaderboard(data || [])
       }
     } catch (error) {
-      console.error('Error fetching leaderboard:', error)
       setError(error.message)
     } finally {
       setLoading(false)

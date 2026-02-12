@@ -36,8 +36,9 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
 
         if (error) throw error
         setUsers(data || [])
-      } catch (error) {
-        console.error('Error cargando usuarios:', error)
+      } catch {
+        // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
+        // console.error('Error cargando usuarios:', error)
       }
     }
 
@@ -86,8 +87,9 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
       })
 
       setRoundPredictions(predictionsByMatch)
-    } catch (error) {
-      console.error('Error cargando pronósticos:', error)
+    } catch {
+      // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
+      // console.error('Error cargando pronósticos:', error)
       setRoundPredictions({})
     } finally {
       setLoading(false)

@@ -14,8 +14,6 @@ export function AuthProvider({ children }) {
 
       if (error) throw error
       setProfile(data)
-    } catch (error) {
-      console.error('Error cargando perfil:', error)
     } finally {
       setLoading(false)
     }
@@ -105,6 +103,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {

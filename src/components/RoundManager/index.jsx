@@ -41,8 +41,9 @@ export default function RoundManager() {
         })
 
         setMatchesByRound(matchesMap)
-      } catch (error) {
-        console.error('Error cargando información de partidos:', error)
+      } catch {
+        // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
+        // console.error('Error cargando información de partidos:', error)
       }
     }
 
@@ -75,8 +76,9 @@ export default function RoundManager() {
         }))
 
         setUsersPredictions(usersData)
-      } catch (error) {
-        console.error('Error cargando predicciones de usuarios:', error)
+      } catch {
+        // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
+        // console.error('Error cargando predicciones de usuarios:', error)
       }
     }
 

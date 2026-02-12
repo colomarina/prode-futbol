@@ -34,7 +34,7 @@ export default function TeamDisplay({ team, size = 'md', showNameBelow = false }
               objectFit: 'contain',
             }}
             onError={e => {
-              console.error('Error loading image:', team.logo_url, 'for team:', team.name)
+              // console.error('Error loading image:', team.logo_url, 'for team:', team.name)
               e.target.style.display = 'none'
             }}
           />
@@ -72,7 +72,7 @@ export default function TeamDisplay({ team, size = 'md', showNameBelow = false }
           }}
           onError={e => {
             // Fallback si la imagen no carga
-            console.error('Error loading image:', team.logo_url, 'for team:', team.name)
+            // console.error('Error loading image:', team.logo_url, 'for team:', team.name)
             e.target.style.display = 'none'
           }}
         />
