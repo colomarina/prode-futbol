@@ -115,8 +115,8 @@ const MatchPrediction = ({
         <div
           style={{
             position: 'absolute',
-            top: hasStatusBadge ? '44px' : '12px',
-            right: '12px',
+            top: '12px',
+            left: '55px',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -127,20 +127,19 @@ const MatchPrediction = ({
             type="button"
             aria-label="Partido de la fecha"
             onClick={e => {
+              e.preventDefault()
               e.stopPropagation()
-              setIsInfoOpen(prev => !prev)
+              setIsInfoOpen(!isInfoOpen)
             }}
             onMouseEnter={() => setIsInfoOpen(true)}
             onMouseLeave={() => setIsInfoOpen(false)}
-            onBlur={() => setIsInfoOpen(false)}
             style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '999px',
+              padding: '6px 12px',
+              borderRadius: '12px',
+              width: '39px',
+              minHeight: '32.5px',
               border: '2px solid var(--color-primary)',
-              backgroundColor: 'white',
-              color: 'var(--color-primary)',
-              fontSize: '0.9rem',
+              fontSize: '0.8rem',
               fontWeight: '700',
               lineHeight: '1',
               cursor: 'pointer',
@@ -154,8 +153,8 @@ const MatchPrediction = ({
               role="tooltip"
               style={{
                 position: 'absolute',
-                top: '36px',
-                right: 0,
+                top: '-5px',
+                left: '43px',
                 backgroundColor: 'white',
                 color: 'var(--color-text-primary)',
                 border: '1px solid #e2e8f0',

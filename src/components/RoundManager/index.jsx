@@ -63,8 +63,6 @@ export default function RoundManager() {
 
         if (error) throw error
 
-        console.log('Data Debug', data)
-
         // Mapear los datos al formato que usa el componente
         const usersData = data.map(user => ({
           id: user.user_id,
