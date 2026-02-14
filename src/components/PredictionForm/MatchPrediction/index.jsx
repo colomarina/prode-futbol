@@ -18,8 +18,6 @@ const MatchPrediction = ({
     return new Date() < cutoffTime
   }, [])
 
-  const hasStatusBadge = match.is_finished || !canPredict(match.match_date)
-
   // Solo se puede predecir si la fecha está abierta Y falta más de 1 hora para el partido
   const canPredictMatch = isRoundOpen && canPredict(match.match_date)
 
@@ -178,7 +176,7 @@ const MatchPrediction = ({
         <div
           style={{
             position: 'absolute',
-            top: hasStatusBadge ? '44px' : '12px',
+            top: '12px',
             right: '12px',
             backgroundColor: 'var(--color-success)',
             color: 'white',
