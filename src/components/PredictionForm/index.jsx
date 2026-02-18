@@ -4,6 +4,7 @@ import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
 import MatchPrediction from './MatchPrediction'
 import Toast from '../Toast'
+import SelectDropdown from '../SelectDropdown'
 
 export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
@@ -227,29 +228,40 @@ export default function PredictionForm() {
 
   // Si la fecha no tiene partidos
   if (!matches || matches.length === 0) {
+    const availableRounds = rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))
+
     return (
       <div className="container" style={{ maxWidth: '900px' }}>
         {/* Selector de fechas */}
         <div className="card" style={{ marginBottom: '24px' }}>
           <label className="form-label">📅 Seleccioná una Fecha</label>
-          <select
-            value={selectedRound || ''}
-            onChange={e => setSelectedRound(Number(e.target.value))}
-            className="form-input"
-          >
-            {rounds
-              .filter(r => ['open', 'locked', 'finished'].includes(r.status))
-              .map(round => (
-                <option key={round.id} value={round.round_number}>
-                  Fecha {round.round_number}{' '}
-                  {round.status === 'open'
-                    ? '(Abierta ✅)'
-                    : round.status === 'finished'
-                      ? '(Finalizada 🏁)'
-                      : '(En juego ⚽)'}
-                </option>
-              ))}
-          </select>
+          <SelectDropdown
+            items={availableRounds}
+            selectedId={selectedRound}
+            onSelect={setSelectedRound}
+            valueKey="round_number"
+            placeholder="Seleccionar fecha..."
+            renderButton={round => (
+              <span style={{ fontWeight: '600' }}>
+                Fecha {round.round_number}{' '}
+                {round.status === 'open'
+                  ? '(Abierta ✅)'
+                  : round.status === 'finished'
+                    ? '(Finalizada 🏁)'
+                    : '(En juego ⚽)'}
+              </span>
+            )}
+            renderOption={round => (
+              <span style={{ flex: 1, fontWeight: '600' }}>
+                Fecha {round.round_number}{' '}
+                {round.status === 'open'
+                  ? '(Abierta ✅)'
+                  : round.status === 'finished'
+                    ? '(Finalizada 🏁)'
+                    : '(En juego ⚽)'}
+              </span>
+            )}
+          />
         </div>
 
         <div style={{ textAlign: 'center', padding: '48px 16px' }}>
@@ -275,35 +287,36 @@ export default function PredictionForm() {
         >
           📅 Seleccioná una Fecha
         </label>
-        <select
-          value={selectedRound || ''}
-          onChange={e => {
-            setSelectedRound(Number(e.target.value))
+        <SelectDropdown
+          items={rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))}
+          selectedId={selectedRound}
+          onSelect={roundNumber => {
+            setSelectedRound(roundNumber)
             setPredictionValues({}) // Limpiar valores al cambiar de fecha
           }}
-          className="form-input"
-          style={{
-            width: '100%',
-            padding: '14px 16px',
-            fontSize: '1rem',
-            borderRadius: '10px',
-            border: '2px solid var(--color-primary)',
-            cursor: 'pointer',
-          }}
-        >
-          {rounds
-            .filter(r => ['open', 'locked', 'finished'].includes(r.status))
-            .map(round => (
-              <option key={round.id} value={round.round_number}>
-                Fecha {round.round_number}{' '}
-                {round.status === 'open'
-                  ? '(Abierta ✅)'
-                  : round.status === 'finished'
-                    ? '(Finalizada 🏁)'
-                    : '(En juego ⚽)'}
-              </option>
-            ))}
-        </select>
+          valueKey="round_number"
+          placeholder="Seleccionar fecha..."
+          renderButton={round => (
+            <span style={{ fontWeight: '600' }}>
+              Fecha {round.round_number}{' '}
+              {round.status === 'open'
+                ? '(Abierta ✅)'
+                : round.status === 'finished'
+                  ? '(Finalizada 🏁)'
+                  : '(En juego ⚽)'}
+            </span>
+          )}
+          renderOption={round => (
+            <span style={{ flex: 1, fontWeight: '600' }}>
+              Fecha {round.round_number}{' '}
+              {round.status === 'open'
+                ? '(Abierta ✅)'
+                : round.status === 'finished'
+                  ? '(Finalizada 🏁)'
+                  : '(En juego ⚽)'}
+            </span>
+          )}
+        />
       </div>
 
       {/* Header con estado de la fecha */}

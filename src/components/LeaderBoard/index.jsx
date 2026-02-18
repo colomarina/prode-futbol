@@ -28,7 +28,7 @@ export default function Leaderboard({ onViewPredictions }) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '1000px', overflow: 'hidden' }}>
+    <div className="container" style={{ maxWidth: '1000px' }}>
       <LeaderboardHeader
         selectedRound={selectedRound}
         setSelectedRound={setSelectedRound}

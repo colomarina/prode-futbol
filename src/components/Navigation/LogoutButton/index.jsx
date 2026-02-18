@@ -1,50 +1,17 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React from 'react'
+import logOut from '../../../assets/logout.svg'
+import styles from './LogoutButton.module.css'
 
-function LogoutButton({ onClick, variant = 'desktop' }) {
-  const [isHovered, setIsHovered] = useState(false)
-
-  const handleMouseEnter = useCallback(() => setIsHovered(true), [])
-  const handleMouseLeave = useCallback(() => setIsHovered(false), [])
-
-  const buttonStyle = useMemo(() => {
-    const baseStyle = {
-      backgroundColor: isHovered ? 'var(--color-error)' : 'transparent',
-      color: isHovered ? 'white' : 'var(--color-error)',
-      border: '2px solid var(--color-error)',
-      borderRadius: '8px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s',
-      display: 'flex',
-      alignItems: 'center',
-      gap: variant === 'desktop' ? '6px' : '4px',
-    }
-
-    if (variant === 'desktop') {
-      return {
-        ...baseStyle,
-        padding: '8px 16px',
-        fontSize: '0.85rem',
-      }
-    }
-    return {
-      ...baseStyle,
-      padding: '8px 14px',
-      fontSize: '0.75rem',
-    }
-  }, [isHovered, variant])
-
+const LogoutButton = ({ onClick, variant = 'desktop' }) => {
   return (
     <button
       onClick={onClick}
-      className={variant === 'mobile' ? 'mobile-menu-btn' : ''}
-      style={buttonStyle}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className={styles.logoutButton}
       aria-label="Cerrar sesión"
       title="Cerrar sesión"
     >
-      <span>Salir</span>
+      <img src={logOut} alt="Cerrar sesión" style={{ width: '16px', height: '16px' }} />
+      {variant === 'desktop' && <span>Cerrar sesión</span>}
     </button>
   )
 }

@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import RoundSelect from '../RoundSelect'
+import SelectDropdown from '../../SelectDropdown'
 
 const LeaderboardHeader = memo(function LeaderboardHeader({
   selectedRound,
@@ -13,7 +13,7 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
         style={{
           fontWeight: '700',
           color: 'var(--color-primary)',
-          margin: 0,
+          margin: '0 0 12px 0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -24,23 +24,35 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
         <span>🏆</span>
         <span>Tabla de Posiciones</span>
       </h2>
-      <p
-        style={{
-          color: 'var(--color-text-secondary)',
-          fontSize: '0.85rem',
-          margin: '4px 0 12px 0',
-          textAlign: 'center',
-        }}
-      >
-        {selectedRound === null ? 'Clasificación general' : `Fecha ${selectedRound}`}
-      </p>
 
-      <RoundSelect
-        value={selectedRound}
-        onChange={setSelectedRound}
-        rounds={rounds}
-        loading={roundsLoading}
-      />
+      {rounds && rounds.length > 0 && (
+        <SelectDropdown
+          items={[
+            { id: null, round_number: null, name: '🏆 General' },
+            ...rounds
+              .filter(r => ['open', 'locked', 'finished'].includes(r.status))
+              .map(r => ({
+                ...r,
+                id: r.round_number,
+              })),
+          ]}
+          selectedId={selectedRound === null ? null : selectedRound}
+          onSelect={value => setSelectedRound(value)}
+          valueKey="id"
+          isLoading={roundsLoading}
+          placeholder="Seleccionar fecha..."
+          renderButton={round => (
+            <span style={{ fontWeight: '600' }}>
+              {round.round_number === null ? '🏆 General' : `📅 Fecha ${round.round_number}`}
+            </span>
+          )}
+          renderOption={round => (
+            <span style={{ flex: 1, fontWeight: '600' }}>
+              {round.round_number === null ? '🏆 General' : `📅 Fecha ${round.round_number}`}
+            </span>
+          )}
+        />
+      )}
     </div>
   )
 })

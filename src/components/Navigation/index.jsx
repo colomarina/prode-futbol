@@ -133,7 +133,7 @@ function NavigationStyles() {
   return (
     <style>
       {`
-        @media (max-width: 767px) {
+        @media (max-width: 1199px) {
           .mobile-hidden { display: none !important; }
           .mobile-visible { display: inline !important; }
           .desktop-flex { display: none !important; }
@@ -150,14 +150,14 @@ function NavigationStyles() {
           .tabs-compact .tab-label-mobile { display: none !important; }
           .tabs-compact .tab-button {
             min-width: 60px;
-            padding: 10px 6px;
+            padding: 8px 4px;
           }
           .tabs-compact .tab-button span:first-child {
             font-size: 1.5rem;
           }
         }
 
-        @media (min-width: 768px) {
+        @media (min-width: 1200px) {
           .mobile-hidden { display: inline !important; }
           .mobile-visible { display: none !important; }
           .desktop-flex { display: flex !important; align-items: center; }

@@ -12,6 +12,7 @@
   --color-surface: #ffffff;
   --color-surface-variant: #fafafa;
   --color-surface-highlight: #e8f5e9; /* Para cards destacados o secciones activas */
+  --color-admin-badge: #fee2e2; /* Para badges de admin */
 
   /* Textos */
   --color-text-primary: #212121;
