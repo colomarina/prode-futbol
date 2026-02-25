@@ -1,5 +1,14 @@
 import { memo } from 'react'
 import { POSITION_CONFIG } from '../leaderboard.config'
+import InfoButton from '../../InfoButton'
+
+// Lista de jugadores suspendidos
+const SUSPENDED_PLAYERS = [
+  'Rodriguez Matias',
+  'Lázaro Beldrio',
+  'Geronimo Andres Garcia',
+  'Ezequiel Cordoba',
+]
 
 const LeaderboardRow = memo(function LeaderboardRow({
   player,
@@ -66,29 +75,41 @@ const PositionCell = memo(function PositionCell({ position, emoji }) {
 })
 
 const PlayerCell = memo(function PlayerCell({ player }) {
+  const isSuspended = SUSPENDED_PLAYERS.includes(player.full_name)
+
   return (
     <td style={{ padding: '12px 8px' }}>
-      <div>
-        <div
-          style={{
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            color: 'var(--color-text-primary)',
-            marginBottom: '2px',
-            textTransform: 'capitalize',
-          }}
-        >
-          {player.username}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div>
+          <div
+            style={{
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: isSuspended ? '#ef4444' : 'var(--color-text-primary)',
+              marginBottom: '2px',
+              textTransform: 'capitalize',
+            }}
+          >
+            {player.username}
+          </div>
+          <div
+            style={{
+              fontSize: '0.8rem',
+              color: isSuspended ? '#ef4444' : 'var(--color-text-secondary)',
+              textTransform: 'capitalize',
+            }}
+          >
+            {player.full_name}
+          </div>
         </div>
-        <div
-          style={{
-            fontSize: '0.8rem',
-            color: 'var(--color-text-secondary)',
-            textTransform: 'capitalize',
-          }}
-        >
-          {player.full_name}
-        </div>
+        {isSuspended && (
+          <InfoButton
+            message="Jugador suspendido"
+            type="error"
+            ariaLabel="Jugador suspendido"
+            position="top"
+          />
+        )}
       </div>
     </td>
   )

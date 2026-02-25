@@ -1,5 +1,6 @@
-import { useEffect, useCallback, memo, useRef, useState } from 'react'
+import { useEffect, useCallback, memo, useRef } from 'react'
 import TeamDisplay from '../../TeamDisplay'
+import InfoButton from '../../InfoButton'
 
 const MatchPrediction = ({
   match,
@@ -9,7 +10,6 @@ const MatchPrediction = ({
   onValueChange,
 }) => {
   const awayInputRef = useRef(null)
-  const [isInfoOpen, setIsInfoOpen] = useState(false)
 
   const isGameOfTheRound = match.round_number === match.match_number
 
@@ -115,59 +115,10 @@ const MatchPrediction = ({
             position: 'absolute',
             top: '12px',
             left: '55px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             zIndex: 2,
           }}
         >
-          <button
-            type="button"
-            aria-label="Partido de la fecha"
-            onClick={e => {
-              e.preventDefault()
-              e.stopPropagation()
-              setIsInfoOpen(!isInfoOpen)
-            }}
-            onMouseEnter={() => setIsInfoOpen(true)}
-            onMouseLeave={() => setIsInfoOpen(false)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '12px',
-              width: '39px',
-              minHeight: '32.5px',
-              border: '2px solid var(--color-primary)',
-              fontSize: '0.8rem',
-              fontWeight: '700',
-              lineHeight: '1',
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-            }}
-          >
-            i
-          </button>
-          {isInfoOpen && (
-            <div
-              role="tooltip"
-              style={{
-                position: 'absolute',
-                top: '-5px',
-                left: '43px',
-                backgroundColor: 'white',
-                color: 'var(--color-text-primary)',
-                border: '1px solid #e2e8f0',
-                borderRadius: '10px',
-                padding: '8px 10px',
-                fontSize: '0.8rem',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
-                pointerEvents: 'none',
-              }}
-            >
-              Partido de la fecha
-            </div>
-          )}
+          <InfoButton message="Partido de la fecha" ariaLabel="Partido de la fecha" />
         </div>
       )}
 
