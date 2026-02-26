@@ -7,7 +7,7 @@ const INFO_BUTTON_TYPES = {
   },
   error: {
     color: '#ef4444',
-    icon: '❌',
+    icon: 'X',
   },
   warning: {
     color: '#f59e0b',
