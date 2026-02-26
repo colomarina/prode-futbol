@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import SelectDropdown from '../../SelectDropdown'
+import SelectDropdown from '../../Common/SelectDropdown'
 
 const LeaderboardHeader = memo(function LeaderboardHeader({
   selectedRound,

@@ -1,4 +1,4 @@
-import TeamDisplay from '../../TeamDisplay'
+import TeamDisplay from '../../Common/TeamDisplay'
 import MatchStatusBadge from '../MatchStatusBadge'
 
 const CARD_STYLE = {

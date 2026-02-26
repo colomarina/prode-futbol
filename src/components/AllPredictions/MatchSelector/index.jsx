@@ -1,4 +1,4 @@
-import SelectDropdown from '../../SelectDropdown'
+import SelectDropdown from '../../Common/SelectDropdown'
 
 const MatchSelector = ({ matches, selectedMatchId, onMatchChange, disabled, isLoading }) => {
   return (

@@ -1,5 +1,5 @@
 import { useCallback, memo, useRef } from 'react'
-import TeamDisplay from '../../TeamDisplay'
+import TeamDisplay from '../../Common/TeamDisplay'
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
   const awayInputRef = useRef(null)

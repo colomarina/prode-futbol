@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import Toast from '../Toast'
+import Toast from '../Common/Toast'
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true)

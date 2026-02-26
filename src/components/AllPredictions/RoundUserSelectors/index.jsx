@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import MatchSelector from '../MatchSelector'
-import SelectDropdown from '../../SelectDropdown'
+import SelectDropdown from '../../Common/SelectDropdown'
 
 const RoundUserSelectors = ({
   availableRounds,

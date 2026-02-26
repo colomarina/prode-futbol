@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import MatchResult from './MatchResult'
-import Toast from '../Toast'
+import Toast from '../Common/Toast'
 
 export default function MatchManager() {
   const { rounds } = useRounds()

@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { POSITION_CONFIG } from '../leaderboard.config'
-import InfoButton from '../../InfoButton'
+import InfoButton from '../../Common/InfoButton'
 
 // Lista de jugadores suspendidos
 const SUSPENDED_PLAYERS = [
