@@ -1,6 +1,6 @@
 import { useEffect, useCallback, memo, useRef } from 'react'
-import TeamDisplay from '../../TeamDisplay'
-import InfoButton from '../../InfoButton'
+import TeamDisplay from '../../Common/TeamDisplay'
+import InfoButton from '../../Common/InfoButton'
 
 const MatchPrediction = ({
   match,

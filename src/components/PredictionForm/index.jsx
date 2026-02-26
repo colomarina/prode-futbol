@@ -3,8 +3,9 @@ import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
 import MatchPrediction from './MatchPrediction'
-import Toast from '../Toast'
-import SelectDropdown from '../SelectDropdown'
+import PaymentReminderModal from '../Common/PaymentReminderModal'
+import Toast from '../Common/Toast'
+import SelectDropdown from '../Common/SelectDropdown'
 
 export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
@@ -18,6 +19,7 @@ export default function PredictionForm() {
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(true)
 
   const predictionsByMatchId = useMemo(() => {
     if (!predictions?.length) return new Map()
@@ -126,6 +128,31 @@ export default function PredictionForm() {
       }
     }
   }, [activeRound, rounds, selectedRound])
+
+  // Cerrar modal cuando cambia la fecha seleccionada
+  useEffect(() => {
+    setShowPaymentModal(false)
+  }, [selectedRound])
+
+  // Verificar si debe mostrarse el recordatorio de pago
+  useEffect(() => {
+    if (!isRoundOpen || !selectedRound) return
+
+    // Verificar localStorage (si marcó "Ya pagué")
+    const paidStatus = localStorage.getItem(`payment_reminder_round_${selectedRound}`)
+    if (paidStatus === 'paid') return
+
+    // Verificar sessionStorage (si marcó "Recordarme después" en esta sesión)
+    const laterStatus = sessionStorage.getItem(`payment_reminder_round_${selectedRound}`)
+    if (laterStatus === 'later') return
+
+    // Si no está en ninguno, mostrar modal después de un pequeño delay
+    const timer = setTimeout(() => {
+      setShowPaymentModal(true)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [isRoundOpen, selectedRound])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {
@@ -321,16 +348,6 @@ export default function PredictionForm() {
 
       {/* Header con estado de la fecha */}
       <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-        {/* <h2
-          style={{
-            fontSize: '2rem',
-            fontWeight: '700',
-            color: 'var(--color-primary)',
-            margin: '0 0 16px 0',
-          }}
-        >
-          Fecha {selectedRound}
-        </h2> */}
         <div
           style={{
             display: 'inline-flex',
@@ -341,6 +358,7 @@ export default function PredictionForm() {
             borderRadius: '12px',
             backgroundColor: `${statusBadge.color}15`,
             border: `2px solid ${statusBadge.color}`,
+            width: '100%',
           }}
         >
           <span
@@ -362,23 +380,6 @@ export default function PredictionForm() {
           </p>
         </div>
       </div>
-
-      {isRoundFinished && (
-        <div
-          style={{
-            background: '#eff6ff',
-            border: '2px solid #93c5fd',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ color: '#1e40af', fontWeight: '600', margin: 0 }}>
-            🏁 Fecha finalizada. Mirá tus puntos obtenidos en cada partido.
-          </p>
-        </div>
-      )}
 
       {/* Atajo a fecha activa */}
       {activeRound && selectedRound !== activeRound.round_number && (
@@ -467,6 +468,13 @@ export default function PredictionForm() {
 
       {/* Toast notifications */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* Payment Reminder Modal */}
+      <PaymentReminderModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        roundNumber={selectedRound}
+      />
     </div>
   )
 }
