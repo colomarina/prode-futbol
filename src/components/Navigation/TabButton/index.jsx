@@ -36,6 +36,7 @@ const TabButton = forwardRef(function TabButton({ tab, isActive, onClick }, ref)
         borderBottom: isActive ? '4px solid var(--color-primary)' : '4px solid transparent',
         borderLeft: isActive ? '1px solid #dcfce7' : '1px solid transparent',
         borderRight: isActive ? '1px solid #dcfce7' : '1px solid transparent',
+        borderTop: isActive ? '1px solid #dcfce7' : '1px solid transparent',
         color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         whiteSpace: 'nowrap',
@@ -47,7 +48,8 @@ const TabButton = forwardRef(function TabButton({ tab, isActive, onClick }, ref)
         justifyContent: 'center',
         gap: '2px',
         position: 'relative',
-        boxShadow: isActive ? '0 -2px 8px rgba(16, 185, 129, 0.1)' : 'none',
+        outline: 'none',
+        outlineOffset: '0',
       }}
       aria-label={`${tab.label}, ${isActive ? 'seleccionado' : 'no seleccionado'}`}
     >

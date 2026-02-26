@@ -1,19 +1,9 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import UserBadge from '../UserBadge'
-import AdminBadge from '../AdminBadge'
-import LogoutButton from '../LogoutButton'
 import styles from './NavHeader.module.css'
+import Sidebar from '../Sidebar'
 
-function NavHeader({ profile, isAdmin, signOut }) {
-  const handleLogout = useCallback(
-    e => {
-      if (e.type === 'click' || e.key === 'Enter' || e.key === ' ') {
-        signOut()
-      }
-    },
-    [signOut]
-  )
-
+function NavHeader({ profile, onNavigate, signOut }) {
   return (
     <header className={styles.prodeHeader}>
       <div className={styles.headerLeft}>
@@ -25,8 +15,7 @@ function NavHeader({ profile, isAdmin, signOut }) {
       </div>
 
       <div className={styles.headerRight}>
-        {isAdmin() && <AdminBadge size="md" />}
-        <LogoutButton onClick={handleLogout} variant="mobile" />
+        <Sidebar onNavigate={onNavigate} onSignOut={signOut} />
       </div>
     </header>
   )

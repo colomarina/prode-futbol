@@ -1,6 +1,7 @@
 import { useState, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { ALL_TABS } from './tabs.config'
+import { hasViewSections, getViewSections, getDefaultSection } from './pages-with-sections.config'
 import NavHeader from './NavHeader'
 import NavTabs from './NavTabs'
 
@@ -8,12 +9,14 @@ import NavTabs from './NavTabs'
 const PredictionForm = lazy(() => import('../PredictionForm'))
 const AllPredictions = lazy(() => import('../AllPredictions'))
 const Leaderboard = lazy(() => import('../LeaderBoard'))
-const Info = lazy(() => import('../Info'))
+const InfoPage = lazy(() => import('../InfoPage'))
 const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
 
 export default function Navigation() {
-  const [activeTab, setActiveTab] = useState('predictions')
+  const [activeTab, setActiveTab] = useState('tournament')
+  // Estado genérico para trackear secciones activas de cualquier vista
+  const [activeSections, setActiveSections] = useState({ tournament: 'predictions' })
   const [allPredictionsSelection, setAllPredictionsSelection] = useState({
     roundNumber: null,
     userId: '',
@@ -23,55 +26,101 @@ export default function Navigation() {
   // Filtrar tabs visibles según permisos
   const visibleTabs = useMemo(() => ALL_TABS.filter(tab => !tab.adminOnly || isAdmin()), [isAdmin])
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'predictions':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <PredictionForm roundNumber={1} />
-          </Suspense>
-        )
-      case 'all-predictions':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <AllPredictions
-              initialRound={allPredictionsSelection.roundNumber}
-              initialUser={allPredictionsSelection.userId}
-            />
-          </Suspense>
-        )
-      case 'leaderboard':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Leaderboard
-              onViewPredictions={({ userId, roundNumber }) => {
-                setAllPredictionsSelection({ roundNumber, userId })
-                setActiveTab('all-predictions')
-              }}
-            />
-          </Suspense>
-        )
-      case 'info':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Info />
-          </Suspense>
-        )
-      case 'admin':
-        return isAdmin() ? (
-          <Suspense fallback={<LoadingSpinner />}>
-            <MatchManager />
-          </Suspense>
-        ) : null
-      case 'rounds':
-        return isAdmin() ? (
-          <Suspense fallback={<LoadingSpinner />}>
-            <RoundManager />
-          </Suspense>
-        ) : null
-      default:
-        return null
+  // Handler para navegación desde menú hamburguesa
+  const handleNavigationFromMenu = viewType => {
+    setActiveTab(viewType)
+    // Inicializar sección por defecto si la vista tiene secciones y aún no está inicializada
+    if (hasViewSections(viewType) && !activeSections[viewType]) {
+      setActiveSections(prev => ({
+        ...prev,
+        [viewType]: getDefaultSection(viewType),
+      }))
     }
+  }
+
+  // Determinar qué tabs mostrar según la vista activa (tabs principales o secciones)
+  const tabsToShow = useMemo(() => {
+    const viewSections = getViewSections(activeTab)
+    return viewSections || visibleTabs
+  }, [activeTab, visibleTabs])
+
+  // Determinar tab activo actual (puede ser sección o tab principal)
+  const currentActiveTab = activeSections[activeTab] || activeTab
+
+  // Verificar si debemos mostrar tabs
+  const shouldShowTabs = visibleTabs.some(tab => tab.id === activeTab) || hasViewSections(activeTab)
+
+  // Handler para cambiar tabs (genérico para tabs principales o secciones)
+  const handleTabChange = tabId => {
+    if (hasViewSections(activeTab)) {
+      // Si la vista actual tiene secciones, cambiar la sección activa
+      setActiveSections(prev => ({ ...prev, [activeTab]: tabId }))
+    } else {
+      // Sino, cambiar el tab principal
+      setActiveTab(tabId)
+    }
+  }
+
+  const renderContent = () => {
+    // Si es una vista con secciones (tournament, info, admin), renderizar según la sección activa
+    if (hasViewSections(activeTab)) {
+      const currentSection = activeSections[activeTab] || getDefaultSection(activeTab)
+
+      // Tournament sections
+      if (activeTab === 'tournament') {
+        switch (currentSection) {
+          case 'predictions':
+            return (
+              <Suspense fallback={<LoadingSpinner />}>
+                <PredictionForm roundNumber={1} />
+              </Suspense>
+            )
+          case 'all-predictions':
+            return (
+              <Suspense fallback={<LoadingSpinner />}>
+                <AllPredictions
+                  initialRound={allPredictionsSelection.roundNumber}
+                  initialUser={allPredictionsSelection.userId}
+                />
+              </Suspense>
+            )
+          case 'leaderboard':
+            return (
+              <Suspense fallback={<LoadingSpinner />}>
+                <Leaderboard
+                  onViewPredictions={({ userId, roundNumber }) => {
+                    setAllPredictionsSelection({ roundNumber, userId })
+                    setActiveSections(prev => ({ ...prev, tournament: 'all-predictions' }))
+                  }}
+                />
+              </Suspense>
+            )
+          default:
+            return null
+        }
+      }
+
+      // Info sections
+      if (activeTab === 'info') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <InfoPage activeSection={currentSection} />
+          </Suspense>
+        )
+      }
+
+      // Admin sections
+      if (activeTab === 'admin') {
+        if (!isAdmin()) return null
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            {currentSection === 'admin-matches' ? <MatchManager /> : <RoundManager />}
+          </Suspense>
+        )
+      }
+    }
+
+    return null
   }
 
   return (
@@ -86,10 +135,16 @@ export default function Navigation() {
         }}
       >
         <div className="container">
-          <NavHeader profile={profile} isAdmin={isAdmin} signOut={signOut} />
+          <NavHeader profile={profile} onNavigate={handleNavigationFromMenu} signOut={signOut} />
 
-          {/* Tabs - Responsive */}
-          <NavTabs tabs={visibleTabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+          {/* Tabs - Responsive - Muestra tabs de navegación o secciones de InfoPage */}
+          {shouldShowTabs && (
+            <NavTabs
+              tabs={tabsToShow}
+              activeTab={currentActiveTab}
+              setActiveTab={handleTabChange}
+            />
+          )}
         </div>
       </nav>
 
