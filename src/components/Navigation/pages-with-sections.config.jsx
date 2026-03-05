@@ -15,6 +15,8 @@ export const INFO_SECTIONS = [
   { id: 'match-status', label: 'Estado de Partidos', icon: '📋' },
 ]
 
+export const STATS_SECTIONS = [{ id: 'personal', label: 'Estadísticas Personales', icon: '📈' }]
+
 export const ADMIN_SECTIONS = [
   { id: 'admin-matches', label: 'Gestionar Partidos', mobileLabel: 'Partidos', icon: '⚽' },
   { id: 'admin-rounds', label: 'Gestionar Fechas', mobileLabel: 'Fechas', icon: '📅' },
@@ -33,6 +35,10 @@ export const PAGES_WITH_SECTIONS = {
   info: {
     sections: INFO_SECTIONS,
     defaultSection: 'points',
+  },
+  stats: {
+    sections: STATS_SECTIONS,
+    defaultSection: 'personal',
   },
   admin: {
     sections: ADMIN_SECTIONS,

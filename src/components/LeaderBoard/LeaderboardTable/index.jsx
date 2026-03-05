@@ -47,7 +47,7 @@ const TableHeader = memo(function TableHeader({ columns }) {
       <tr
         style={{
           backgroundColor: 'var(--color-surface-variant)',
-          borderBottom: '2px solid #E0E0E0',
+          borderBottom: '2px solid var(--color-border)',
           position: 'sticky',
           top: 0,
           zIndex: 1,

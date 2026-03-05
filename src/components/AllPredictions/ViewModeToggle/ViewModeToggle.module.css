@@ -1,6 +1,6 @@
 /* Adapted from Uiverse.io by cbolson */
 .viewModeToggle {
-  --_switch-bg-clr: #f5f5f5;
+  --_switch-bg-clr: var(--color-surface-variant);
   --_switch-padding: 4px;
   --_slider-bg-clr: var(--color-primary);
   --_slider-bg-clr-on: var(--color-primary);

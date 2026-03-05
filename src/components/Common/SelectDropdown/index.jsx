@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 const SELECT_STYLE = {
   width: '100%',
@@ -21,7 +21,25 @@ const SelectDropdown = ({
   valueKey = 'id',
 }) => {
   const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef(null)
   const selectedItem = items.find(item => item[valueKey] === selectedId)
+
+  // Cerrar dropdown cuando se clickea afuera
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
 
   const handleSelect = id => {
     onSelect(id)
@@ -29,7 +47,7 @@ const SelectDropdown = ({
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative' }} ref={containerRef}>
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -39,7 +57,8 @@ const SelectDropdown = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: disabled ? '#f5f5f5' : 'white',
+          backgroundColor: disabled ? 'var(--color-surface-variant)' : 'var(--color-surface)',
+          color: disabled ? 'var(--color-text-secondary)' : 'var(--color-text-primary)',
           opacity: disabled ? 0.6 : 1,
           cursor: disabled ? 'not-allowed' : 'pointer',
         }}
@@ -70,7 +89,7 @@ const SelectDropdown = ({
             top: '100%',
             left: 0,
             right: 0,
-            background: 'white',
+            background: 'var(--color-surface)',
             border: '2px solid var(--color-primary)',
             borderRadius: '10px',
             marginTop: '4px',
@@ -96,12 +115,12 @@ const SelectDropdown = ({
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'background 200ms',
-                borderBottom: '1px solid #f0f0f0',
+                // borderBottom: '1px solid var(--color-border)',
                 fontSize: '0.95rem',
               }}
               onMouseEnter={e => {
                 if (selectedId !== item[valueKey]) {
-                  e.currentTarget.style.background = '#f5f5f5'
+                  e.currentTarget.style.background = 'var(--color-surface-variant)'
                 }
               }}
               onMouseLeave={e => {

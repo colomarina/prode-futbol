@@ -84,8 +84,8 @@ const MatchPrediction = ({
         overflow: 'hidden',
         background: isGameOfTheRound
           ? 'var(--color-match-highlight)'
-          : 'linear-gradient(to bottom, #ffffff, #fafafa)',
-        border: '1px solid #e2e8f0',
+          : 'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
+        border: '1px solid var(--color-border)',
         borderRadius: '16px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -227,8 +227,8 @@ const MatchPrediction = ({
                 fontSize: '1.4rem',
                 fontWeight: '700',
                 borderRadius: '10px',
-                border: '3px solid #E0E0E0',
-                backgroundColor: '#FAFAFA',
+                border: '3px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface-variant)',
                 color: existingPrediction ? 'var(--color-primary)' : 'var(--color-text-secondary)',
               }}
             >
@@ -283,8 +283,8 @@ const MatchPrediction = ({
                 fontSize: '1.4rem',
                 fontWeight: '700',
                 borderRadius: '10px',
-                border: '3px solid #E0E0E0',
-                backgroundColor: '#FAFAFA',
+                border: '3px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface-variant)',
                 color: existingPrediction ? 'var(--color-primary)' : 'var(--color-text-secondary)',
               }}
             >

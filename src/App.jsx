@@ -1,4 +1,5 @@
 import { useAuth, AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Login from './components/Login'
 import Navigation from './components/Navigation'
 // import PredictionForm from './components/PredictionForm'
@@ -52,9 +53,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

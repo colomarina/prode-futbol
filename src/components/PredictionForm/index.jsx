@@ -385,15 +385,15 @@ export default function PredictionForm() {
       {activeRound && selectedRound !== activeRound.round_number && (
         <div
           style={{
-            background: '#f0fdf4',
-            border: '2px solid #86efac',
+            background: 'var(--color-surface-highlight)',
+            border: '2px solid var(--color-success)',
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '24px',
             textAlign: 'center',
           }}
         >
-          <p style={{ color: '#15803d', fontWeight: '600', marginBottom: '8px' }}>
+          <p style={{ color: 'var(--color-success)', fontWeight: '600', marginBottom: '8px' }}>
             💡 La Fecha {activeRound.round_number} está abierta para pronósticos
           </p>
           <button

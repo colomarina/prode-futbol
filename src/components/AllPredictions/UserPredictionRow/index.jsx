@@ -4,8 +4,9 @@ const UserPredictionRow = ({ user, prediction, isFinished }) => {
       className="card match-prediction-row"
       style={{
         padding: '10px 12px',
-        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
-        border: '1px solid #e2e8f0',
+        background:
+          'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
+        border: '1px solid var(--color-border)',
         borderRadius: '12px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         display: 'flex',

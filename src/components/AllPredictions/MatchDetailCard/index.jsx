@@ -8,8 +8,9 @@ const MatchDetailCard = ({ match }) => {
       style={{
         padding: '16px',
         marginBottom: '16px',
-        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
-        border: '1px solid #e2e8f0',
+        background:
+          'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
+        border: '1px solid var(--color-border)',
         borderRadius: '16px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }}
@@ -21,7 +22,7 @@ const MatchDetailCard = ({ match }) => {
           alignItems: 'center',
           marginBottom: '12px',
           paddingBottom: '8px',
-          borderBottom: '1px solid #f0f0f0',
+          borderBottom: '1px solid var(--color-border)',
         }}
       >
         <span

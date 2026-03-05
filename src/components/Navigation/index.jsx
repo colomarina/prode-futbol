@@ -12,6 +12,7 @@ const Leaderboard = lazy(() => import('../LeaderBoard'))
 const InfoPage = lazy(() => import('../InfoPage'))
 const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
+const PersonalStats = lazy(() => import('../PersonalStats'))
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('tournament')
@@ -109,6 +110,15 @@ export default function Navigation() {
         )
       }
 
+      // Stats sections
+      if (activeTab === 'stats') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <PersonalStats activeSection={currentSection} />
+          </Suspense>
+        )
+      }
+
       // Admin sections
       if (activeTab === 'admin') {
         if (!isAdmin()) return null
@@ -131,7 +141,7 @@ export default function Navigation() {
           backgroundColor: 'var(--color-surface)',
           position: 'sticky',
           top: 0,
-          zIndex: 100,
+          zIndex: 1100,
         }}
       >
         <div className="container">
@@ -229,7 +239,7 @@ function NavigationStyles() {
         }
 
         .tab-button:hover {
-          background-color: #f0fdf4;
+          background-color: var(--color-surface-highlight);
           transform: translateY(-1px);
         }
 

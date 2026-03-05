@@ -25,7 +25,7 @@ const LeaderboardRow = memo(function LeaderboardRow({
     <tr
       style={{
         backgroundColor: bgColor || 'transparent',
-        borderBottom: '1px solid #E0E0E0',
+        borderBottom: '1px solid var(--color-border)',
         transition: 'background-color 0.2s',
       }}
     >

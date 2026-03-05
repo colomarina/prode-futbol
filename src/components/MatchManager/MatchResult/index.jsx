@@ -52,7 +52,8 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       style={{
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(to bottom, #ffffff, #fafafa)',
+        background:
+          'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
         border: '1px solid #e2e8f0',
         borderRadius: '16px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',

@@ -89,8 +89,8 @@ export default function RoundManager() {
     const configs = {
       pending: {
         bg: 'rgba(156, 163, 175, 0.1)',
-        border: '#9ca3af',
-        color: '#6b7280',
+        border: 'var(--color-text-secondary)',
+        color: 'var(--color-text-secondary)',
         icon: '⏳',
         label: 'Pendiente',
       },
@@ -103,15 +103,15 @@ export default function RoundManager() {
       },
       locked: {
         bg: 'rgba(239, 68, 68, 0.1)',
-        border: '#ef4444',
-        color: '#b91c1c',
+        border: 'var(--color-error)',
+        color: 'var(--color-error)',
         icon: '🔒',
         label: 'Bloqueada',
       },
       finished: {
         bg: 'rgba(59, 130, 246, 0.1)',
-        border: '#3b82f6',
-        color: '#1e40af',
+        border: 'var(--color-info)',
+        color: 'var(--color-info)',
         icon: '✅',
         label: 'Finalizada',
       },
@@ -776,7 +776,7 @@ export default function RoundManager() {
                 <div
                   key={round.id}
                   style={{
-                    border: `2px solid ${isActive ? statusConfig.border : '#E0E0E0'}`,
+                    border: `2px solid ${isActive ? statusConfig.border : 'var(--color-border)'}`,
                     borderRadius: '12px',
                     padding: '12px',
                     backgroundColor: isActive ? statusConfig.bg : 'var(--color-surface)',
@@ -833,7 +833,7 @@ export default function RoundManager() {
                       width: '100%',
                       padding: '10px 12px',
                       borderRadius: '8px',
-                      border: '2px solid #E0E0E0',
+                      border: '2px solid var(--color-border)',
                       backgroundColor: 'var(--color-surface)',
                       color: 'var(--color-text-primary)',
                       fontWeight: '600',
@@ -848,7 +848,7 @@ export default function RoundManager() {
                       e.currentTarget.style.borderColor = 'var(--color-primary)'
                     }}
                     onBlur={e => {
-                      e.currentTarget.style.borderColor = '#E0E0E0'
+                      e.currentTarget.style.borderColor = 'var(--color-border)'
                     }}
                   >
                     <option value="pending">⏳ Pendiente</option>

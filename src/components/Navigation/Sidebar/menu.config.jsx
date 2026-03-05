@@ -18,6 +18,14 @@ export const MENU_ITEMS = [
     viewType: 'info',
   },
   {
+    id: 'stats',
+    label: 'Estadísticas',
+    icon: '📈',
+    description: 'Ver estadísticas personales y generales',
+    adminOnly: false,
+    viewType: 'stats',
+  },
+  {
     id: 'admin-divider',
     type: 'divider',
     label: 'ADMINISTRACIÓN',

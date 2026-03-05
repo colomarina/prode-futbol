@@ -1,5 +1,6 @@
 import React from 'react'
 import UserBadge from '../UserBadge'
+import ThemeToggle from '../../Common/ThemeToggle'
 import styles from './NavHeader.module.css'
 import Sidebar from '../Sidebar'
 
@@ -15,6 +16,7 @@ function NavHeader({ profile, onNavigate, signOut }) {
       </div>
 
       <div className={styles.headerRight}>
+        <ThemeToggle />
         <Sidebar onNavigate={onNavigate} onSignOut={signOut} />
       </div>
     </header>

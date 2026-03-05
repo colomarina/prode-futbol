@@ -102,7 +102,7 @@ const RoundUserSelectors = ({
                       position: 'absolute',
                       top: '100%',
                       right: 0,
-                      background: 'white',
+                      background: 'var(--color-surface)',
                       border: '2px solid var(--color-primary)',
                       borderRadius: '10px',
                       minWidth: '250px',
@@ -135,12 +135,12 @@ const RoundUserSelectors = ({
                           cursor: 'pointer',
                           textAlign: 'left',
                           transition: 'background 200ms',
-                          borderBottom: '1px solid #f0f0f0',
+                          borderBottom: '1px solid var(--color-border)',
                           fontSize: '0.95rem',
                         }}
                         onMouseEnter={e => {
                           if (selectedRound !== round.round_number) {
-                            e.target.style.background = '#f5f5f5'
+                            e.target.style.background = 'var(--color-surface-variant)'
                           }
                         }}
                         onMouseLeave={e => {
@@ -169,9 +169,11 @@ const RoundUserSelectors = ({
                   border:
                     selectedRound === round.round_number
                       ? '2px solid var(--color-primary)'
-                      : '2px solid #e0e0e0',
+                      : '2px solid var(--color-border)',
                   background:
-                    selectedRound === round.round_number ? 'var(--color-primary)' : 'white',
+                    selectedRound === round.round_number
+                      ? 'var(--color-primary)'
+                      : 'var(--color-surface)',
                   color:
                     selectedRound === round.round_number ? 'white' : 'var(--color-text-primary)',
                   cursor: 'pointer',
@@ -181,14 +183,14 @@ const RoundUserSelectors = ({
                 }}
                 onMouseEnter={e => {
                   if (selectedRound !== round.round_number) {
-                    e.target.style.background = '#f5f5f5'
+                    e.target.style.background = 'var(--color-surface-variant)'
                     e.target.style.borderColor = 'var(--color-primary)'
                   }
                 }}
                 onMouseLeave={e => {
                   if (selectedRound !== round.round_number) {
-                    e.target.style.background = 'white'
-                    e.target.style.borderColor = '#e0e0e0'
+                    e.target.style.background = 'var(--color-surface)'
+                    e.target.style.borderColor = 'var(--color-border)'
                   }
                 }}
               >

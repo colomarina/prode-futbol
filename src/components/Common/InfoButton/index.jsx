@@ -75,7 +75,7 @@ const InfoButton = ({ message, type = 'info', position = 'right', ariaLabel = 'I
           lineHeight: '1',
           cursor: 'pointer',
           boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-          backgroundColor: 'white',
+          backgroundColor: 'var(--color-surface)',
           color: config.color,
         }}
       >
@@ -87,9 +87,9 @@ const InfoButton = ({ message, type = 'info', position = 'right', ariaLabel = 'I
           style={{
             position: 'absolute',
             ...tooltipPosition,
-            backgroundColor: 'white',
+            backgroundColor: 'var(--color-surface)',
             color: 'var(--color-text-primary)',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--color-border)',
             borderRadius: '10px',
             padding: '8px 10px',
             fontSize: '0.8rem',

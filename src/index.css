@@ -63,6 +63,59 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Tema Oscuro */
+[data-theme='dark'] {
+  /* Colores principales - iguales en ambos temas */
+  --color-primary: #1e7f43;
+  --color-primary-dark: #155a2f;
+  --color-primary-light: #2a9e56;
+  --color-secondary: #4caf50;
+  --color-secondary-light: #66bb6a;
+
+  /* Fondos - Oscuros */
+  --color-background: #0f0f0f;
+  --color-surface: #1a1a1a;
+  --color-surface-variant: #242424;
+  --color-surface-highlight: #1b3a1f;
+  --color-admin-badge: #3d2626;
+
+  /* Textos - Claros */
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #a0a0a0;
+  --color-text-disabled: #606060;
+  --color-text-on-primary: #ffffff;
+
+  /* Estados - Igual en ambos temas */
+  --color-success: #2e7d32;
+  --color-success-light: #4caf50;
+  --color-error: #c62828;
+  --color-error-light: #e53935;
+  --color-warning: #f9a825;
+  --color-warning-light: #fbc02d;
+  --color-info: #1976d2;
+  --color-info-light: #42a5f5;
+
+  /* Bordes y divisores - Oscuros */
+  --color-border: #333333;
+  --color-border-light: #262626;
+  --color-divider: #333333;
+
+  /* Específicos para prode - Oscuros */
+  --color-match-card: #1a1a1a;
+  --color-match-highlight2: #0d2410;
+  --color-match-highlight: #0f3a1a;
+  --color-match-highlight3: #134d1a;
+  --color-score-home: #1e7f43;
+  --color-score-away: #8a9aaa;
+  --color-badge: #ff6f00;
+  --color-badge-light: #ffa726;
+
+  /* Sombras - Oscuras */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+}
+
 /* Reset y Estilos Base */
 * {
   margin: 0;
