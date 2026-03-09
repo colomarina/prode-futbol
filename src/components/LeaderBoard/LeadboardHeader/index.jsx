@@ -31,6 +31,7 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
             { id: null, round_number: null, name: '🏆 General' },
             ...rounds
               .filter(r => ['open', 'locked', 'finished'].includes(r.status))
+              .sort((a, b) => b.round_number - a.round_number)
               .map(r => ({
                 ...r,
                 id: r.round_number,

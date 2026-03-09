@@ -62,9 +62,6 @@ export default function PersonalStats() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Evolución de Puntos</h2>
         <LineChart data={stats.evolutionByRound} />
-        <p className={styles.sectionDescription}>
-          Pasa el mouse sobre los puntos para ver detalles de cada fecha
-        </p>
       </section>
 
       {/* Sección 3: Mejor y Peor fecha */}

@@ -56,26 +56,25 @@ export const AccuracyBreakdown = ({ breakdown }) => {
               <div className={styles.itemHeader}>
                 <div className={styles.labelWrapper}>
                   <span className={styles.icon}>{item.icon}</span>
-                  <div className={styles.labelBlock}>
-                    <span className={styles.label}>{item.label}</span>
-                    <span className={styles.description}>{item.description}</span>
-                  </div>
+                  <span className={styles.label}>{item.label}</span>
                 </div>
                 <span className={styles.count}>{item.count}</span>
               </div>
 
+              <p className={styles.description}>{item.description}</p>
+
               {/* Barra de progreso */}
-              <div className={styles.barContainer}>
-                <div
-                  className={styles.barFill}
-                  style={{
-                    width: `${percentage}%`,
-                    backgroundColor: item.color,
-                  }}
-                >
-                  {percentage > 5 && <span className={styles.percentageInside}>{percentage}%</span>}
+              <div className={styles.barWrapper}>
+                <div className={styles.barContainer}>
+                  <div
+                    className={styles.barFill}
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: item.color,
+                    }}
+                  />
                 </div>
-                {percentage <= 5 && <span className={styles.percentageOutside}>{percentage}%</span>}
+                <span className={styles.percentage}>{percentage}%</span>
               </div>
             </div>
           )

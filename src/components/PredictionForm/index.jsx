@@ -2,13 +2,18 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
+import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 import MatchPrediction from './MatchPrediction'
 import PaymentReminderModal from '../Common/PaymentReminderModal'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
+import LoadingState from '../Common/LoadingState'
+import EmptyState from '../Common/EmptyState'
 
 export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
+  const { user } = useAuth()
 
   // Inicializar selectedRound con activeRound cuando esté disponible
   const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
@@ -19,7 +24,7 @@ export default function PredictionForm() {
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(true)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   const predictionsByMatchId = useMemo(() => {
     if (!predictions?.length) return new Map()
@@ -30,6 +35,14 @@ export default function PredictionForm() {
   const currentRound = useMemo(
     () => rounds?.find(r => r.round_number === selectedRound),
     [rounds, selectedRound]
+  )
+
+  const availableRounds = useMemo(
+    () =>
+      (rounds || [])
+        .filter(r => ['open', 'locked', 'finished'].includes(r.status))
+        .sort((a, b) => b.round_number - a.round_number),
+    [rounds]
   )
 
   const isRoundOpen = currentRound?.status === 'open'
@@ -120,64 +133,69 @@ export default function PredictionForm() {
   useEffect(() => {
     if (selectedRound) return
 
-    if (rounds?.length) {
-      const available = rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))
-      const lastAvailable = available.sort((a, b) => b.round_number - a.round_number)[0]
-      if (lastAvailable) {
-        setSelectedRound(lastAvailable.round_number)
+    if (availableRounds.length) {
+      const newestRound = availableRounds[0]
+      if (newestRound) {
+        setSelectedRound(newestRound.round_number)
       }
     }
-  }, [activeRound, rounds, selectedRound])
-
-  // Cerrar modal cuando cambia la fecha seleccionada
-  useEffect(() => {
-    setShowPaymentModal(false)
-  }, [selectedRound])
+  }, [activeRound, availableRounds, selectedRound])
 
   // Verificar si debe mostrarse el recordatorio de pago
   useEffect(() => {
-    if (!isRoundOpen || !selectedRound) return
+    if (!isRoundOpen || !selectedRound || !user?.id) {
+      setShowPaymentModal(false)
+      return
+    }
 
-    // Verificar localStorage (si marcó "Ya pagué")
-    const paidStatus = localStorage.getItem(`payment_reminder_round_${selectedRound}`)
-    if (paidStatus === 'paid') return
-
-    // Verificar sessionStorage (si marcó "Recordarme después" en esta sesión)
+    // Si marcó "Recordarme después" en esta sesión, no insistir
     const laterStatus = sessionStorage.getItem(`payment_reminder_round_${selectedRound}`)
-    if (laterStatus === 'later') return
+    if (laterStatus === 'later') {
+      setShowPaymentModal(false)
+      return
+    }
 
-    // Si no está en ninguno, mostrar modal después de un pequeño delay
-    const timer = setTimeout(() => {
-      setShowPaymentModal(true)
-    }, 500)
+    let isCancelled = false
 
-    return () => clearTimeout(timer)
-  }, [isRoundOpen, selectedRound])
+    const checkPaymentStatus = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_my_round_payment_status', {
+          p_round_number: selectedRound,
+        })
+
+        if (error) throw error
+
+        // Si ya está pagada según admin/sistema, no mostrar más la modal
+        if (!isCancelled) {
+          setShowPaymentModal(data !== true)
+        }
+      } catch {
+        // Si falla la verificación, mostrar recordatorio para no perder el aviso
+        if (!isCancelled) {
+          setShowPaymentModal(true)
+        }
+      }
+    }
+
+    checkPaymentStatus()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isRoundOpen, selectedRound, user?.id])
+
+  const handleClosePaymentModal = useCallback(() => {
+    if (selectedRound) {
+      sessionStorage.setItem(`payment_reminder_round_${selectedRound}`, 'later')
+    }
+    setShowPaymentModal(false)
+  }, [selectedRound])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div
-          style={{
-            width: '56px',
-            height: '56px',
-            margin: '0 auto 20px',
-            border: '4px solid rgba(30, 127, 67, 0.1)',
-            borderTop: '4px solid var(--color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }}
-        />
-        <p
-          style={{
-            color: 'var(--color-text-secondary)',
-            fontSize: '1rem',
-            fontWeight: '500',
-          }}
-        >
-          Cargando información...
-        </p>
+      <div className="container">
+        <LoadingState message="Cargando información..." />
       </div>
     )
   }
@@ -185,14 +203,11 @@ export default function PredictionForm() {
   // Si no hay fechas en absoluto
   if (!rounds || rounds.length === 0) {
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>⚽</div>
-        <h3 style={{ color: 'var(--color-text-primary)', marginBottom: '8px' }}>
-          No hay fechas disponibles
-        </h3>
-        <p style={{ color: 'var(--color-text-secondary)' }}>
-          Esperá a que el administrador cree las fechas del torneo
-        </p>
+      <div className="container">
+        <EmptyState
+          title="No hay fechas disponibles"
+          description="Esperá a que el administrador cree las fechas del torneo"
+        />
       </div>
     )
   }
@@ -200,27 +215,8 @@ export default function PredictionForm() {
   // Mientras cargan los partidos
   if (matchesLoading) {
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div
-          style={{
-            width: '56px',
-            height: '56px',
-            margin: '0 auto 20px',
-            border: '4px solid rgba(30, 127, 67, 0.1)',
-            borderTop: '4px solid var(--color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }}
-        />
-        <p
-          style={{
-            color: 'var(--color-text-secondary)',
-            fontSize: '1rem',
-            fontWeight: '500',
-          }}
-        >
-          Cargando partidos...
-        </p>
+      <div className="container">
+        <LoadingState message="Cargando partidos..." />
       </div>
     )
   }
@@ -228,35 +224,14 @@ export default function PredictionForm() {
   // No renderizar hasta que haya una fecha seleccionada
   if (!selectedRound) {
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div
-          style={{
-            width: '56px',
-            height: '56px',
-            margin: '0 auto 20px',
-            border: '4px solid rgba(30, 127, 67, 0.1)',
-            borderTop: '4px solid var(--color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }}
-        />
-        <p
-          style={{
-            color: 'var(--color-text-secondary)',
-            fontSize: '1rem',
-            fontWeight: '500',
-          }}
-        >
-          Preparando información...
-        </p>
+      <div className="container">
+        <LoadingState message="Preparando información..." />
       </div>
     )
   }
 
   // Si la fecha no tiene partidos
   if (!matches || matches.length === 0) {
-    const availableRounds = rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))
-
     return (
       <div className="container" style={{ maxWidth: '900px' }}>
         {/* Selector de fechas */}
@@ -291,15 +266,10 @@ export default function PredictionForm() {
           />
         </div>
 
-        <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '16px' }}>⚽</div>
-          <h3 style={{ color: 'var(--color-text-primary)', marginBottom: '8px' }}>
-            No hay partidos disponibles
-          </h3>
-          <p style={{ color: 'var(--color-text-secondary)' }}>
-            Todavía no se cargaron partidos para esta fecha.
-          </p>
-        </div>
+        <EmptyState
+          title="No hay partidos disponibles"
+          description="Todavía no se cargaron partidos para esta fecha."
+        />
       </div>
     )
   }
@@ -315,7 +285,7 @@ export default function PredictionForm() {
           📅 Seleccioná una Fecha
         </label>
         <SelectDropdown
-          items={rounds.filter(r => ['open', 'locked', 'finished'].includes(r.status))}
+          items={availableRounds}
           selectedId={selectedRound}
           onSelect={roundNumber => {
             setSelectedRound(roundNumber)
@@ -472,7 +442,7 @@ export default function PredictionForm() {
       {/* Payment Reminder Modal */}
       <PaymentReminderModal
         isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
+        onClose={handleClosePaymentModal}
         roundNumber={selectedRound}
       />
     </div>

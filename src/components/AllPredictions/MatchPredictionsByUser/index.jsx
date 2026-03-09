@@ -1,12 +1,10 @@
 import MatchCard from '../MatchCard'
+import LoadingState from '../../Common/LoadingState'
 
 const MatchPredictionsByUser = ({ matches, roundPredictions, hasMatchStarted, loading }) => {
   if (loading)
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div className="spinner" style={{ margin: '0 auto 16px' }} />
-        <p style={{ color: 'var(--color-text-secondary)' }}>Cargando pronósticos...</p>
-      </div>
+      <LoadingState message="Cargando pronósticos..." style={{ padding: '40px' }} spacing="16px" />
     )
 
   return (

@@ -13,6 +13,7 @@ const InfoPage = lazy(() => import('../InfoPage'))
 const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
 const PersonalStats = lazy(() => import('../PersonalStats'))
+const AdminPayments = lazy(() => import('../AdminPayments'))
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('tournament')
@@ -124,7 +125,13 @@ export default function Navigation() {
         if (!isAdmin()) return null
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            {currentSection === 'admin-matches' ? <MatchManager /> : <RoundManager />}
+            {currentSection === 'admin-matches' ? (
+              <MatchManager />
+            ) : currentSection === 'admin-rounds' ? (
+              <RoundManager />
+            ) : (
+              <AdminPayments />
+            )}
           </Suspense>
         )
       }

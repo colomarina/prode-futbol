@@ -3,8 +3,8 @@ import styles from './PaymentReminderModal.module.css'
 
 /**
  * Modal de recordatorio de pago
- * Se muestra una vez al entrar a pronósticos si la fecha está abierta
- * El usuario puede marcar "Ya pagué" o "Recordarme después"
+ * Se muestra cuando la fecha está abierta y el pago figura pendiente
+ * El estado real de pago se valida en backend
  */
 const PaymentReminderModal = ({ isOpen, onClose, roundNumber }) => {
   // Cerrar con tecla Escape
@@ -28,15 +28,13 @@ const PaymentReminderModal = ({ isOpen, onClose, roundNumber }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
-  const handleAlreadyPaid = () => {
-    // Guardar en localStorage que ya pagó esta fecha
-    localStorage.setItem(`payment_reminder_round_${roundNumber}`, 'paid')
-    onClose()
-  }
-
   const handleRemindLater = () => {
     // Guardar en sessionStorage para no mostrar en esta sesión
     sessionStorage.setItem(`payment_reminder_round_${roundNumber}`, 'later')
+    onClose()
+  }
+
+  const handleUnderstood = () => {
     onClose()
   }
 
@@ -55,7 +53,7 @@ const PaymentReminderModal = ({ isOpen, onClose, roundNumber }) => {
         <div className={styles.header}>
           <span className={styles.icon}>💰</span>
           <h2 id="modal-title" className={styles.title}>
-            ¡No te olvides de abonar la fecha!
+            Pago pendiente de esta fecha
           </h2>
         </div>
 
@@ -65,23 +63,26 @@ const PaymentReminderModal = ({ isOpen, onClose, roundNumber }) => {
             Para que tu participación quede confirmada, acordate de realizar el pago antes del
             cierre.
           </p>
+          <p className={styles.note}>
+            Cuando el admin confirme tu pago, este aviso deja de aparecer.
+          </p>
         </div>
 
         {/* Actions */}
         <div className={styles.actions}>
           <button
             className={`${styles.button} ${styles.primaryButton}`}
-            onClick={handleAlreadyPaid}
+            onClick={handleUnderstood}
             type="button"
           >
-            <span>Ya pagué ✓</span>
+            <span>Entiendo, lo pago luego</span>
           </button>
           <button
             className={`${styles.button} ${styles.secondaryButton}`}
             onClick={handleRemindLater}
             type="button"
           >
-            <span>Recordarme después</span>
+            <span>Recordarme más tarde</span>
           </button>
         </div>
       </div>

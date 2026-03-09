@@ -1,5 +1,6 @@
 import MatchDetailCard from '../MatchDetailCard'
 import UserPredictionRow from '../UserPredictionRow'
+import LoadingState from '../../Common/LoadingState'
 
 const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, matchLoading }) => {
   return (
@@ -7,10 +8,11 @@ const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, match
       {selectedMatch && <MatchDetailCard match={selectedMatch} />}
 
       {matchLoading ? (
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <div className="spinner" style={{ margin: '0 auto 16px' }} />
-          <p style={{ color: 'var(--color-text-secondary)' }}>Cargando pronósticos...</p>
-        </div>
+        <LoadingState
+          message="Cargando pronósticos..."
+          style={{ padding: '40px' }}
+          spacing="16px"
+        />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {users

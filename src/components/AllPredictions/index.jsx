@@ -4,6 +4,7 @@ import RoundUserSelectors from './RoundUserSelectors'
 import MatchPredictionsByUser from './MatchPredictionsByUser'
 import MatchPredictionsByMatch from './MatchPredictionsByMatch'
 import EmptyState from './EmptyState'
+import LoadingState from '../Common/LoadingState'
 
 export default function AllPredictions({ initialRound = null, initialUser = '' }) {
   const {
@@ -31,9 +32,8 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
 
   if (roundsLoading)
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <div className="spinner" style={{ margin: '0 auto 16px' }} />
-        <p style={{ color: 'var(--color-text-secondary)' }}>Cargando...</p>
+      <div className="container">
+        <LoadingState message="Cargando..." />
       </div>
     )
 

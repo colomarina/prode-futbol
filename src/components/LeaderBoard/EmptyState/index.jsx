@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import CommonEmptyState from '../../Common/EmptyState'
 
 const EmptyState = memo(function EmptyState({
   title = 'No hay datos disponibles',
@@ -6,20 +7,16 @@ const EmptyState = memo(function EmptyState({
   icon = '📊',
 }) {
   return (
-    <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-      <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{icon}</div>
-      <p
-        style={{
-          fontSize: '1rem',
-          color: 'var(--color-text-primary)',
-          marginBottom: '4px',
-          fontWeight: '600',
-        }}
-      >
-        {title}
-      </p>
-      <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{subtitle}</p>
-    </div>
+    <CommonEmptyState
+      icon={icon}
+      title={title}
+      description={subtitle}
+      style={{ padding: '32px 16px' }}
+      iconStyle={{ fontSize: '3rem', marginBottom: '12px' }}
+      titleTag="p"
+      titleStyle={{ fontSize: '1rem', marginBottom: '4px', fontWeight: '600' }}
+      descriptionStyle={{ fontSize: '0.85rem' }}
+    />
   )
 })
 

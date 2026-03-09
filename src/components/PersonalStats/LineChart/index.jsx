@@ -3,12 +3,18 @@ import styles from './LineChart.module.css'
 
 export const LineChart = ({ data }) => {
   const [hoveredRound, setHoveredRound] = useState(null)
+  const [selectedRound, setSelectedRound] = useState(null)
 
   if (!data || data.length === 0) return null
 
+  const isTouchDevice =
+    typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
+
   // Calcular dimensiones y escala
   const padding = { top: 40, right: 40, bottom: 60, left: 60 }
-  const width = 600
+  const baseWidth = 600
+  const pointSpacing = 88
+  const width = Math.max(baseWidth, padding.left + padding.right + (data.length - 1) * pointSpacing)
   const height = 300
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
@@ -16,16 +22,28 @@ export const LineChart = ({ data }) => {
   const maxPoints = Math.max(...data.map(d => d.points))
   const minPoints = Math.min(...data.map(d => d.points))
   const range = maxPoints - minPoints || 10
-  const padding_value = range * 0.1
+  const paddingValue = range * 0.1
 
-  const maxY = maxPoints + padding_value
-  const minY = Math.max(0, minPoints - padding_value)
+  const maxY = maxPoints + paddingValue
+  const minY = Math.max(0, minPoints - paddingValue)
 
-  // Funciones de conversión
-  const getX = index => padding.left + (index / (data.length - 1)) * chartWidth
+  // Funciones de conversion
+  const getX = index => {
+    if (data.length === 1) return padding.left + chartWidth / 2
+    return padding.left + (index / (data.length - 1)) * chartWidth
+  }
+
   const getY = points => height - padding.bottom - ((points - minY) / (maxY - minY)) * chartHeight
+  const activeRound = selectedRound ?? hoveredRound
 
-  // Generar path de línea
+  const getTooltipX = x => {
+    const tooltipWidth = 100
+    const minX = padding.left + 4
+    const maxX = width - padding.right - tooltipWidth - 4
+    return Math.min(Math.max(x - tooltipWidth / 2, minX), maxX)
+  }
+
+  // Generar path de linea
   const pathData = data
     .map((d, i) => {
       const x = getX(i)
@@ -47,132 +65,143 @@ export const LineChart = ({ data }) => {
 
   return (
     <div className={styles.container}>
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="xMidYMid meet"
-        className={styles.chart}
-      >
-        {/* Grid de fondo */}
-        {yTicks.map((tick, i) => (
-          <g key={`grid-${i}`}>
-            <line
-              x1={padding.left}
-              y1={tick.y}
-              x2={width - padding.right}
-              y2={tick.y}
-              className={styles.gridLine}
-            />
-            <text
-              x={padding.left - 10}
-              y={tick.y}
-              textAnchor="end"
-              dominantBaseline="middle"
-              className={styles.axisLabel}
-            >
-              {tick.value}
-            </text>
-          </g>
-        ))}
-
-        {/* Línea del gráfico */}
-        <path d={pathData} className={styles.line} />
-
-        {/* Puntos interactivos */}
-        {data.map((d, i) => {
-          const x = getX(i)
-          const y = getY(d.points)
-          const isHovered = hoveredRound === d.roundNumber
-
-          return (
-            <g
-              key={`point-${i}`}
-              onMouseEnter={() => setHoveredRound(d.roundNumber)}
-              onMouseLeave={() => setHoveredRound(null)}
-              className={styles.pointGroup}
-            >
-              {/* Círculo grande (hit area) */}
-              <circle cx={x} cy={y} r="8" className={styles.pointHitArea} />
-
-              {/* Círculo visible */}
-              <circle
-                cx={x}
-                cy={y}
-                r={isHovered ? 6 : 4}
-                className={styles.point}
-                style={{
-                  transition: 'r 0.2s',
-                }}
+      <p className={styles.hint}>{isTouchDevice ? 'Toca un punto para ver detalle' : ''}</p>
+      <div className={styles.scrollArea}>
+        <svg
+          width={width}
+          height="100%"
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMinYMid meet"
+          className={styles.chart}
+        >
+          {/* Grid de fondo */}
+          {yTicks.map((tick, i) => (
+            <g key={`grid-${i}`}>
+              <line
+                x1={padding.left}
+                y1={tick.y}
+                x2={width - padding.right}
+                y2={tick.y}
+                className={styles.gridLine}
               />
-
-              {/* Tooltip */}
-              {isHovered && (
-                <>
-                  {/* Línea vertical */}
-                  <line
-                    x1={x}
-                    y1={padding.top}
-                    x2={x}
-                    y2={height - padding.bottom}
-                    className={styles.tooltipLine}
-                  />
-
-                  {/* Tooltip box */}
-                  <rect
-                    x={x - 45}
-                    y={y - 45}
-                    width="90"
-                    height="40"
-                    rx="4"
-                    className={styles.tooltipBox}
-                  />
-                  <text x={x} y={y - 30} textAnchor="middle" className={styles.tooltipText}>
-                    Fecha {d.roundNumber}
-                  </text>
-                  <text x={x} y={y - 15} textAnchor="middle" className={styles.tooltipValue}>
-                    {d.points} pts
-                  </text>
-                </>
-              )}
-
-              {/* Etiqueta de round en el eje X */}
               <text
-                x={x}
-                y={height - padding.bottom + 25}
-                textAnchor="middle"
+                x={padding.left - 10}
+                y={tick.y}
+                textAnchor="end"
+                dominantBaseline="middle"
                 className={styles.axisLabel}
               >
-                Fecha {d.roundNumber}
+                {tick.value}
               </text>
             </g>
-          )
-        })}
+          ))}
 
-        {/* Ejes */}
-        <line
-          x1={padding.left}
-          y1={padding.top}
-          x2={padding.left}
-          y2={height - padding.bottom}
-          className={styles.axis}
-        />
-        <line
-          x1={padding.left}
-          y1={height - padding.bottom}
-          x2={width - padding.right}
-          y2={height - padding.bottom}
-          className={styles.axis}
-        />
+          {/* Linea del grafico */}
+          <path d={pathData} className={styles.line} />
 
-        {/* Etiquetas de ejes */}
-        <text x={padding.left - 35} y={padding.top - 10} className={styles.axisTitle}>
-          Puntos
-        </text>
-        <text x={width / 2} y={height - 15} textAnchor="middle" className={styles.axisTitle}>
-          Número de Fecha
-        </text>
-      </svg>
+          {/* Puntos interactivos */}
+          {data.map((d, i) => {
+            const x = getX(i)
+            const y = getY(d.points)
+            const isActive = activeRound === d.roundNumber
+            const tooltipX = getTooltipX(x)
+
+            return (
+              <g
+                key={`point-${i}`}
+                onPointerEnter={() => {
+                  if (!isTouchDevice) setHoveredRound(d.roundNumber)
+                }}
+                onPointerLeave={() => {
+                  if (!isTouchDevice) setHoveredRound(null)
+                }}
+                onClick={() => {
+                  setSelectedRound(prev => (prev === d.roundNumber ? null : d.roundNumber))
+                }}
+                className={styles.pointGroup}
+              >
+                {/* Circulo grande (hit area) */}
+                <circle cx={x} cy={y} r={isTouchDevice ? 14 : 10} className={styles.pointHitArea} />
+
+                {/* Circulo visible */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={isActive ? 6 : 4}
+                  className={styles.point}
+                  style={{
+                    transition: 'r 0.2s',
+                  }}
+                />
+
+                {/* Tooltip */}
+                {isActive && (
+                  <>
+                    {/* Linea vertical */}
+                    <line
+                      x1={x}
+                      y1={padding.top}
+                      x2={x}
+                      y2={height - padding.bottom}
+                      className={styles.tooltipLine}
+                    />
+
+                    {/* Tooltip box */}
+                    <rect
+                      x={tooltipX}
+                      y={y - 45}
+                      width="100"
+                      height="40"
+                      rx="4"
+                      className={styles.tooltipBox}
+                    />
+                    <text x={tooltipX + 50} y={y - 30} textAnchor="middle" className={styles.tooltipText}>
+                      Fecha {d.roundNumber}
+                    </text>
+                    <text x={tooltipX + 50} y={y - 15} textAnchor="middle" className={styles.tooltipValue}>
+                      {d.points} pts
+                    </text>
+                  </>
+                )}
+
+                {/* Etiqueta de round en el eje X */}
+                <text
+                  x={x}
+                  y={height - padding.bottom + 25}
+                  textAnchor="middle"
+                  className={styles.axisLabel}
+                >
+                  Fecha {d.roundNumber}
+                </text>
+              </g>
+            )
+          })}
+
+          {/* Ejes */}
+          <line
+            x1={padding.left}
+            y1={padding.top}
+            x2={padding.left}
+            y2={height - padding.bottom}
+            className={styles.axis}
+          />
+          <line
+            x1={padding.left}
+            y1={height - padding.bottom}
+            x2={width - padding.right}
+            y2={height - padding.bottom}
+            className={styles.axis}
+          />
+
+          {/* Etiquetas de ejes */}
+          <text x={padding.left - 35} y={padding.top - 10} className={styles.axisTitle}>
+            Puntos
+          </text>
+          <text x={width / 2} y={height - 15} textAnchor="middle" className={styles.axisTitle}>
+            Numero de Fecha
+          </text>
+        </svg>
+      </div>
     </div>
   )
 }
