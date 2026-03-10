@@ -72,9 +72,7 @@ export const usePredictions = (roundNumber = null) => {
 
       if (match) {
         const matchDate = new Date(match.match_date)
-        const cutoffTime = new Date(
-          matchDate.getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000
-        ) // minutos antes configurables
+        const cutoffTime = new Date(matchDate.getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000) // minutos antes configurables
 
         if (new Date() >= cutoffTime) {
           return { data: null, error: 'Ya no se pueden cargar predicciones para este partido' }

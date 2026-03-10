@@ -7,8 +7,7 @@ export const LineChart = ({ data }) => {
 
   if (!data || data.length === 0) return null
 
-  const isTouchDevice =
-    typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
+  const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
 
   // Calcular dimensiones y escala
   const padding = { top: 40, right: 40, bottom: 60, left: 60 }
@@ -155,10 +154,20 @@ export const LineChart = ({ data }) => {
                       rx="4"
                       className={styles.tooltipBox}
                     />
-                    <text x={tooltipX + 50} y={y - 30} textAnchor="middle" className={styles.tooltipText}>
+                    <text
+                      x={tooltipX + 50}
+                      y={y - 30}
+                      textAnchor="middle"
+                      className={styles.tooltipText}
+                    >
                       Fecha {d.roundNumber}
                     </text>
-                    <text x={tooltipX + 50} y={y - 15} textAnchor="middle" className={styles.tooltipValue}>
+                    <text
+                      x={tooltipX + 50}
+                      y={y - 15}
+                      textAnchor="middle"
+                      className={styles.tooltipValue}
+                    >
                       {d.points} pts
                     </text>
                   </>
