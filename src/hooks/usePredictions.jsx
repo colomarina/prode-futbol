@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { PREDICTION_CUTOFF_MINUTES } from '../constants/predictions'
 
 export const usePredictions = (roundNumber = null) => {
   const [predictions, setPredictions] = useState([])
@@ -71,7 +72,9 @@ export const usePredictions = (roundNumber = null) => {
 
       if (match) {
         const matchDate = new Date(match.match_date)
-        const cutoffTime = new Date(matchDate.getTime() - 20 * 60 * 1000) // 20 minutos antes
+        const cutoffTime = new Date(
+          matchDate.getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000
+        ) // minutos antes configurables
 
         if (new Date() >= cutoffTime) {
           return { data: null, error: 'Ya no se pueden cargar predicciones para este partido' }

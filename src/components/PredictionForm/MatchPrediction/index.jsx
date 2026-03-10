@@ -1,6 +1,7 @@
 import { useEffect, useCallback, memo, useRef } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
 import InfoButton from '../../Common/InfoButton'
+import { PREDICTION_CUTOFF_MINUTES } from '../../../constants/predictions'
 
 const MatchPrediction = ({
   match,
@@ -14,11 +15,13 @@ const MatchPrediction = ({
   const isGameOfTheRound = match.round_number === match.match_number
 
   const canPredict = useCallback(matchDate => {
-    const cutoffTime = new Date(new Date(matchDate).getTime() - 20 * 60 * 1000)
+    const cutoffTime = new Date(
+      new Date(matchDate).getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000
+    )
     return new Date() < cutoffTime
   }, [])
 
-  // Solo se puede predecir si la fecha está abierta Y falta más de 1 hora para el partido
+  // Solo se puede predecir si la fecha está abierta y faltan más minutos que el corte configurado
   const canPredictMatch = isRoundOpen && canPredict(match.match_date)
 
   // Inicializar valores desde predicción existente
