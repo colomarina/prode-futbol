@@ -14,6 +14,7 @@ const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
 const PersonalStats = lazy(() => import('../PersonalStats'))
 const AdminPayments = lazy(() => import('../AdminPayments'))
+const AdminFinance = lazy(() => import('../AdminFinance'))
 
 export default function Navigation() {
   const [activeTab, setActiveTab] = useState('tournament')
@@ -129,6 +130,8 @@ export default function Navigation() {
               <MatchManager />
             ) : currentSection === 'admin-rounds' ? (
               <RoundManager />
+            ) : currentSection === 'admin-finance' ? (
+              <AdminFinance />
             ) : (
               <AdminPayments />
             )}

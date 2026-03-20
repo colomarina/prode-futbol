@@ -21,6 +21,7 @@ export const ADMIN_SECTIONS = [
   { id: 'admin-matches', label: 'Gestionar Partidos', mobileLabel: 'Partidos', icon: '⚽' },
   { id: 'admin-rounds', label: 'Gestionar Fechas', mobileLabel: 'Fechas', icon: '📅' },
   { id: 'admin-payments', label: 'Pagos por Fecha', mobileLabel: 'Pagos', icon: '💸' },
+  { id: 'admin-finance', label: 'Finanzas', mobileLabel: 'Finanzas', icon: '📈' },
 ]
 
 /**

@@ -1,3 +1,5 @@
+import SelectDropdown from '../Common/SelectDropdown'
+
 const FILTER_OPTIONS = [
   { id: 'all', label: 'Todos' },
   { id: 'paid', label: 'Pagos' },
@@ -18,6 +20,11 @@ export default function PaymentsSortFilters({
   onSortChange,
   counts,
 }) {
+  const filterItems = FILTER_OPTIONS.map(option => ({
+    ...option,
+    count: counts[option.id] ?? 0,
+  }))
+
   return (
     <div
       style={{
@@ -29,53 +36,41 @@ export default function PaymentsSortFilters({
         justifyContent: 'space-between',
       }}
     >
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-        {FILTER_OPTIONS.map(opt => {
-          const isActive = filterStatus === opt.id
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => onFilterChange(opt.id)}
-              style={{
-                padding: '5px 12px',
-                borderRadius: '20px',
-                border: '1px solid',
-                borderColor: isActive ? 'var(--color-primary)' : 'var(--color-border)',
-                background: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
-                color: isActive ? '#fff' : 'var(--color-text-secondary)',
-                fontSize: '0.8rem',
-                fontWeight: isActive ? '600' : '400',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {opt.label} ({counts[opt.id] ?? 0})
-            </button>
-          )
-        })}
+      <div style={{ minWidth: '220px', flex: '1 1 240px' }}>
+        <p style={{ margin: '0 0 6px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+          Estado
+        </p>
+        <SelectDropdown
+          items={filterItems}
+          selectedId={filterStatus}
+          onSelect={onFilterChange}
+          placeholder="Filtrar por estado"
+          renderButton={option => (
+            <span>
+              {option.label} ({option.count})
+            </span>
+          )}
+          renderOption={option => (
+            <span>
+              {option.label} ({option.count})
+            </span>
+          )}
+        />
       </div>
 
-      <select
-        value={sortOrder}
-        onChange={e => onSortChange(e.target.value)}
-        style={{
-          padding: '5px 10px',
-          borderRadius: '8px',
-          border: '1px solid var(--color-border)',
-          background: 'var(--color-surface)',
-          color: 'var(--color-text-primary)',
-          fontSize: '0.8rem',
-          cursor: 'pointer',
-          outline: 'none',
-        }}
-      >
-        {SORT_OPTIONS.map(opt => (
-          <option key={opt.id} value={opt.id}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <div style={{ minWidth: '220px', flex: '1 1 240px' }}>
+        <p style={{ margin: '0 0 6px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+          Orden
+        </p>
+        <SelectDropdown
+          items={SORT_OPTIONS}
+          selectedId={sortOrder}
+          onSelect={onSortChange}
+          placeholder="Ordenar"
+          renderButton={option => <span>{option.label}</span>}
+          renderOption={option => <span>{option.label}</span>}
+        />
+      </div>
     </div>
   )
 }
