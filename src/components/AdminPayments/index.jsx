@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRoundPayments } from '../../hooks/useRoundPayments'
 import Toast from '../Common/Toast'
 import AdminPaymentsHeader from './AdminPaymentsHeader.jsx'
 import PaymentsRoundFilters from './PaymentsRoundFilters.jsx'
+import PaymentsSortFilters from './PaymentsSortFilters.jsx'
 import PaymentsTable from './PaymentsTable.jsx'
 
 export default function AdminPayments() {
@@ -19,6 +20,41 @@ export default function AdminPayments() {
   } = useRoundPayments()
 
   const [toast, setToast] = useState(null)
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [sortOrder, setSortOrder] = useState('name_asc')
+
+  const counts = useMemo(
+    () => ({
+      all: payments.length,
+      paid: payments.filter(p => p.hasPaid).length,
+      pending: payments.filter(p => !p.hasPaid).length,
+    }),
+    [payments]
+  )
+
+  const displayedPayments = useMemo(() => {
+    let result = [...payments]
+
+    if (filterStatus === 'paid') {
+      result = result.filter(p => p.hasPaid)
+    } else if (filterStatus === 'pending') {
+      result = result.filter(p => !p.hasPaid)
+    }
+
+    const getName = p => (p.fullName || p.username || '').toLowerCase()
+
+    if (sortOrder === 'name_asc') {
+      result.sort((a, b) => getName(a).localeCompare(getName(b)))
+    } else if (sortOrder === 'name_desc') {
+      result.sort((a, b) => getName(b).localeCompare(getName(a)))
+    } else if (sortOrder === 'paid_first') {
+      result.sort((a, b) => (b.hasPaid ? 1 : 0) - (a.hasPaid ? 1 : 0))
+    } else if (sortOrder === 'pending_first') {
+      result.sort((a, b) => (a.hasPaid ? 1 : 0) - (b.hasPaid ? 1 : 0))
+    }
+
+    return result
+  }, [payments, filterStatus, sortOrder])
 
   const handleChangePayment = useCallback(
     async (userId, hasPaid, fullName) => {
@@ -49,9 +85,17 @@ export default function AdminPayments() {
         stats={stats}
       />
 
+      <PaymentsSortFilters
+        filterStatus={filterStatus}
+        onFilterChange={setFilterStatus}
+        sortOrder={sortOrder}
+        onSortChange={setSortOrder}
+        counts={counts}
+      />
+
       <PaymentsTable
         loading={loading}
-        payments={payments}
+        payments={displayedPayments}
         savingByUser={savingByUser}
         onTogglePayment={handleChangePayment}
       />
