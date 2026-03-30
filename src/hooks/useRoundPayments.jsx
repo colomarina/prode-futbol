@@ -71,11 +71,25 @@ export function useRoundPayments() {
       setPayments(prev => prev.map(item => (item.userId === userId ? { ...item, hasPaid } : item)))
 
       try {
-        const { error } = await supabase.rpc('set_round_payment_status', {
-          p_round_number: selectedRound,
-          p_user_id: userId,
-          p_has_paid: hasPaid,
-        })
+        let error = null
+
+        if (hasPaid) {
+          // Registrar pago real + allocation para que impacte en Finanzas.
+          const response = await supabase.rpc('register_payment', {
+            p_user_id: userId,
+            p_total_amount: 2000,
+            p_payment_method: 'Transferencia',
+            p_allocations: [{ round_number: selectedRound, allocated_amount: 2000 }],
+          })
+          error = response.error
+        } else {
+          // Eliminar allocation y sincronizar estado legacy.
+          const response = await supabase.rpc('remove_round_allocation', {
+            p_user_id: userId,
+            p_round_number: selectedRound,
+          })
+          error = response.error
+        }
 
         if (error) throw error
 

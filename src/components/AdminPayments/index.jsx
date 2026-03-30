@@ -68,7 +68,10 @@ export default function AdminPayments() {
         return
       }
 
-      setToast(null)
+      setToast({
+        type: hasPaid ? 'success' : 'warning',
+        message: hasPaid ? `${fullName} pagó` : `${fullName} marcado como no pagado`,
+      })
     },
     [updateUserPayment]
   )
