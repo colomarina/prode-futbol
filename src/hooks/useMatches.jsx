@@ -22,7 +22,8 @@ export const useMatches = (roundNumber = null) => {
           `
           *,
           home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
-          away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url)
+          away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
+          qualifier_team:teams!matches_qualifier_team_id_fkey(id, name, slug, logo_url)
         `
         )
         .eq('round_number', roundNumber)
@@ -47,7 +48,8 @@ export const useMatches = (roundNumber = null) => {
       const { data, error } = await supabase.from('matches').insert([matchData]).select(`
           *,
           home_team:teams!matches_home_team_id_fkey(*),
-          away_team:teams!matches_away_team_id_fkey(*)
+          away_team:teams!matches_away_team_id_fkey(*),
+          qualifier_team:teams!matches_qualifier_team_id_fkey(*)
         `)
 
       if (error) throw error
@@ -71,7 +73,8 @@ export const useMatches = (roundNumber = null) => {
         .select(`
           *,
           home_team:teams!matches_home_team_id_fkey(*),
-          away_team:teams!matches_away_team_id_fkey(*)
+          away_team:teams!matches_away_team_id_fkey(*),
+          qualifier_team:teams!matches_qualifier_team_id_fkey(*)
         `)
 
       if (error) throw error

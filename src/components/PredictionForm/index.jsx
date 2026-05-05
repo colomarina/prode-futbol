@@ -10,6 +10,7 @@ import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
 import LoadingState from '../Common/LoadingState'
 import EmptyState from '../Common/EmptyState'
+import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
 
 export default function PredictionForm() {
   const { rounds, activeRound, loading: roundsLoading } = useRounds()
@@ -74,6 +75,7 @@ export default function PredictionForm() {
           matchId: match.id,
           homePrediction: parseInt(values.home, 10),
           awayPrediction: parseInt(values.away, 10),
+          qualifierPredictionId: values.qualifier || null,
         }
       })
 
@@ -245,7 +247,7 @@ export default function PredictionForm() {
             placeholder="Seleccionar fecha..."
             renderButton={round => (
               <span style={{ fontWeight: '600' }}>
-                Fecha {round.round_number}{' '}
+                {getRoundDisplayName(round)}{' '}
                 {round.status === 'open'
                   ? '(Abierta ✅)'
                   : round.status === 'finished'
@@ -255,7 +257,7 @@ export default function PredictionForm() {
             )}
             renderOption={round => (
               <span style={{ flex: 1, fontWeight: '600' }}>
-                Fecha {round.round_number}{' '}
+                {getRoundDisplayName(round)}{' '}
                 {round.status === 'open'
                   ? '(Abierta ✅)'
                   : round.status === 'finished'
@@ -295,7 +297,7 @@ export default function PredictionForm() {
           placeholder="Seleccionar fecha..."
           renderButton={round => (
             <span style={{ fontWeight: '600' }}>
-              Fecha {round.round_number}{' '}
+              {getRoundDisplayName(round)}{' '}
               {round.status === 'open'
                 ? '(Abierta ✅)'
                 : round.status === 'finished'
@@ -305,7 +307,7 @@ export default function PredictionForm() {
           )}
           renderOption={round => (
             <span style={{ flex: 1, fontWeight: '600' }}>
-              Fecha {round.round_number}{' '}
+              {getRoundDisplayName(round)}{' '}
               {round.status === 'open'
                 ? '(Abierta ✅)'
                 : round.status === 'finished'
@@ -364,14 +366,14 @@ export default function PredictionForm() {
           }}
         >
           <p style={{ color: 'var(--color-success)', fontWeight: '600', marginBottom: '8px' }}>
-            💡 La Fecha {activeRound.round_number} está abierta para pronósticos
+            💡 {getRoundDisplayName(activeRound)} está abierta para pronósticos
           </p>
           <button
             onClick={() => setSelectedRound(activeRound.round_number)}
             className="btn-success"
             style={{ padding: '8px 16px', fontSize: '0.9rem' }}
           >
-            Ir a Fecha {activeRound.round_number} →
+            Ir a {getRoundDisplayNameByNumber(activeRound.round_number, rounds)} →
           </button>
         </div>
       )}

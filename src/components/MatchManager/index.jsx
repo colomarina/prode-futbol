@@ -53,10 +53,22 @@ export default function MatchManager() {
         const home = parseInt(values.home, 10)
         const away = parseInt(values.away, 10)
 
+        let qualifierTeamId = null
+        if (match.is_playoff) {
+          if (home > away) {
+            qualifierTeamId = match.home_team_id
+          } else if (away > home) {
+            qualifierTeamId = match.away_team_id
+          } else {
+            qualifierTeamId = values.qualifier || match.qualifier_team_id || match.home_team_id
+          }
+        }
+
         return updateMatch(match.id, {
           home_score: home,
           away_score: away,
           is_finished: true,
+          ...(match.is_playoff ? { qualifier_team_id: qualifierTeamId } : {}),
         })
       })
     )

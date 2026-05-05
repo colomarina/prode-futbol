@@ -1,5 +1,18 @@
-import { useCallback, memo, useRef } from 'react'
+import { useCallback, memo, useEffect, useMemo, useRef } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
+
+const parseScoreValue = value => {
+  if (value === '' || value === null || value === undefined) return null
+  const parsed = Number(value)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+const getWinnerTeamId = (homeScore, awayScore, match) => {
+  if (homeScore === null || awayScore === null) return null
+  if (homeScore > awayScore) return match.home_team_id
+  if (awayScore > homeScore) return match.away_team_id
+  return null
+}
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
   const awayInputRef = useRef(null)
@@ -30,6 +43,59 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
   const displayAwayValue = match.is_finished
     ? resultValues[match.id]?.away || match.away_score?.toString() || ''
     : awayScore
+
+  const homeScoreNumber = parseScoreValue(displayHomeValue)
+  const awayScoreNumber = parseScoreValue(displayAwayValue)
+  const autoWinnerTeamId = getWinnerTeamId(homeScoreNumber, awayScoreNumber, match)
+
+  const selectedQualifierTeamId = useMemo(() => {
+    if (!match.is_playoff) return null
+
+    return (
+      autoWinnerTeamId ||
+      resultValues[match.id]?.qualifier ||
+      match.qualifier_team_id ||
+      match.home_team_id
+    )
+  }, [
+    autoWinnerTeamId,
+    match.home_team_id,
+    match.id,
+    match.is_playoff,
+    match.qualifier_team_id,
+    resultValues,
+  ])
+
+  const qualifierIsLocked = Boolean(autoWinnerTeamId)
+
+  useEffect(() => {
+    if (!match.is_playoff) return
+
+    if (autoWinnerTeamId && resultValues[match.id]?.qualifier !== autoWinnerTeamId) {
+      onValueChange(match.id, 'qualifier', autoWinnerTeamId)
+      return
+    }
+
+    if (!autoWinnerTeamId && !resultValues[match.id]?.qualifier) {
+      onValueChange(match.id, 'qualifier', match.qualifier_team_id || match.home_team_id)
+    }
+  }, [
+    autoWinnerTeamId,
+    match.home_team_id,
+    match.id,
+    match.is_playoff,
+    match.qualifier_team_id,
+    onValueChange,
+    resultValues,
+  ])
+
+  const handleQualifierChange = useCallback(
+    qualifierTeamId => {
+      if (!match.is_playoff || qualifierIsLocked) return
+      onValueChange(match.id, 'qualifier', qualifierTeamId)
+    },
+    [match.id, match.is_playoff, onValueChange, qualifierIsLocked]
+  )
 
   // Formatear fecha
   const matchDate = new Date(match.match_date)
@@ -204,6 +270,63 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           </div>
         </div>
       </div>
+
+      {match.is_playoff && (
+        <div
+          style={{
+            marginBottom: '16px',
+            border: '1px solid var(--color-border)',
+            borderRadius: '12px',
+            padding: '12px',
+            backgroundColor: 'var(--color-surface-variant)',
+          }}
+        >
+          <p
+            style={{
+              margin: '0 0 10px 0',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            🥊 Si empatan, ¿quién clasifica por penales?
+          </p>
+
+          {[match.home_team, match.away_team].map(team => (
+            <label
+              key={team.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px',
+                cursor: qualifierIsLocked ? 'default' : 'pointer',
+              }}
+            >
+              <input
+                type="radio"
+                name={`match-qualifier-${match.id}`}
+                checked={selectedQualifierTeamId === team.id}
+                disabled={qualifierIsLocked}
+                onChange={() => handleQualifierChange(team.id)}
+              />
+              <span style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>{team.name}</span>
+            </label>
+          ))}
+
+          {qualifierIsLocked && (
+            <p
+              style={{
+                margin: '8px 0 0 0',
+                color: 'var(--color-text-secondary)',
+                fontSize: '0.8rem',
+              }}
+            >
+              No hace falta elegir: con ese marcador hay ganador directo.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Indicador de resultado guardado */}
       {match.is_finished && (

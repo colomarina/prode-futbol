@@ -7,6 +7,7 @@ export const TOURNAMENT_SECTIONS = [
   { id: 'predictions', label: 'Mis Pronósticos', mobileLabel: 'Pronósticos', icon: '📊' },
   { id: 'all-predictions', label: 'Ver Pronósticos', mobileLabel: 'Rivales', icon: '👀' },
   { id: 'leaderboard', label: 'Tabla de Posiciones', mobileLabel: 'Tabla', icon: '🏆' },
+  { id: 'playoffs', label: 'Playoffs', mobileLabel: 'Playoffs', icon: '🥊' },
 ]
 
 export const INFO_SECTIONS = [

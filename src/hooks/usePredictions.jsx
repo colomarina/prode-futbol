@@ -43,7 +43,10 @@ export const usePredictions = (roundNumber = null) => {
             home_score,
             away_score,
             is_finished,
-            round_number
+            round_number,
+            is_playoff,
+            playoff_stage,
+            qualifier_team_id
           )
         `
         )
@@ -59,7 +62,12 @@ export const usePredictions = (roundNumber = null) => {
     }
   }
 
-  const createPrediction = async (matchId, homePrediction, awayPrediction) => {
+  const createPrediction = async (
+    matchId,
+    homePrediction,
+    awayPrediction,
+    qualifierPredictionId = null
+  ) => {
     if (!user) return { data: null, error: 'No autenticado' }
 
     try {
@@ -87,6 +95,7 @@ export const usePredictions = (roundNumber = null) => {
             match_id: matchId,
             home_prediction: homePrediction,
             away_prediction: awayPrediction,
+            qualifier_prediction_id: qualifierPredictionId,
           },
         ])
         .select()
@@ -104,7 +113,12 @@ export const usePredictions = (roundNumber = null) => {
     }
   }
 
-  const updatePrediction = async (predictionId, homePrediction, awayPrediction) => {
+  const updatePrediction = async (
+    predictionId,
+    homePrediction,
+    awayPrediction,
+    qualifierPredictionId = null
+  ) => {
     if (!user) return { data: null, error: 'No autenticado' }
 
     try {
@@ -113,6 +127,7 @@ export const usePredictions = (roundNumber = null) => {
         .update({
           home_prediction: homePrediction,
           away_prediction: awayPrediction,
+          qualifier_prediction_id: qualifierPredictionId,
           updated_at: new Date().toISOString(),
         })
         .eq('id', predictionId)
@@ -138,13 +153,16 @@ export const usePredictions = (roundNumber = null) => {
 
     try {
       const now = new Date().toISOString()
-      const predictions = predictionsData.map(({ matchId, homePrediction, awayPrediction }) => ({
-        user_id: user.id,
-        match_id: matchId,
-        home_prediction: homePrediction,
-        away_prediction: awayPrediction,
-        updated_at: now,
-      }))
+      const predictions = predictionsData.map(
+        ({ matchId, homePrediction, awayPrediction, qualifierPredictionId = null }) => ({
+          user_id: user.id,
+          match_id: matchId,
+          home_prediction: homePrediction,
+          away_prediction: awayPrediction,
+          qualifier_prediction_id: qualifierPredictionId,
+          updated_at: now,
+        })
+      )
 
       // Upsert: inserta si no existe, actualiza si existe
       const { data, error } = await supabase

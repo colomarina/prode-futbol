@@ -10,6 +10,7 @@ const PredictionForm = lazy(() => import('../PredictionForm'))
 const AllPredictions = lazy(() => import('../AllPredictions'))
 const Leaderboard = lazy(() => import('../LeaderBoard'))
 const InfoPage = lazy(() => import('../InfoPage'))
+const Playoffs = lazy(() => import('../Playoffs'))
 const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
 const PersonalStats = lazy(() => import('../PersonalStats'))
@@ -96,6 +97,12 @@ export default function Navigation() {
                     setActiveSections(prev => ({ ...prev, tournament: 'all-predictions' }))
                   }}
                 />
+              </Suspense>
+            )
+          case 'playoffs':
+            return (
+              <Suspense fallback={<LoadingSpinner />}>
+                <Playoffs />
               </Suspense>
             )
           default:

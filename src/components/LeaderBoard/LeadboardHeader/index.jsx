@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import SelectDropdown from '../../Common/SelectDropdown'
+import { getRoundDisplayName } from '../../../utils/roundLabels'
 
 const LeaderboardHeader = memo(function LeaderboardHeader({
   selectedRound,
@@ -7,6 +8,8 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
   rounds,
   roundsLoading,
 }) {
+  const playoffRounds = new Set([17, 18, 19, 20])
+
   return (
     <div style={{ marginBottom: '16px' }}>
       <h2
@@ -29,8 +32,10 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
         <SelectDropdown
           items={[
             { id: null, round_number: null, name: '🏆 General' },
+            { id: 'playoffs', round_number: 'playoffs', name: '🥊 Playoffs' },
             ...rounds
               .filter(r => ['open', 'locked', 'finished'].includes(r.status))
+              .filter(r => !playoffRounds.has(r.round_number))
               .sort((a, b) => b.round_number - a.round_number)
               .map(r => ({
                 ...r,
@@ -44,12 +49,20 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
           placeholder="Seleccionar fecha..."
           renderButton={round => (
             <span style={{ fontWeight: '600' }}>
-              {round.round_number === null ? '🏆 General' : `📅 Fecha ${round.round_number}`}
+              {round.round_number === null
+                ? '🏆 General'
+                : round.round_number === 'playoffs'
+                  ? '🥊 Playoffs'
+                  : `📅 ${getRoundDisplayName(round)}`}
             </span>
           )}
           renderOption={round => (
             <span style={{ flex: 1, fontWeight: '600' }}>
-              {round.round_number === null ? '🏆 General' : `📅 Fecha ${round.round_number}`}
+              {round.round_number === null
+                ? '🏆 General'
+                : round.round_number === 'playoffs'
+                  ? '🥊 Playoffs'
+                  : `📅 ${getRoundDisplayName(round)}`}
             </span>
           )}
         />

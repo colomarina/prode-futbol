@@ -8,7 +8,12 @@ const LeaderboardTable = memo(function LeaderboardTable({
   selectedRound,
   onViewPredictions,
 }) {
-  const columns = useMemo(() => TABLE_COLUMNS[selectedRound ? 'round' : 'general'], [selectedRound])
+  const columns = useMemo(() => {
+    if (selectedRound === 'playoffs') return TABLE_COLUMNS.playoffs
+    return TABLE_COLUMNS[selectedRound ? 'round' : 'general']
+  }, [selectedRound])
+
+  const showViewColumn = Boolean(selectedRound && selectedRound !== 'playoffs')
 
   if (leaderboard.length === 0) {
     return <EmptyState />
@@ -30,7 +35,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
               player={player}
               position={index + 1}
               showRoundsColumn={!selectedRound}
-              showViewColumn={Boolean(selectedRound)}
+              showViewColumn={showViewColumn}
               onViewPredictions={onViewPredictions}
               selectedRound={selectedRound}
             />

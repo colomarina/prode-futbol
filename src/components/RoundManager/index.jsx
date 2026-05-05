@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { supabase } from '../../lib/supabase'
 import Toast from '../Common/Toast'
+import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
 
 export default function RoundManager() {
   const { rounds, activeRound, updateRoundStatus, finishRound, loading } = useRounds()
@@ -11,6 +12,11 @@ export default function RoundManager() {
   const [toast, setToast] = useState(null)
   const [usersPredictions, setUsersPredictions] = useState([])
   const [showDetails, setShowDetails] = useState(false)
+
+  const formatRoundLabel = useCallback(
+    roundNumber => getRoundDisplayNameByNumber(roundNumber, rounds),
+    [rounds]
+  )
 
   // Cargar información de partidos para cada fecha
   useEffect(() => {
@@ -218,7 +224,7 @@ export default function RoundManager() {
         return
       }
 
-      if (confirm(`¿Finalizar la Fecha ${roundNumber}? Se calcularán los puntajes.`)) {
+      if (confirm(`¿Finalizar ${formatRoundLabel(roundNumber)}? Se calcularán los puntajes.`)) {
         const { error } = await finishRound(roundNumber)
         if (error) {
           setToast({
@@ -233,7 +239,7 @@ export default function RoundManager() {
         }
       }
     },
-    [matchesByRound, finishRound]
+    [matchesByRound, finishRound, formatRoundLabel]
   )
 
   const handleChangeStatus = useCallback(
@@ -252,7 +258,7 @@ export default function RoundManager() {
         const openRound = rounds.find(r => r.status === 'open' && r.id !== roundId)
         if (openRound) {
           setToast({
-            message: `Ya hay una fecha abierta (Fecha ${openRound.round_number}). Bloqueala o finalizala antes.`,
+            message: `Ya hay una fecha abierta (${getRoundDisplayName(openRound)}). Bloqueala o finalizala antes.`,
             type: 'error',
           })
           return
@@ -266,7 +272,7 @@ export default function RoundManager() {
         finished: 'Finalizada',
       }
 
-      if (confirm(`¿Cambiar estado de Fecha ${roundNumber} a "${statusNames[newStatus]}"?`)) {
+      if (confirm(`¿Cambiar estado de ${formatRoundLabel(roundNumber)} a "${statusNames[newStatus]}"?`)) {
         const { error } = await updateRoundStatus(roundNumber, newStatus)
         if (error) {
           setToast({
@@ -281,7 +287,7 @@ export default function RoundManager() {
         }
       }
     },
-    [rounds, updateRoundStatus]
+    [formatRoundLabel, rounds, updateRoundStatus]
   )
 
   if (loading) {
@@ -429,7 +435,7 @@ export default function RoundManager() {
                     marginBottom: '8px',
                   }}
                 >
-                  Fecha {activeRound.round_number}
+                  {getRoundDisplayName(activeRound)}
                 </p>
                 <p
                   style={{
@@ -801,7 +807,7 @@ export default function RoundManager() {
                         color: 'var(--color-text-primary)',
                       }}
                     >
-                      Fecha {round.round_number}
+                      {getRoundDisplayName(round)}
                     </span>
                     <span
                       style={{

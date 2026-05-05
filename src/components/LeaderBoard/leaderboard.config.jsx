@@ -30,4 +30,5 @@ export const POSITION_CONFIG = {
 export const TABLE_COLUMNS = {
   general: ['Pos', 'Jugador', 'Pts', 'Fch'],
   round: ['Pos', 'Jugador', 'Pts', ''],
+  playoffs: ['Pos', 'Jugador', 'Pts'],
 }

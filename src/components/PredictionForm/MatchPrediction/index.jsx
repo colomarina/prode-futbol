@@ -1,7 +1,27 @@
-import { useEffect, useCallback, memo, useRef } from 'react'
+import { useEffect, useCallback, memo, useRef, useMemo } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
 import InfoButton from '../../Common/InfoButton'
 import { PREDICTION_CUTOFF_MINUTES } from '../../../constants/predictions'
+
+const parseScoreValue = value => {
+  if (value === '' || value === null || value === undefined) return null
+  const parsed = Number(value)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+const getWinnerTeamId = (homeScore, awayScore, match) => {
+  if (homeScore === null || awayScore === null) return null
+  if (homeScore > awayScore) return match.home_team_id
+  if (awayScore > homeScore) return match.away_team_id
+  return null
+}
+
+const resolveTeamName = (teamId, match) => {
+  if (!teamId) return 'Sin definir'
+  if (teamId === match.home_team_id) return match.home_team?.name || 'Local'
+  if (teamId === match.away_team_id) return match.away_team?.name || 'Visitante'
+  return 'Sin definir'
+}
 
 const MatchPrediction = ({
   match,
@@ -29,9 +49,51 @@ const MatchPrediction = ({
     if (existingPrediction && !predictionValue) {
       onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
       onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
+      if (match.is_playoff) {
+        onValueChange(
+          match.id,
+          'qualifier',
+          existingPrediction.qualifier_prediction_id || match.home_team_id
+        )
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingPrediction, match.id, predictionValue])
+
+  const homeScore = predictionValue?.home || ''
+  const awayScore = predictionValue?.away || ''
+  const qualifierHomeValue = canPredictMatch
+    ? homeScore
+    : existingPrediction?.home_prediction?.toString() || ''
+  const qualifierAwayValue = canPredictMatch
+    ? awayScore
+    : existingPrediction?.away_prediction?.toString() || ''
+  const homeScoreNumber = parseScoreValue(qualifierHomeValue)
+  const awayScoreNumber = parseScoreValue(qualifierAwayValue)
+  const autoWinnerTeamId = getWinnerTeamId(homeScoreNumber, awayScoreNumber, match)
+
+  useEffect(() => {
+    if (!match.is_playoff || !canPredictMatch) return
+
+    if (autoWinnerTeamId && predictionValue?.qualifier !== autoWinnerTeamId) {
+      onValueChange(match.id, 'qualifier', autoWinnerTeamId)
+      return
+    }
+
+    if (!autoWinnerTeamId && !predictionValue?.qualifier) {
+      const fallbackQualifier = existingPrediction?.qualifier_prediction_id || match.home_team_id
+      onValueChange(match.id, 'qualifier', fallbackQualifier)
+    }
+  }, [
+    autoWinnerTeamId,
+    canPredictMatch,
+    existingPrediction?.qualifier_prediction_id,
+    match.home_team_id,
+    match.id,
+    match.is_playoff,
+    onValueChange,
+    predictionValue?.qualifier,
+  ])
 
   const handleInputChange = useCallback(
     (field, value) => {
@@ -51,9 +113,6 @@ const MatchPrediction = ({
     [canPredictMatch, onValueChange, match.id]
   )
 
-  const homeScore = predictionValue?.home || ''
-  const awayScore = predictionValue?.away || ''
-
   // Si no se puede editar, mostrar valor guardado o placeholder
   const displayHomeValue = canPredictMatch
     ? homeScore
@@ -62,6 +121,48 @@ const MatchPrediction = ({
   const displayAwayValue = canPredictMatch
     ? awayScore
     : existingPrediction?.away_prediction?.toString() || '-'
+
+  const selectedQualifierId = useMemo(() => {
+    if (!match.is_playoff) return null
+
+    if (canPredictMatch) {
+      return (
+        autoWinnerTeamId ||
+        predictionValue?.qualifier ||
+        existingPrediction?.qualifier_prediction_id ||
+        match.home_team_id
+      )
+    }
+
+    return (
+      existingPrediction?.qualifier_prediction_id ||
+      autoWinnerTeamId ||
+      match.home_team_id ||
+      null
+    )
+  }, [
+    autoWinnerTeamId,
+    canPredictMatch,
+    existingPrediction?.qualifier_prediction_id,
+    match.home_team_id,
+    match.is_playoff,
+    predictionValue?.qualifier,
+  ])
+
+  const qualifierIsLocked = Boolean(autoWinnerTeamId)
+  const shouldShowQualifierPicker =
+    match.is_playoff &&
+    homeScoreNumber !== null &&
+    awayScoreNumber !== null &&
+    homeScoreNumber === awayScoreNumber
+
+  const handleQualifierChange = useCallback(
+    qualifierTeamId => {
+      if (!canPredictMatch || qualifierIsLocked || !match.is_playoff) return
+      onValueChange(match.id, 'qualifier', qualifierTeamId)
+    },
+    [canPredictMatch, match.id, match.is_playoff, onValueChange, qualifierIsLocked]
+  )
 
   // Formatear fecha
   const matchDate = new Date(match.match_date)
@@ -302,6 +403,147 @@ const MatchPrediction = ({
         </div>
       </div>
 
+      {shouldShowQualifierPicker && (
+        <div
+          style={{
+            marginBottom: '16px',
+            border: '1px solid var(--color-border)',
+            borderRadius: '12px',
+            padding: '12px',
+            backgroundColor: 'var(--color-surface-variant)',
+          }}
+        >
+          <p
+            style={{
+              margin: '0 0 10px 0',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            🥊 Si empatan, ¿quién clasifica por penales?
+          </p>
+
+          <div
+            role="radiogroup"
+            aria-label="Seleccionar equipo que clasifica"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: '8px',
+            }}
+          >
+            {[match.home_team, match.away_team].map(team => {
+              const isSelected = selectedQualifierId === team.id
+              const isDisabled = !canPredictMatch || qualifierIsLocked
+
+              return (
+                <button
+                  key={team.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  disabled={isDisabled}
+                  onClick={() => handleQualifierChange(team.id)}
+                  style={{
+                    width: '100%',
+                    borderRadius: '12px',
+                    border: isSelected
+                      ? '2px solid var(--color-primary)'
+                      : '1px solid var(--color-border)',
+                    background: isSelected
+                      ? 'linear-gradient(120deg, var(--color-surface-highlight), var(--color-surface))'
+                      : 'var(--color-surface)',
+                    color: 'var(--color-text-primary)',
+                    padding: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    fontSize: '0.95rem',
+                    fontWeight: isSelected ? '700' : '600',
+                    textAlign: 'left',
+                    cursor: isDisabled ? 'default' : 'pointer',
+                    opacity: !canPredictMatch && !isSelected ? 0.75 : 1,
+                    transition: 'all 0.2s ease',
+                    boxShadow: isSelected ? '0 4px 14px rgba(0, 0, 0, 0.08)' : 'none',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      minWidth: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '999px',
+                        border: isSelected
+                          ? '5px solid var(--color-primary)'
+                          : '2px solid var(--color-text-secondary)',
+                        backgroundColor: 'var(--color-surface)',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {team.name}
+                    </span>
+                  </span>
+
+                  {isSelected && (
+                    <span
+                      style={{
+                        color: 'var(--color-primary)',
+                        fontWeight: '800',
+                        fontSize: '0.82rem',
+                        letterSpacing: '0.3px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      SELECCIONADO
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {qualifierIsLocked && canPredictMatch && (
+            <p
+              style={{
+                margin: '8px 0 0 0',
+                color: 'var(--color-text-secondary)',
+                fontSize: '0.8rem',
+              }}
+            >
+              No hace falta elegir: con ese marcador hay ganador directo.
+            </p>
+          )}
+
+          {!qualifierIsLocked && canPredictMatch && (
+            <p
+              style={{
+                margin: '8px 0 0 0',
+                color: 'var(--color-text-secondary)',
+                fontSize: '0.8rem',
+              }}
+            >
+              Elegí quién pensás que clasifica por penales.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Match Result and Points */}
       {match.is_finished && (
         <div
@@ -347,6 +589,23 @@ const MatchPrediction = ({
                 >
                   Tu pronóstico: {existingPrediction.home_prediction} -{' '}
                   {existingPrediction.away_prediction}
+                </p>
+              )}
+              {match.is_playoff && match.qualifier_team_id && (
+                <p
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-secondary)',
+                    marginTop: '6px',
+                  }}
+                >
+                  Clasificó: {resolveTeamName(match.qualifier_team_id, match)}{' '}
+                  {existingPrediction?.qualifier_prediction_id &&
+                  existingPrediction.qualifier_prediction_id === match.qualifier_team_id
+                    ? '✅'
+                    : existingPrediction?.qualifier_prediction_id
+                      ? '❌'
+                      : ''}
                 </p>
               )}
             </div>
