@@ -67,6 +67,21 @@ const MatchDetailCard = ({ match }) => {
               ? `${match.home_score ?? '-'} - ${match.away_score ?? '-'}`
               : 'En juego'}
           </div>
+          {match.is_finished && match.qualifier_team && (
+            <div
+              style={{
+                marginTop: '8px',
+                padding: '8px',
+                backgroundColor: 'var(--color-primary-light)',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: '800',
+                color: 'var(--color-text)',
+              }}
+            >
+              🏆 Clasificó: {match.qualifier_team.name}
+            </div>
+          )}
         </div>
 
         <div style={{ justifySelf: 'start', textAlign: 'center' }}>

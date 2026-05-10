@@ -44,7 +44,9 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: '700' }}>
+        <span
+          style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: '700' }}
+        >
           #{match.match_number || '?'}
         </span>
         <span
@@ -56,7 +58,11 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
             padding: '2px 8px',
           }}
         >
-          {match.is_finished ? 'Finalizado' : hasStarted ? 'En juego' : `${formattedDate} ${formattedTime}`}
+          {match.is_finished
+            ? 'Finalizado'
+            : hasStarted
+              ? 'En juego'
+              : `${formattedDate} ${formattedTime}`}
         </span>
       </div>
 
@@ -104,7 +110,9 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
       )}
 
       {match.is_finished && match.qualifier_team_id && (
-        <p style={{ margin: '0 0 6px 0', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+        <p
+          style={{ margin: '0 0 6px 0', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}
+        >
           Clasificó: {qualifierName}
         </p>
       )}

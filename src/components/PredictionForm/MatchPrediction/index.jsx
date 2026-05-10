@@ -135,10 +135,7 @@ const MatchPrediction = ({
     }
 
     return (
-      existingPrediction?.qualifier_prediction_id ||
-      autoWinnerTeamId ||
-      match.home_team_id ||
-      null
+      existingPrediction?.qualifier_prediction_id || autoWinnerTeamId || match.home_team_id || null
     )
   }, [
     autoWinnerTeamId,

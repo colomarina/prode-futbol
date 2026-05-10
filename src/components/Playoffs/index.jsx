@@ -26,11 +26,7 @@ export default function Playoffs() {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1200px' }}>
-        <EmptyState
-          icon="⚠️"
-          title="No se pudieron cargar los playoffs"
-          description={error}
-        />
+        <EmptyState icon="⚠️" title="No se pudieron cargar los playoffs" description={error} />
       </div>
     )
   }

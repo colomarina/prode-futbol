@@ -272,7 +272,11 @@ export default function RoundManager() {
         finished: 'Finalizada',
       }
 
-      if (confirm(`¿Cambiar estado de ${formatRoundLabel(roundNumber)} a "${statusNames[newStatus]}"?`)) {
+      if (
+        confirm(
+          `¿Cambiar estado de ${formatRoundLabel(roundNumber)} a "${statusNames[newStatus]}"?`
+        )
+      ) {
         const { error } = await updateRoundStatus(roundNumber, newStatus)
         if (error) {
           setToast({

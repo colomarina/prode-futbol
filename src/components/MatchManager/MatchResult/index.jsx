@@ -310,7 +310,9 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
                 disabled={qualifierIsLocked}
                 onChange={() => handleQualifierChange(team.id)}
               />
-              <span style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>{team.name}</span>
+              <span style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
+                {team.name}
+              </span>
             </label>
           ))}
 

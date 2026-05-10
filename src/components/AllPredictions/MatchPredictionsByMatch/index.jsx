@@ -23,6 +23,7 @@ const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, match
                 user={user}
                 prediction={matchPredictions[user.id]}
                 isFinished={selectedMatch?.is_finished}
+                match={selectedMatch}
               />
             ))}
         </div>

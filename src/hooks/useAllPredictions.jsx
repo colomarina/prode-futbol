@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 
 export function useAllPredictions({ initialRound = null, initialUser = '' } = {}) {
   const { rounds, loading: roundsLoading } = useRounds()
-  const [selectedRound, setSelectedRound] = useState(null)
+  const [selectedRound, setSelectedRound] = useState(initialRound || null)
   const { matches, loading: matchesLoading } = useMatches(selectedRound)
   const [roundPredictions, setRoundPredictions] = useState({})
   const [matchPredictions, setMatchPredictions] = useState({})
@@ -16,9 +16,6 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
   const [matchLoading, setMatchLoading] = useState(false)
   const [viewMode, setViewMode] = useState('by-user')
 
-  useEffect(() => {
-    if (initialRound) setSelectedRound(initialRound)
-  }, [initialRound])
   useEffect(() => {
     if (initialUser) setSelectedUser(initialUser)
   }, [initialUser])

@@ -70,8 +70,14 @@ const buildStageSlots = stageList => {
 
   stageList.forEach((stage, index) => {
     const matches = stage.matches || []
-    const expectedCount = index === 0 ? Math.max(matches.length, 1) : Math.max(matches.length, Math.ceil(previousCount / 2), 1)
-    const slots = Array.from({ length: expectedCount }, (_, slotIndex) => matches[slotIndex] || null)
+    const expectedCount =
+      index === 0
+        ? Math.max(matches.length, 1)
+        : Math.max(matches.length, Math.ceil(previousCount / 2), 1)
+    const slots = Array.from(
+      { length: expectedCount },
+      (_, slotIndex) => matches[slotIndex] || null
+    )
 
     slotsByStage[stage.id] = slots
     previousCount = expectedCount
@@ -81,10 +87,16 @@ const buildStageSlots = stageList => {
 }
 
 const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, predictionsByMatch }) {
-  const firstPopulatedStageIndex = STAGE_ORDER.findIndex(stage => (matchesByStage[stage] || []).length > 0)
-  const startIndex = firstPopulatedStageIndex >= 0 ? firstPopulatedStageIndex : STAGE_ORDER.indexOf('octavos')
+  const firstPopulatedStageIndex = STAGE_ORDER.findIndex(
+    stage => (matchesByStage[stage] || []).length > 0
+  )
+  const startIndex =
+    firstPopulatedStageIndex >= 0 ? firstPopulatedStageIndex : STAGE_ORDER.indexOf('octavos')
   const visibleStages = STAGE_ORDER.slice(Math.max(0, startIndex))
-  const stageDescriptors = visibleStages.map(stage => ({ id: stage, matches: matchesByStage[stage] || [] }))
+  const stageDescriptors = visibleStages.map(stage => ({
+    id: stage,
+    matches: matchesByStage[stage] || [],
+  }))
   const slotsByStage = buildStageSlots(stageDescriptors)
 
   return (
@@ -144,7 +156,9 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
               'radial-gradient(circle at 0% 0%, var(--color-surface-highlight), transparent 45%), var(--color-surface)',
           }}
         >
-          <div style={{ display: 'flex', gap: '14px', minWidth: '980px', alignItems: 'flex-start' }}>
+          <div
+            style={{ display: 'flex', gap: '14px', minWidth: '980px', alignItems: 'flex-start' }}
+          >
             {stageDescriptors.map((stage, stageIndex) => (
               <section key={stage.id} style={getColumnStyle(stageIndex)}>
                 <h3
