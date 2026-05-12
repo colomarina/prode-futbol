@@ -16,7 +16,7 @@ const BRACKET_SLOT_HEIGHT = 66
 const BRACKET_BASE_GAP = 12
 const BRACKET_UNIT = BRACKET_SLOT_HEIGHT + BRACKET_BASE_GAP
 
-const getColumnStyle = stageIndex => ({
+const getColumnStyle = () => ({
   minWidth: '220px',
   flex: '0 0 220px',
   paddingTop: '0px',
@@ -33,11 +33,6 @@ const getStackStyle = stageIndex => {
     gap: `${gap}px`,
     marginTop: `${marginTop}px`,
   }
-}
-
-const getConnectorHalfHeight = stageIndex => {
-  if (stageIndex <= 0) return 0
-  return Math.pow(2, stageIndex - 2) * BRACKET_UNIT
 }
 
 const teamNameStyle = {
@@ -97,13 +92,16 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
     id: stage,
     matches: matchesByStage[stage] || [],
   }))
+  const mobileStageDescriptors = [...stageDescriptors]
+    .filter(stage => stage.matches.length > 0)
+    .reverse()
   const slotsByStage = buildStageSlots(stageDescriptors)
 
   return (
     <div>
       <div className="playoff-mobile-view" style={{ display: 'block' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {stageDescriptors.map(stage => (
+          {mobileStageDescriptors.map(stage => (
             <section key={stage.id} className="card" style={{ padding: '12px' }}>
               <h3
                 style={{
