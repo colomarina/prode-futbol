@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { applyTournamentTheme } from '../config/tournaments.config'
+import { applyTournamentTheme } from '../config/tournaments.config.js'
 
 const ThemeContext = createContext({})
 

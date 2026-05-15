@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { applyTournamentTheme } from '../config/tournaments.config'
+import { applyTournamentTheme } from '../config/tournaments.config.js'
 
 const TournamentContext = createContext()
 
