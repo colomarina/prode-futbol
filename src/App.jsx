@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { TournamentProvider, useTournament } from './contexts/TournamentContext'
@@ -34,10 +34,10 @@ function AppContent() {
     [isUserAdmin]
   )
 
-  const accessibleTournaments = useMemo(
-    () => tournaments.filter(canAccessTournament),
-    [tournaments, canAccessTournament]
-  )
+  // const accessibleTournaments = useMemo(
+  //   () => tournaments.filter(canAccessTournament),
+  //   [tournaments, canAccessTournament]
+  // )
 
   const handleSelectTournament = useCallback(
     tournament => {

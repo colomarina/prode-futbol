@@ -34,6 +34,7 @@ export const TournamentProvider = ({ children }) => {
           }
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching tournaments:', err)
       } finally {
         setLoading(false)
@@ -86,6 +87,7 @@ export const TournamentProvider = ({ children }) => {
  * Hook to use Tournament context
  * @returns {Object} Tournament context value
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTournament = () => {
   const context = useContext(TournamentContext)
   if (!context) {

@@ -9,10 +9,11 @@ export default function MatchManager() {
   const { activeTournament } = useTournament()
   const { rounds } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
-  const { matches, loading: matchesLoading, updateMatch } = useMatches(
-    selectedRound,
-    activeTournament?.id
-  )
+  const {
+    matches,
+    loading: matchesLoading,
+    updateMatch,
+  } = useMatches(selectedRound, activeTournament?.id)
   const [resultValues, setResultValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)

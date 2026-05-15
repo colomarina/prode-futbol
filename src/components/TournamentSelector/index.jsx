@@ -11,7 +11,9 @@ export default function TournamentSelector({
   //   Auto-select if only one active tournament
   useEffect(() => {
     if (!loading && tournaments.length > 0) {
-      const selectableTournaments = tournaments.filter(tournament => !isTournamentDisabled(tournament))
+      const selectableTournaments = tournaments.filter(
+        tournament => !isTournamentDisabled(tournament)
+      )
 
       if (selectableTournaments.length === 1 && tournaments.length === 1) {
         onSelect(selectableTournaments[0])
