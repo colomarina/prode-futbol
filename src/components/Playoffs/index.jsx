@@ -1,11 +1,15 @@
 import { useMemo } from 'react'
 import { usePlayoffs } from '../../hooks/usePlayoffs'
+import { useTournament } from '../../contexts/TournamentContext'
 import PlayoffBracket from './PlayoffBracket'
 import LoadingState from '../Common/LoadingState'
 import EmptyState from '../Common/EmptyState'
 
 export default function Playoffs() {
-  const { matchesByStage, predictions, loading, error, hasAnyPlayoffMatches } = usePlayoffs()
+  const { activeTournament } = useTournament()
+  const { matchesByStage, predictions, loading, error, hasAnyPlayoffMatches } = usePlayoffs(
+    activeTournament?.id
+  )
 
   const predictionsByMatch = useMemo(() => {
     const map = {}

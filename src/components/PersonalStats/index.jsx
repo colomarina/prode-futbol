@@ -1,4 +1,5 @@
 import { useAuth } from '../../contexts/AuthContext'
+import { useTournament } from '../../contexts/TournamentContext'
 import { usePersonalStats } from '../../hooks/usePersonalStats'
 import { MetricCard } from './MetricCard'
 import { LineChart } from './LineChart'
@@ -9,7 +10,8 @@ import styles from './PersonalStats.module.css'
 
 export default function PersonalStats() {
   const { user } = useAuth()
-  const { stats, loading, error } = usePersonalStats(user?.id)
+  const { activeTournament } = useTournament()
+  const { stats, loading, error } = usePersonalStats(user?.id, activeTournament?.id)
 
   if (loading) {
     return (

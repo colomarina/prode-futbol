@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
+import { useTournament } from '../../../contexts/TournamentContext'
 import { MENU_ITEMS } from './menu.config'
 import HamburgerButton from './HamburgerButton'
 import TournamentDrawer from './TournamentDrawer'
@@ -9,6 +10,7 @@ export default function Sidebar({ onNavigate, onSignOut }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { isAdmin } = useAuth()
+  const { tournaments, setActiveTournament } = useTournament()
 
   // Filtrar items del menú según permisos
   const visibleMenuItems = useMemo(
@@ -16,10 +18,43 @@ export default function Sidebar({ onNavigate, onSignOut }) {
     [isAdmin]
   )
 
+  const menuItems = useMemo(() => {
+    if (tournaments.length <= 1) {
+      return visibleMenuItems
+    }
+
+    const changeTournamentItem = {
+      id: 'change-tournament',
+      type: 'change_tournament',
+      label: 'Cambiar torneo',
+      icon: '🔄',
+      description: 'Elegir otro torneo disponible',
+      adminOnly: false,
+    }
+
+    const logoutIndex = visibleMenuItems.findIndex(item => item.type === 'logout')
+
+    if (logoutIndex === -1) {
+      return [...visibleMenuItems, changeTournamentItem]
+    }
+
+    return [
+      ...visibleMenuItems.slice(0, logoutIndex),
+      changeTournamentItem,
+      ...visibleMenuItems.slice(logoutIndex),
+    ]
+  }, [tournaments.length, visibleMenuItems])
+
   const handleOpen = () => setIsOpen(true)
   const handleClose = () => setIsOpen(false)
 
   const handleSelectItem = async item => {
+    if (item.type === 'change_tournament') {
+      setActiveTournament(null)
+      setIsOpen(false)
+      return
+    }
+
     // Manejar logout
     if (item.type === 'logout' && onSignOut) {
       setIsLoggingOut(true)
@@ -51,7 +86,7 @@ export default function Sidebar({ onNavigate, onSignOut }) {
         showBackButton={false}
       >
         <MainMenuView
-          menuItems={visibleMenuItems}
+          menuItems={menuItems}
           onSelectItem={handleSelectItem}
           isLoggingOut={isLoggingOut}
         />

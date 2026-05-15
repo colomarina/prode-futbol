@@ -13,7 +13,7 @@ const emptyMatchesByStage = {
   final: [],
 }
 
-export function usePlayoffs() {
+export function usePlayoffs(tournamentId = null) {
   const [matchesByStage, setMatchesByStage] = useState(emptyMatchesByStage)
   const [predictions, setPredictions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,7 +21,7 @@ export function usePlayoffs() {
   const { user } = useAuth()
 
   const fetchPlayoffMatches = useCallback(async () => {
-    const { data, error: matchesError } = await supabase
+    let query = supabase
       .from('matches')
       .select(
         `
@@ -32,6 +32,12 @@ export function usePlayoffs() {
       `
       )
       .eq('is_playoff', true)
+
+    if (tournamentId) {
+      query = query.eq('tournament_id', tournamentId)
+    }
+
+    const { data, error: matchesError } = await query
       .order('round_number', { ascending: true })
       .order('match_number', { ascending: true })
       .order('match_date', { ascending: true })
@@ -56,7 +62,7 @@ export function usePlayoffs() {
     setMatchesByStage(grouped)
 
     return data || []
-  }, [])
+  }, [tournamentId])
 
   const fetchPredictions = useCallback(
     async playoffMatches => {

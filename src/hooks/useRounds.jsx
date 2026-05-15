@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-export const useRounds = () => {
+export const useRounds = (tournamentId = null) => {
   const [rounds, setRounds] = useState([])
   const [activeRound, setActiveRound] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -10,24 +10,27 @@ export const useRounds = () => {
   const fetchRounds = useCallback(async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('rounds')
-        .select('*')
-        .order('round_number', { ascending: true })
+      let query = supabase.from('rounds').select('*')
+
+      if (tournamentId) {
+        query = query.eq('tournament_id', tournamentId)
+      }
+
+      const { data, error } = await query.order('round_number', { ascending: true })
 
       if (error) throw error
 
-      setRounds(data)
+      setRounds(data || [])
 
       // Encontrar la fecha activa (open)
-      const active = data.find(r => r.status === 'open')
+      const active = (data || []).find(r => r.status === 'open')
       setActiveRound(active)
     } catch (error) {
       setError(error.message)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [tournamentId])
 
   useEffect(() => {
     fetchRounds()

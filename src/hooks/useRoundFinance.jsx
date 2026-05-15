@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRounds } from './useRounds'
+import { useTournament } from '../contexts/TournamentContext'
 
 function mapRow(row) {
   const paidUsers = Number(row.paid_users)
@@ -21,7 +22,8 @@ function mapRow(row) {
 }
 
 export function useRoundFinance() {
-  const { rounds, activeRound } = useRounds()
+  const { activeTournament } = useTournament()
+  const { rounds, activeRound } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
   const [summaries, setSummaries] = useState([])
   const [loading, setLoading] = useState(false)

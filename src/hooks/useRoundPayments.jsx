@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRounds } from './useRounds'
+import { useTournament } from '../contexts/TournamentContext'
 
 export function useRoundPayments() {
-  const { rounds, activeRound, loading: roundsLoading } = useRounds()
+  const { activeTournament } = useTournament()
+  const { rounds, activeRound, loading: roundsLoading } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(false)

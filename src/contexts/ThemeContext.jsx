@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { applyTournamentTheme } from '../config/tournaments.config'
 
 const ThemeContext = createContext({})
 
@@ -17,6 +18,12 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('theme', isDark ? 'dark' : 'light')
     // Aplicar tema al documento
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+
+    // Re-aplicar tema del torneo activo para reflejar variables light/dark del torneo
+    const activeTournamentSlug = localStorage.getItem('active_tournament_slug')
+    if (activeTournamentSlug) {
+      applyTournamentTheme(activeTournamentSlug, isDark)
+    }
   }, [isDark])
 
   const toggleTheme = () => {

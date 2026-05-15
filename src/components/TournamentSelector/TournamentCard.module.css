@@ -1,0 +1,76 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-align: center;
+}
+
+.card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.card:active {
+  transform: translateY(0);
+}
+
+.cardDisabled,
+.card:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  border-style: dashed;
+}
+
+.cardDisabled:hover,
+.card:disabled:hover {
+  border-color: var(--color-border);
+  box-shadow: none;
+  transform: none;
+}
+
+.emoji {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.season {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-on-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.disabledHint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}

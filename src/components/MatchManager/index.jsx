@@ -1,13 +1,18 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
+import { useTournament } from '../../contexts/TournamentContext'
 import MatchResult from './MatchResult'
 import Toast from '../Common/Toast'
 
 export default function MatchManager() {
-  const { rounds } = useRounds()
+  const { activeTournament } = useTournament()
+  const { rounds } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
-  const { matches, loading: matchesLoading, updateMatch } = useMatches(selectedRound)
+  const { matches, loading: matchesLoading, updateMatch } = useMatches(
+    selectedRound,
+    activeTournament?.id
+  )
   const [resultValues, setResultValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)

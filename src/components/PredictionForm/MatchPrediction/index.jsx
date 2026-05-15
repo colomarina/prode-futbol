@@ -46,15 +46,20 @@ const MatchPrediction = ({
 
   // Inicializar valores desde predicción existente
   useEffect(() => {
-    if (existingPrediction && !predictionValue) {
-      onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
-      onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
+    if (existingPrediction) {
+      if (predictionValue?.home !== existingPrediction.home_prediction?.toString()) {
+        onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
+      }
+
+      if (predictionValue?.away !== existingPrediction.away_prediction?.toString()) {
+        onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
+      }
+
       if (match.is_playoff) {
-        onValueChange(
-          match.id,
-          'qualifier',
-          existingPrediction.qualifier_prediction_id || match.home_team_id
-        )
+        const nextQualifier = existingPrediction.qualifier_prediction_id || match.home_team_id
+        if (predictionValue?.qualifier !== nextQualifier) {
+          onValueChange(match.id, 'qualifier', nextQualifier)
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

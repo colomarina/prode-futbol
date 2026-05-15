@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRounds } from '../../hooks/useRounds'
+import { useTournament } from '../../contexts/TournamentContext'
 import { supabase } from '../../lib/supabase'
 import Toast from '../Common/Toast'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
 
 export default function RoundManager() {
-  const { rounds, activeRound, updateRoundStatus, finishRound, loading } = useRounds()
+  const { activeTournament } = useTournament()
+  const { rounds, activeRound, updateRoundStatus, finishRound, loading } = useRounds(
+    activeTournament?.id
+  )
   const [matchesByRound, setMatchesByRound] = useState({})
   // const [roundNumber, setRoundNumber] = useState(1)
   // const [adminLoading, setAdminLoading] = useState(false)

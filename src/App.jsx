@@ -1,13 +1,61 @@
+import { useCallback, useEffect, useMemo } from 'react'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { TournamentProvider, useTournament } from './contexts/TournamentContext'
 import Login from './components/Login'
 import Navigation from './components/Navigation'
+import TournamentSelector from './components/TournamentSelector'
 // import PredictionForm from './components/PredictionForm'
 
-function AppContent() {
-  const { user, loading } = useAuth()
+// Optional switch:
+// - false (default): only active tournaments are accessible to everyone.
+// - true: admins can also access upcoming tournaments.
+const ALLOW_UPCOMING_FOR_ADMINS =
+  import.meta.env.VITE_ALLOW_UPCOMING_TOURNAMENTS_FOR_ADMINS === 'true'
 
-  if (loading) {
+function AppContent() {
+  const { user, loading, isAdmin } = useAuth()
+  const {
+    tournaments,
+    activeTournament,
+    setActiveTournament,
+    loading: tournamentLoading,
+  } = useTournament()
+
+  const isUserAdmin = isAdmin()
+
+  const canAccessTournament = useCallback(
+    tournament => {
+      if (!tournament) return false
+      if (tournament.status === 'active') return true
+      if (ALLOW_UPCOMING_FOR_ADMINS && isUserAdmin && tournament.status === 'upcoming') return true
+      return false
+    },
+    [isUserAdmin]
+  )
+
+  const accessibleTournaments = useMemo(
+    () => tournaments.filter(canAccessTournament),
+    [tournaments, canAccessTournament]
+  )
+
+  const handleSelectTournament = useCallback(
+    tournament => {
+      if (!canAccessTournament(tournament)) return
+      setActiveTournament(tournament)
+    },
+    [canAccessTournament, setActiveTournament]
+  )
+
+  // Safety guard: if someone forces a blocked tournament (e.g. localStorage), clear it.
+  useEffect(() => {
+    if (!activeTournament) return
+    if (!canAccessTournament(activeTournament)) {
+      setActiveTournament(null)
+    }
+  }, [activeTournament, canAccessTournament, setActiveTournament])
+
+  if (loading || tournamentLoading) {
     return (
       <div
         className="loading-container"
@@ -48,15 +96,47 @@ function AppContent() {
     return <Login />
   }
 
-  return <Navigation />
+  // User logged in but no tournament selected and tournaments loaded
+  if (!activeTournament && tournaments.length > 0) {
+    return (
+      <TournamentSelector
+        tournaments={tournaments}
+        loading={tournamentLoading}
+        onSelect={handleSelectTournament}
+        isTournamentDisabled={tournament => !canAccessTournament(tournament)}
+      />
+    )
+  }
+
+  // User logged in and tournament selected
+  if (activeTournament && canAccessTournament(activeTournament)) {
+    return <Navigation />
+  }
+
+  // Fallback: no accessible tournaments for this user
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--color-text-secondary)',
+      }}
+    >
+      No hay torneos habilitados para tu cuenta
+    </div>
+  )
 }
 
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <TournamentProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </TournamentProvider>
     </ThemeProvider>
   )
 }

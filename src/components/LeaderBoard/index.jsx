@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLeaderboard } from '../../hooks/useLeaderboard'
 import { useRounds } from '../../hooks/useRounds'
+import { useTournament } from '../../contexts/TournamentContext'
 import LeaderboardHeader from './LeadboardHeader'
 import LeaderboardTable from './LeaderboardTable'
 import LoadingSpinner from './LoadingSpinner'
@@ -8,8 +9,9 @@ import ErrorMessage from './ErrorMessage'
 
 export default function Leaderboard({ onViewPredictions }) {
   const [selectedRound, setSelectedRound] = useState(null)
-  const { leaderboard, loading, error } = useLeaderboard(selectedRound)
-  const { rounds, loading: roundsLoading } = useRounds()
+  const { activeTournament } = useTournament()
+  const { leaderboard, loading, error } = useLeaderboard(selectedRound, activeTournament?.id)
+  const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
 
   if (loading) {
     return (

@@ -1,10 +1,18 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-export const useMatches = (roundNumber = null) => {
+export const useMatches = (roundNumber = null, tournamentId = null) => {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Marcar como loading inmediatamente (antes del paint) cuando cambia roundNumber,
+  // para evitar el flash de EmptyState entre el cambio de ronda y el arranque del fetch.
+  useLayoutEffect(() => {
+    if (roundNumber) {
+      setLoading(true)
+    }
+  }, [roundNumber])
 
   const fetchMatches = useCallback(async () => {
     // Si no hay roundNumber, no traer nada
@@ -16,17 +24,22 @@ export const useMatches = (roundNumber = null) => {
 
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('matches')
-        .select(
-          `
+      let query = supabase.from('matches').select(
+        `
           *,
           home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
           away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
           qualifier_team:teams!matches_qualifier_team_id_fkey(id, name, slug, logo_url)
         `
-        )
-        .eq('round_number', roundNumber)
+      )
+
+      query = query.eq('round_number', roundNumber)
+
+      if (tournamentId) {
+        query = query.eq('tournament_id', tournamentId)
+      }
+
+      const { data, error } = await query
         .order('match_number', { ascending: true })
         .order('match_date', { ascending: true })
 
@@ -37,7 +50,7 @@ export const useMatches = (roundNumber = null) => {
     } finally {
       setLoading(false)
     }
-  }, [roundNumber])
+  }, [roundNumber, tournamentId])
 
   useEffect(() => {
     fetchMatches()

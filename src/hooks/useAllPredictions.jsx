@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRounds } from './useRounds'
 import { useMatches } from './useMatches'
+import { useTournament } from '../contexts/TournamentContext'
 import { supabase } from '../lib/supabase'
 
 export function useAllPredictions({ initialRound = null, initialUser = '' } = {}) {
-  const { rounds, loading: roundsLoading } = useRounds()
+  const { activeTournament } = useTournament()
+  const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(initialRound || null)
-  const { matches, loading: matchesLoading } = useMatches(selectedRound)
+  const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
   const [roundPredictions, setRoundPredictions] = useState({})
   const [matchPredictions, setMatchPredictions] = useState({})
   const [users, setUsers] = useState([])

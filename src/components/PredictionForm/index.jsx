@@ -3,6 +3,7 @@ import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
 import { useAuth } from '../../contexts/AuthContext'
+import { useTournament } from '../../contexts/TournamentContext'
 import { supabase } from '../../lib/supabase'
 import MatchPrediction from './MatchPrediction'
 import PaymentReminderModal from '../Common/PaymentReminderModal'
@@ -13,13 +14,14 @@ import EmptyState from '../Common/EmptyState'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
 
 export default function PredictionForm() {
-  const { rounds, activeRound, loading: roundsLoading } = useRounds()
+  const { activeTournament } = useTournament()
+  const { rounds, activeRound, loading: roundsLoading } = useRounds(activeTournament?.id)
   const { user } = useAuth()
 
   // Inicializar selectedRound con activeRound cuando esté disponible
   const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
 
-  const { matches, loading: matchesLoading } = useMatches(selectedRound)
+  const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
   const { predictions, batchUpsertPredictions } = usePredictions(selectedRound)
 
   const [predictionValues, setPredictionValues] = useState({})
@@ -131,14 +133,14 @@ export default function PredictionForm() {
     }
   }, [isRoundOpen, isRoundFinished])
 
-  // Auto-seleccionar siempre la ultima fecha disponible al cargar
+  // Auto-seleccionar la fecha activa (open) al cargar, o la más nueva si no hay ninguna activa
   useEffect(() => {
     if (selectedRound) return
 
     if (availableRounds.length) {
-      const newestRound = availableRounds[0]
-      if (newestRound) {
-        setSelectedRound(newestRound.round_number)
+      const roundToSelect = activeRound ?? availableRounds[0]
+      if (roundToSelect) {
+        setSelectedRound(roundToSelect.round_number)
       }
     }
   }, [activeRound, availableRounds, selectedRound])
