@@ -44,22 +44,22 @@ const MatchPrediction = ({
   // Solo se puede predecir si la fecha está abierta y faltan más minutos que el corte configurado
   const canPredictMatch = isRoundOpen && canPredict(match.match_date)
 
-  // Inicializar valores desde predicción existente
+  // Inicializar valores desde predicción existente.
+  // Solo se setea un campo si todavía es undefined — nunca se pisa un valor que el usuario editó.
   useEffect(() => {
     if (existingPrediction) {
-      if (predictionValue?.home !== existingPrediction.home_prediction?.toString()) {
+      if (predictionValue?.home === undefined) {
         onValueChange(match.id, 'home', existingPrediction.home_prediction.toString())
       }
-
-      if (predictionValue?.away !== existingPrediction.away_prediction?.toString()) {
+      if (predictionValue?.away === undefined) {
         onValueChange(match.id, 'away', existingPrediction.away_prediction.toString())
       }
-
-      if (match.is_playoff) {
-        const nextQualifier = existingPrediction.qualifier_prediction_id || match.home_team_id
-        if (predictionValue?.qualifier !== nextQualifier) {
-          onValueChange(match.id, 'qualifier', nextQualifier)
-        }
+      if (match.is_playoff && predictionValue?.qualifier === undefined) {
+        onValueChange(
+          match.id,
+          'qualifier',
+          existingPrediction.qualifier_prediction_id || match.home_team_id
+        )
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
