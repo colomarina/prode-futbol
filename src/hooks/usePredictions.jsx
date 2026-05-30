@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { PREDICTION_CUTOFF_MINUTES } from '../constants/predictions'
 
-export const usePredictions = (roundNumber = null) => {
+export const usePredictions = (roundNumber = null, tournamentId = null) => {
   const [predictions, setPredictions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -14,7 +14,7 @@ export const usePredictions = (roundNumber = null) => {
       fetchPredictions()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, roundNumber])
+  }, [user, roundNumber, tournamentId])
 
   const fetchPredictions = async () => {
     if (!user) return
@@ -28,7 +28,7 @@ export const usePredictions = (roundNumber = null) => {
 
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      let query = supabase
         .from('predictions')
         .select(
           `
@@ -52,6 +52,12 @@ export const usePredictions = (roundNumber = null) => {
         )
         .eq('user_id', user.id)
         .eq('matches.round_number', roundNumber)
+
+      if (tournamentId) {
+        query = query.eq('matches.tournament_id', tournamentId)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       setPredictions(data)

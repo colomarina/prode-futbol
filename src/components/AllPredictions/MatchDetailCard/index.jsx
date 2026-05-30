@@ -2,6 +2,8 @@ import TeamDisplay from '../../Common/TeamDisplay'
 import MatchStatusBadge from '../MatchStatusBadge'
 
 const MatchDetailCard = ({ match }) => {
+  const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
+
   return (
     <div
       className="card"
@@ -25,18 +27,34 @@ const MatchDetailCard = ({ match }) => {
           borderBottom: '1px solid var(--color-border)',
         }}
       >
-        <span
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            color: 'white',
-            padding: '4px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: '700',
-          }}
-        >
-          Partido #{match.match_number}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: 'white',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              fontSize: '0.75rem',
+              fontWeight: '700',
+            }}
+          >
+            Partido #{match.match_number}
+          </span>
+          {groupLabel && (
+            <span
+              style={{
+                backgroundColor: 'var(--color-primary-light)',
+                color: 'var(--color-primary-dark)',
+                padding: '4px 10px',
+                borderRadius: '999px',
+                fontSize: '0.72rem',
+                fontWeight: '700',
+              }}
+            >
+              {groupLabel}
+            </span>
+          )}
+        </div>
         <MatchStatusBadge match={match} />
       </div>
 

@@ -22,7 +22,10 @@ export default function PredictionForm() {
   const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
 
   const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
-  const { predictions, batchUpsertPredictions } = usePredictions(selectedRound)
+  const { predictions, batchUpsertPredictions } = usePredictions(
+    selectedRound,
+    activeTournament?.id
+  )
 
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
@@ -163,11 +166,27 @@ export default function PredictionForm() {
 
     const checkPaymentStatus = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_my_round_payment_status', {
-          p_round_number: selectedRound,
-        })
+        let data = null
 
-        if (error) throw error
+        if (activeTournament?.id) {
+          const tournamentRpc = await supabase.rpc('get_my_round_payment_status_by_tournament', {
+            p_tournament_id: activeTournament.id,
+            p_round_number: selectedRound,
+          })
+
+          if (!tournamentRpc.error) {
+            data = tournamentRpc.data
+          }
+        }
+
+        if (data === null) {
+          const legacyRpc = await supabase.rpc('get_my_round_payment_status', {
+            p_round_number: selectedRound,
+          })
+
+          if (legacyRpc.error) throw legacyRpc.error
+          data = legacyRpc.data
+        }
 
         // Si ya está pagada según admin/sistema, no mostrar más la modal
         if (!isCancelled) {
@@ -186,7 +205,7 @@ export default function PredictionForm() {
     return () => {
       isCancelled = true
     }
-  }, [isRoundOpen, selectedRound, user?.id])
+  }, [isRoundOpen, selectedRound, user?.id, activeTournament?.id])
 
   const handleClosePaymentModal = useCallback(() => {
     if (selectedRound) {

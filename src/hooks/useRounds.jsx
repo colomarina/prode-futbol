@@ -38,10 +38,16 @@ export const useRounds = (tournamentId = null) => {
 
   const updateRoundStatus = async (roundNumber, status) => {
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('rounds')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('round_number', roundNumber)
+
+      if (tournamentId) {
+        query = query.eq('tournament_id', tournamentId)
+      }
+
+      const { error } = await query
 
       if (error) throw error
 
@@ -64,10 +70,16 @@ export const useRounds = (tournamentId = null) => {
 
   const lockRound = async roundNumber => {
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('rounds')
         .update({ status: 'locked', updated_at: new Date().toISOString() })
         .eq('round_number', roundNumber)
+
+      if (tournamentId) {
+        query = query.eq('tournament_id', tournamentId)
+      }
+
+      const { error } = await query
 
       if (error) throw error
 
@@ -90,10 +102,16 @@ export const useRounds = (tournamentId = null) => {
 
   const finishRound = async roundNumber => {
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('rounds')
         .update({ status: 'finished', updated_at: new Date().toISOString() })
         .eq('round_number', roundNumber)
+
+      if (tournamentId) {
+        query = query.eq('tournament_id', tournamentId)
+      }
+
+      const { error } = await query
 
       if (error) throw error
 

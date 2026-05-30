@@ -32,11 +32,27 @@ export function useRoundPayments() {
 
     try {
       setLoading(true)
-      const { data, error } = await supabase.rpc('get_round_payments_status', {
-        p_round_number: roundNumber,
-      })
+      let data = null
 
-      if (error) throw error
+      if (activeTournament?.id) {
+        const tournamentRpc = await supabase.rpc('get_round_payments_status_by_tournament', {
+          p_tournament_id: activeTournament.id,
+          p_round_number: roundNumber,
+        })
+
+        if (!tournamentRpc.error) {
+          data = tournamentRpc.data
+        }
+      }
+
+      if (!data) {
+        const legacyRpc = await supabase.rpc('get_round_payments_status', {
+          p_round_number: roundNumber,
+        })
+
+        if (legacyRpc.error) throw legacyRpc.error
+        data = legacyRpc.data
+      }
 
       setPayments(
         (data || []).map(row => ({
@@ -54,7 +70,7 @@ export function useRoundPayments() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activeTournament?.id])
 
   useEffect(() => {
     if (!selectedRound) return
@@ -76,21 +92,61 @@ export function useRoundPayments() {
         let error = null
 
         if (hasPaid) {
-          // Registrar pago real + allocation para que impacte en Finanzas.
-          const response = await supabase.rpc('register_payment', {
-            p_user_id: userId,
-            p_total_amount: 2000,
-            p_payment_method: 'Transferencia',
-            p_allocations: [{ round_number: selectedRound, allocated_amount: 2000 }],
-          })
-          error = response.error
+          const allocations = [{ round_number: selectedRound, allocated_amount: 2000 }]
+
+          if (activeTournament?.id) {
+            const tournamentResponse = await supabase.rpc('register_payment_by_tournament', {
+              p_tournament_id: activeTournament.id,
+              p_user_id: userId,
+              p_total_amount: 2000,
+              p_payment_method: 'Transferencia',
+              p_allocations: allocations,
+            })
+
+            if (!tournamentResponse.error) {
+              error = null
+            } else {
+              const legacyResponse = await supabase.rpc('register_payment', {
+                p_user_id: userId,
+                p_total_amount: 2000,
+                p_payment_method: 'Transferencia',
+                p_allocations: allocations,
+              })
+              error = legacyResponse.error
+            }
+          } else {
+            const legacyResponse = await supabase.rpc('register_payment', {
+              p_user_id: userId,
+              p_total_amount: 2000,
+              p_payment_method: 'Transferencia',
+              p_allocations: allocations,
+            })
+            error = legacyResponse.error
+          }
         } else {
-          // Eliminar allocation y sincronizar estado legacy.
-          const response = await supabase.rpc('remove_round_allocation', {
-            p_user_id: userId,
-            p_round_number: selectedRound,
-          })
-          error = response.error
+          if (activeTournament?.id) {
+            const tournamentResponse = await supabase.rpc('remove_round_allocation_by_tournament', {
+              p_tournament_id: activeTournament.id,
+              p_user_id: userId,
+              p_round_number: selectedRound,
+            })
+
+            if (!tournamentResponse.error) {
+              error = null
+            } else {
+              const legacyResponse = await supabase.rpc('remove_round_allocation', {
+                p_user_id: userId,
+                p_round_number: selectedRound,
+              })
+              error = legacyResponse.error
+            }
+          } else {
+            const legacyResponse = await supabase.rpc('remove_round_allocation', {
+              p_user_id: userId,
+              p_round_number: selectedRound,
+            })
+            error = legacyResponse.error
+          }
         }
 
         if (error) throw error
@@ -103,7 +159,7 @@ export function useRoundPayments() {
         setSavingByUser(prev => ({ ...prev, [userId]: false }))
       }
     },
-    [selectedRound, payments]
+    [selectedRound, payments, activeTournament?.id]
   )
 
   const stats = useMemo(() => {

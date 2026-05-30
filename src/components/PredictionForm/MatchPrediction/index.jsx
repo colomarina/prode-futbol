@@ -33,6 +33,7 @@ const MatchPrediction = ({
   const awayInputRef = useRef(null)
 
   const isGameOfTheRound = match.round_number === match.match_number
+  const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
 
   const canPredict = useCallback(matchDate => {
     const cutoffTime = new Date(
@@ -272,6 +273,26 @@ const MatchPrediction = ({
           textAlign: 'center',
         }}
       >
+        {groupLabel && (
+          <div
+            style={{
+              marginBottom: '6px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                color: 'var(--color-primary-dark)',
+                backgroundColor: 'var(--color-primary-light)',
+                borderRadius: '999px',
+                padding: '4px 10px',
+              }}
+            >
+              {groupLabel}
+            </span>
+          </div>
+        )}
         <span
           style={{
             fontSize: '0.9rem',

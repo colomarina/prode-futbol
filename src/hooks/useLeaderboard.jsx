@@ -59,6 +59,53 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
         return
       }
 
+      const fetchRoundScoresByRounds = async (roundNumbers, includeRoundInSelect = false) => {
+        if (!roundNumbers?.length) return []
+
+        const baseSelect = includeRoundInSelect
+          ? `
+            user_id,
+            total_points,
+            round_number,
+            profiles (
+              id,
+              username,
+              full_name,
+              avatar_url
+            )
+          `
+          : `
+            user_id,
+            total_points,
+            profiles (
+              id,
+              username,
+              full_name,
+              avatar_url
+            )
+          `
+
+        if (tournamentId) {
+          const scopedAttempt = await supabase
+            .from('round_scores')
+            .select(baseSelect)
+            .eq('tournament_id', tournamentId)
+            .in('round_number', roundNumbers)
+
+          if (!scopedAttempt.error) {
+            return scopedAttempt.data || []
+          }
+        }
+
+        const legacyAttempt = await supabase
+          .from('round_scores')
+          .select(baseSelect)
+          .in('round_number', roundNumbers)
+
+        if (legacyAttempt.error) throw legacyAttempt.error
+        return legacyAttempt.data || []
+      }
+
       if (roundNumber === 'playoffs') {
         let playoffRounds = [17, 18, 19, 20]
 
@@ -79,23 +126,7 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
           return
         }
 
-        const { data: roundScoresData, error: roundError } = await supabase
-          .from('round_scores')
-          .select(
-            `
-            user_id,
-            total_points,
-            profiles (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          `
-          )
-          .in('round_number', playoffRounds)
-
-        if (roundError) throw roundError
+        const roundScoresData = await fetchRoundScoresByRounds(playoffRounds)
 
         const formattedData = buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
           ...item,
@@ -110,24 +141,7 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
         }
 
         // Tabla de posiciones por fecha específica
-        const { data: roundScoresData, error: roundError } = await supabase
-          .from('round_scores')
-          .select(
-            `
-            user_id,
-            total_points,
-            profiles (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          `
-          )
-          .eq('round_number', roundNumber)
-          .order('total_points', { ascending: false })
-
-        if (roundError) throw roundError
+        const roundScoresData = await fetchRoundScoresByRounds([roundNumber])
 
         // Transformar los datos al formato esperado
         const formattedData = roundScoresData.map(item => ({
@@ -152,24 +166,7 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
           return
         }
 
-        const { data: roundScoresData, error: roundError } = await supabase
-          .from('round_scores')
-          .select(
-            `
-            user_id,
-            total_points,
-            round_number,
-            profiles (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          `
-          )
-          .in('round_number', tournamentRoundNumbers)
-
-        if (roundError) throw roundError
+        const roundScoresData = await fetchRoundScoresByRounds(tournamentRoundNumbers, true)
 
         setLeaderboard(buildLeaderboardFromRoundScores(roundScoresData))
       }

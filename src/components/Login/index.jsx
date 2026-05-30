@@ -72,6 +72,7 @@ export default function Login() {
               marginBottom: '8px',
             }}
           >
+            {/* TODO: Poner Prode GianniInfantino S.A cuando es el mundial */}
             Prode Chiqui Tapia
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>

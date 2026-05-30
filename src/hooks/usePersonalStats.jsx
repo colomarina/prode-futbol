@@ -176,6 +176,16 @@ export const usePersonalStats = (userId, tournamentId = null) => {
       setError(null)
 
       if (tournamentId) {
+        const tournamentStatsRpc = await supabase.rpc('get_personal_stats_by_tournament', {
+          p_tournament_id: tournamentId,
+        })
+
+        if (mounted && !tournamentStatsRpc.error) {
+          setStats(tournamentStatsRpc.data || emptyStats)
+          setLoading(false)
+          return
+        }
+
         const { data: tournamentMatches, error: matchesError } = await supabase
           .from('matches')
           .select('id, round_number, home_score, away_score, is_finished')

@@ -10,6 +10,7 @@ function NavHeader({ profile, onNavigate, signOut }) {
       <div className={styles.headerLeft}>
         <div className={styles.logoContainer}>⚽</div>
         <div className={styles.brandInfo}>
+          {/* TODO: Poner Prode GianniInfantino S.A cuando es el mundial */}
           <h1>Prode Chiqui Tapia</h1>
           <UserBadge username={profile?.username} />
         </div>

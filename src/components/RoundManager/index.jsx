@@ -28,10 +28,16 @@ export default function RoundManager() {
       if (!rounds || rounds.length === 0) return
 
       try {
-        const { data: matches, error } = await supabase
+        let query = supabase
           .from('matches')
           .select('id, round_number, is_finished')
           .order('round_number', { ascending: true })
+
+        if (activeTournament?.id) {
+          query = query.eq('tournament_id', activeTournament.id)
+        }
+
+        const { data: matches, error } = await query
 
         if (error) throw error
 
@@ -58,7 +64,7 @@ export default function RoundManager() {
     }
 
     fetchMatchesInfo()
-  }, [rounds])
+  }, [rounds, activeTournament?.id])
 
   // Cargar información de predicciones de usuarios para la fecha activa
   useEffect(() => {
@@ -69,20 +75,37 @@ export default function RoundManager() {
       }
 
       try {
-        // La función ahora detecta automáticamente la fecha abierta
-        const { data, error } = await supabase.rpc('get_round_predictions_summary')
+        // Prefer tournament-aware RPC when available, fallback to legacy.
+        let data = null
+        if (activeTournament?.id) {
+          const tournamentRpc = await supabase.rpc('get_round_predictions_summary_by_tournament', {
+            p_tournament_id: activeTournament.id,
+            p_round_num: activeRound.round_number,
+          })
 
-        if (error) throw error
+          if (!tournamentRpc.error) {
+            data = tournamentRpc.data
+          }
+        }
+
+        if (!data) {
+          const legacyRpc = await supabase.rpc('get_round_predictions_summary', {
+            round_num: activeRound.round_number,
+          })
+
+          if (legacyRpc.error) throw legacyRpc.error
+          data = legacyRpc.data
+        }
 
         // Mapear los datos al formato que usa el componente
-        const usersData = data.map(user => ({
+        const usersData = (data || []).map(user => ({
           id: user.user_id,
           name: user.user_name,
           totalMatches: user.total_matches,
           predictedCount: user.predicted_count,
           missingMatches: user.missing_matches,
           progress: parseFloat(user.progress),
-          roundNumber: user.round_number, // Para debug
+          roundNumber: user.round_number ?? activeRound.round_number, // Para debug
         }))
 
         setUsersPredictions(usersData)
@@ -93,7 +116,7 @@ export default function RoundManager() {
     }
 
     fetchUsersPredictions()
-  }, [activeRound])
+  }, [activeRound, activeTournament?.id])
 
   const getStatusConfig = useCallback(status => {
     const configs = {

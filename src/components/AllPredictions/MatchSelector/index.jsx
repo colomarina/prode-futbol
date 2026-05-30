@@ -11,7 +11,8 @@ const MatchSelector = ({ matches, selectedMatchId, onMatchChange, disabled, isLo
       placeholder="Seleccionar partido..."
       renderButton={match => (
         <>
-          #{match.match_number} -
+          #{match.match_number}
+          {match.group_label ? ` (${match.group_label})` : ''} -
           {match.home_team?.logo_url && (
             <img
               src={match.home_team.logo_url}
@@ -41,7 +42,8 @@ const MatchSelector = ({ matches, selectedMatchId, onMatchChange, disabled, isLo
       )}
       renderOption={match => (
         <>
-          #{match.match_number} -
+          #{match.match_number}
+          {match.group_label ? ` (${match.group_label})` : ''} -
           {match.home_team?.logo_url && (
             <img
               src={match.home_team.logo_url}

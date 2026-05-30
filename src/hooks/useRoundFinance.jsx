@@ -45,15 +45,33 @@ export function useRoundFinance() {
     try {
       setLoading(true)
       setError(null)
-      const { data, error } = await supabase.rpc('get_all_round_financial_summaries')
-      if (error) throw error
+      let data = null
+
+      if (activeTournament?.id) {
+        const tournamentRpc = await supabase.rpc('get_all_round_financial_summaries_by_tournament', {
+          p_tournament_id: activeTournament.id,
+        })
+
+        if (!tournamentRpc.error) {
+          data = tournamentRpc.data
+        }
+      }
+
+      if (!data) {
+        const legacyRpc = await supabase.rpc('get_all_round_financial_summaries')
+        if (legacyRpc.error) throw legacyRpc.error
+
+        const tournamentRoundNumbers = new Set((rounds || []).map(round => round.round_number))
+        data = (legacyRpc.data || []).filter(row => tournamentRoundNumbers.has(row.round_number))
+      }
+
       setSummaries((data || []).map(mapRow))
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [rounds, activeTournament?.id])
 
   useEffect(() => {
     fetchSummaries()
@@ -71,12 +89,36 @@ export function useRoundFinance() {
 
       try {
         setSaving(true)
-        const { error } = await supabase.rpc('upsert_round_finance', {
-          p_round_number: roundNumber,
-          p_entry_fee: entryFee,
-          p_prize_amount: prizeAmount,
-        })
-        if (error) throw error
+        let rpcError = null
+
+        if (activeTournament?.id) {
+          const tournamentRpc = await supabase.rpc('upsert_round_finance_by_tournament', {
+            p_tournament_id: activeTournament.id,
+            p_round_number: roundNumber,
+            p_entry_fee: entryFee,
+            p_prize_amount: prizeAmount,
+          })
+
+          if (!tournamentRpc.error) {
+            rpcError = null
+          } else {
+            const legacyRpc = await supabase.rpc('upsert_round_finance', {
+              p_round_number: roundNumber,
+              p_entry_fee: entryFee,
+              p_prize_amount: prizeAmount,
+            })
+            rpcError = legacyRpc.error
+          }
+        } else {
+          const legacyRpc = await supabase.rpc('upsert_round_finance', {
+            p_round_number: roundNumber,
+            p_entry_fee: entryFee,
+            p_prize_amount: prizeAmount,
+          })
+          rpcError = legacyRpc.error
+        }
+
+        if (rpcError) throw rpcError
         // Refetch para recalcular saldo acumulado con los valores reales
         await fetchSummaries()
       } catch (err) {
@@ -87,7 +129,7 @@ export function useRoundFinance() {
         setSaving(false)
       }
     },
-    [summaries, fetchSummaries]
+    [summaries, fetchSummaries, activeTournament?.id]
   )
 
   const selectedSummary = useMemo(
