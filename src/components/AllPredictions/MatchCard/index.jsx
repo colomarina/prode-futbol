@@ -1,5 +1,7 @@
 import TeamDisplay from '../../Common/TeamDisplay'
 import MatchStatusBadge from '../MatchStatusBadge'
+import { useTournament } from '../../../contexts/TournamentContext'
+import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
 
 const CARD_STYLE = {
   padding: '12px',
@@ -17,10 +19,12 @@ const resolveTeamById = (teamId, match) => {
 }
 
 const MatchCard = ({ match, prediction, started }) => {
+  const { activeTournament } = useTournament()
   const isTiePrediction =
     prediction && Number(prediction.home_prediction) === Number(prediction.away_prediction)
   const qualifierPredictionTeam = resolveTeamById(prediction?.qualifier_prediction_id, match)
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
+  const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)
 
   return (
     <div className="card" style={{ ...CARD_STYLE, opacity: started ? 1 : 0.6 }}>
@@ -51,8 +55,9 @@ const MatchCard = ({ match, prediction, started }) => {
           {groupLabel && (
             <span
               style={{
-                backgroundColor: 'var(--color-primary-light)',
-                color: 'var(--color-primary-dark)',
+                backgroundColor:
+                  groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
+                color: groupBadgeColors?.color || 'var(--color-primary-dark)',
                 padding: '4px 10px',
                 borderRadius: '999px',
                 fontSize: '0.72rem',

@@ -2,6 +2,8 @@ import { useEffect, useCallback, memo, useRef, useMemo } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
 import InfoButton from '../../Common/InfoButton'
 import { PREDICTION_CUTOFF_MINUTES } from '../../../constants/predictions'
+import { useTournament } from '../../../contexts/TournamentContext'
+import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
 
 const parseScoreValue = value => {
   if (value === '' || value === null || value === undefined) return null
@@ -30,10 +32,15 @@ const MatchPrediction = ({
   predictionValue,
   onValueChange,
 }) => {
+  const { activeTournament } = useTournament()
   const awayInputRef = useRef(null)
 
-  const isGameOfTheRound = match.round_number === match.match_number
+  const isGameOfTheRound =
+    activeTournament?.slug === 'mundial-2026'
+      ? match.match_number === 1
+      : match.round_number === match.match_number
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
+  const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)
 
   const canPredict = useCallback(matchDate => {
     const cutoffTime = new Date(
@@ -283,8 +290,9 @@ const MatchPrediction = ({
               style={{
                 fontSize: '0.78rem',
                 fontWeight: '700',
-                color: 'var(--color-primary-dark)',
-                backgroundColor: 'var(--color-primary-light)',
+                color: groupBadgeColors?.color || 'var(--color-primary-dark)',
+                backgroundColor:
+                  groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
                 borderRadius: '999px',
                 padding: '4px 10px',
               }}

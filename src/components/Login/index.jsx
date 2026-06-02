@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useTournament } from '../../contexts/TournamentContext'
+import { getTournamentConfig } from '../../config/tournaments.config'
 import Toast from '../Common/Toast'
 
 export default function Login() {
@@ -13,6 +15,9 @@ export default function Login() {
   const [toast, setToast] = useState(null)
 
   const { signIn, signUp } = useAuth()
+  const { activeTournament } = useTournament()
+  const tournamentConfig = getTournamentConfig(activeTournament?.slug)
+  const prodeName = tournamentConfig?.prodeName || 'Prode Chiqui Tapia'
 
   const handleSubmit = async e => {
     e.preventDefault()
@@ -72,8 +77,7 @@ export default function Login() {
               marginBottom: '8px',
             }}
           >
-            {/* TODO: Poner Prode GianniInfantino S.A cuando es el mundial */}
-            Prode Chiqui Tapia
+            {prodeName}
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
             {isLogin ? 'Ingresá a tu cuenta' : 'Creá tu cuenta'}

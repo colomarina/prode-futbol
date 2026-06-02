@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { TournamentProvider, useTournament } from './contexts/TournamentContext'
+import { getTournamentConfig } from './config/tournaments.config'
 import Login from './components/Login'
 import Navigation from './components/Navigation'
 import TournamentSelector from './components/TournamentSelector'
@@ -21,6 +22,7 @@ function AppContent() {
     setActiveTournament,
     loading: tournamentLoading,
   } = useTournament()
+  const tournamentConfig = getTournamentConfig(activeTournament?.slug)
 
   const isUserAdmin = isAdmin()
 
@@ -54,6 +56,19 @@ function AppContent() {
       setActiveTournament(null)
     }
   }, [activeTournament, canAccessTournament, setActiveTournament])
+
+  useEffect(() => {
+    const defaultTitle = 'Prode Chiqui Tapia'
+
+    if (!activeTournament) {
+      document.title = defaultTitle
+      return
+    }
+
+    const tournamentName = activeTournament.name || tournamentConfig?.label || 'Torneo'
+    const prodeName = tournamentConfig?.prodeName || defaultTitle
+    document.title = `${prodeName} | ${tournamentName}`
+  }, [activeTournament, tournamentConfig?.label, tournamentConfig?.prodeName])
 
   if (loading || tournamentLoading) {
     return (

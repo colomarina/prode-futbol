@@ -1,8 +1,12 @@
 import TeamDisplay from '../../Common/TeamDisplay'
 import MatchStatusBadge from '../MatchStatusBadge'
+import { useTournament } from '../../../contexts/TournamentContext'
+import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
 
 const MatchDetailCard = ({ match }) => {
+  const { activeTournament } = useTournament()
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
+  const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)
 
   return (
     <div
@@ -43,8 +47,9 @@ const MatchDetailCard = ({ match }) => {
           {groupLabel && (
             <span
               style={{
-                backgroundColor: 'var(--color-primary-light)',
-                color: 'var(--color-primary-dark)',
+                backgroundColor:
+                  groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
+                color: groupBadgeColors?.color || 'var(--color-primary-dark)',
                 padding: '4px 10px',
                 borderRadius: '999px',
                 fontSize: '0.72rem',
