@@ -24,53 +24,56 @@ export function useRoundPayments() {
     }
   }, [selectedRound, activeRound, rounds])
 
-  const fetchPayments = useCallback(async roundNumber => {
-    if (!roundNumber) {
-      setPayments([])
-      return { error: null }
-    }
+  const fetchPayments = useCallback(
+    async roundNumber => {
+      if (!roundNumber) {
+        setPayments([])
+        return { error: null }
+      }
 
-    try {
-      setLoading(true)
-      let data = null
+      try {
+        setLoading(true)
+        let data = null
 
-      if (activeTournament?.id) {
-        const tournamentRpc = await supabase.rpc('get_round_payments_status_by_tournament', {
-          p_tournament_id: activeTournament.id,
-          p_round_number: roundNumber,
-        })
+        if (activeTournament?.id) {
+          const tournamentRpc = await supabase.rpc('get_round_payments_status_by_tournament', {
+            p_tournament_id: activeTournament.id,
+            p_round_number: roundNumber,
+          })
 
-        if (!tournamentRpc.error) {
-          data = tournamentRpc.data
+          if (!tournamentRpc.error) {
+            data = tournamentRpc.data
+          }
         }
+
+        if (!data) {
+          const legacyRpc = await supabase.rpc('get_round_payments_status', {
+            p_round_number: roundNumber,
+          })
+
+          if (legacyRpc.error) throw legacyRpc.error
+          data = legacyRpc.data
+        }
+
+        setPayments(
+          (data || []).map(row => ({
+            userId: row.user_id,
+            username: row.username,
+            fullName: row.full_name,
+            hasPaid: row.has_paid,
+            paidAt: row.paid_at,
+          }))
+        )
+
+        return { error: null }
+      } catch (error) {
+        return { error }
+      } finally {
+        setLoading(false)
       }
-
-      if (!data) {
-        const legacyRpc = await supabase.rpc('get_round_payments_status', {
-          p_round_number: roundNumber,
-        })
-
-        if (legacyRpc.error) throw legacyRpc.error
-        data = legacyRpc.data
-      }
-
-      setPayments(
-        (data || []).map(row => ({
-          userId: row.user_id,
-          username: row.username,
-          fullName: row.full_name,
-          hasPaid: row.has_paid,
-          paidAt: row.paid_at,
-        }))
-      )
-
-      return { error: null }
-    } catch (error) {
-      return { error }
-    } finally {
-      setLoading(false)
-    }
-  }, [activeTournament?.id])
+    },
+    [activeTournament?.id]
+  )
 
   useEffect(() => {
     if (!selectedRound) return

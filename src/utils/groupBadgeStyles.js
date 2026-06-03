@@ -1,5 +1,18 @@
 const MUNDIAL_TOURNAMENT_SLUG = 'mundial-2026'
-const SUPPORTED_GROUP_LETTERS = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'])
+const SUPPORTED_GROUP_LETTERS = new Set([
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+  'H',
+  'I',
+  'J',
+  'K',
+  'L',
+])
 
 const normalizeGroupLabel = groupLabel => {
   if (typeof groupLabel !== 'string') return ''

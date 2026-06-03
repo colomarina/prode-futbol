@@ -48,9 +48,12 @@ export function useRoundFinance() {
       let data = null
 
       if (activeTournament?.id) {
-        const tournamentRpc = await supabase.rpc('get_all_round_financial_summaries_by_tournament', {
-          p_tournament_id: activeTournament.id,
-        })
+        const tournamentRpc = await supabase.rpc(
+          'get_all_round_financial_summaries_by_tournament',
+          {
+            p_tournament_id: activeTournament.id,
+          }
+        )
 
         if (!tournamentRpc.error) {
           data = tournamentRpc.data

@@ -51,6 +51,15 @@ export default function Sidebar({ onNavigate, onSignOut }) {
   const handleSelectItem = async item => {
     if (item.type === 'change_tournament') {
       setActiveTournament(null)
+
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/')
+      }
+
+      if (onNavigate) {
+        onNavigate('tournament')
+      }
+
       setIsOpen(false)
       return
     }

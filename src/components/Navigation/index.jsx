@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from 'react'
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { ALL_TABS } from './tabs.config'
 import { hasViewSections, getViewSections, getDefaultSection } from './pages-with-sections.config'
@@ -16,9 +16,15 @@ const RoundManager = lazy(() => import('../RoundManager'))
 const PersonalStats = lazy(() => import('../PersonalStats'))
 const AdminPayments = lazy(() => import('../AdminPayments'))
 const AdminFinance = lazy(() => import('../AdminFinance'))
+const UserProfile = lazy(() => import('../UserProfile'))
+
+const getTabFromPath = () =>
+  typeof window !== 'undefined' && window.location.pathname.startsWith('/profile')
+    ? 'profile'
+    : 'tournament'
 
 export default function Navigation() {
-  const [activeTab, setActiveTab] = useState('tournament')
+  const [activeTab, setActiveTab] = useState(getTabFromPath)
   // Estado genérico para trackear secciones activas de cualquier vista
   const [activeSections, setActiveSections] = useState({ tournament: 'predictions' })
   const [allPredictionsSelection, setAllPredictionsSelection] = useState({
@@ -26,6 +32,24 @@ export default function Navigation() {
     userId: '',
   })
   const { profile, isAdmin, signOut } = useAuth()
+
+  useEffect(() => {
+    const syncFromLocation = () => {
+      setActiveTab(getTabFromPath())
+    }
+
+    window.addEventListener('popstate', syncFromLocation)
+
+    return () => window.removeEventListener('popstate', syncFromLocation)
+  }, [])
+
+  useEffect(() => {
+    const nextPath = activeTab === 'profile' ? '/profile' : '/'
+
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath)
+    }
+  }, [activeTab])
 
   // Filtrar tabs visibles según permisos
   const visibleTabs = useMemo(() => ALL_TABS.filter(tab => !tab.adminOnly || isAdmin()), [isAdmin])
@@ -66,6 +90,14 @@ export default function Navigation() {
   }
 
   const renderContent = () => {
+    if (activeTab === 'profile') {
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <UserProfile />
+        </Suspense>
+      )
+    }
+
     // Si es una vista con secciones (tournament, info, admin), renderizar según la sección activa
     if (hasViewSections(activeTab)) {
       const currentSection = activeSections[activeTab] || getDefaultSection(activeTab)

@@ -23,6 +23,8 @@ function AppContent() {
     loading: tournamentLoading,
   } = useTournament()
   const tournamentConfig = getTournamentConfig(activeTournament?.slug)
+  const isProfileRoute =
+    typeof window !== 'undefined' && window.location.pathname.startsWith('/profile')
 
   const isUserAdmin = isAdmin()
 
@@ -70,6 +72,15 @@ function AppContent() {
     document.title = `${prodeName} | ${tournamentName}`
   }, [activeTournament, tournamentConfig?.label, tournamentConfig?.prodeName])
 
+  useEffect(() => {
+    if (loading) return
+    if (typeof window === 'undefined') return
+
+    if (!user && window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/')
+    }
+  }, [user, loading])
+
   if (loading || tournamentLoading) {
     return (
       <div
@@ -109,6 +120,11 @@ function AppContent() {
 
   if (!user) {
     return <Login />
+  }
+
+  // Profile route can render without selecting a tournament first
+  if (isProfileRoute) {
+    return <Navigation />
   }
 
   // User logged in but no tournament selected and tournaments loaded

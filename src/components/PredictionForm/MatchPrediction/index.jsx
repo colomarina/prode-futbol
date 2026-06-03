@@ -291,8 +291,7 @@ const MatchPrediction = ({
                 fontSize: '0.78rem',
                 fontWeight: '700',
                 color: groupBadgeColors?.color || 'var(--color-primary-dark)',
-                backgroundColor:
-                  groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
+                backgroundColor: groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
                 borderRadius: '999px',
                 padding: '4px 10px',
               }}

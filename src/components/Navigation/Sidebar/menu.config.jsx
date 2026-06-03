@@ -26,6 +26,14 @@ export const MENU_ITEMS = [
     viewType: 'stats',
   },
   {
+    id: 'profile',
+    label: 'Mi Perfil',
+    icon: '👤',
+    description: 'Editar nombre del equipo y contraseña',
+    adminOnly: false,
+    viewType: 'profile',
+  },
+  {
     id: 'admin-divider',
     type: 'divider',
     label: 'ADMINISTRACIÓN',

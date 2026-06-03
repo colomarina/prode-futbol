@@ -47,8 +47,7 @@ const MatchDetailCard = ({ match }) => {
           {groupLabel && (
             <span
               style={{
-                backgroundColor:
-                  groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
+                backgroundColor: groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
                 color: groupBadgeColors?.color || 'var(--color-primary-dark)',
                 padding: '4px 10px',
                 borderRadius: '999px',
