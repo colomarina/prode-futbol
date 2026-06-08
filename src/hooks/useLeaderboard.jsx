@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 
 const buildLeaderboardFromRoundScores = roundScoresData => {
   const totalsByUser = new Map()
@@ -42,7 +43,7 @@ const fetchTournamentRoundNumbers = async tournamentId => {
   return uniqueRoundNumbers
 }
 
-export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
+export const useLeaderboard = (roundNumber = null, tournamentId = null, includeWorldCupBonus = false) => {
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -133,7 +134,7 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
           round_number: 'playoffs',
         }))
 
-        setLeaderboard(formattedData)
+        setLeaderboard(filterHiddenPlayers(formattedData))
       } else if (roundNumber) {
         if (tournamentId && !tournamentRoundNumbers.includes(roundNumber)) {
           setLeaderboard([])
@@ -153,7 +154,7 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
           total_points: item.total_points,
         }))
 
-        setLeaderboard(formattedData)
+        setLeaderboard(filterHiddenPlayers(formattedData))
       } else {
         // Tabla de posiciones general
         if (!tournamentId) {
@@ -162,20 +163,34 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null) => {
 
           if (viewError) throw viewError
 
-          setLeaderboard(data || [])
+          setLeaderboard(filterHiddenPlayers(data || []))
+          return
+        }
+
+        if (includeWorldCupBonus) {
+          const { data: bonusLeaderboard, error: bonusError } = await supabase.rpc(
+            'get_tournament_leaderboard_with_bonus',
+            {
+              p_tournament_id: tournamentId,
+            }
+          )
+
+          if (bonusError) throw bonusError
+
+          setLeaderboard(filterHiddenPlayers(bonusLeaderboard || []))
           return
         }
 
         const roundScoresData = await fetchRoundScoresByRounds(tournamentRoundNumbers, true)
 
-        setLeaderboard(buildLeaderboardFromRoundScores(roundScoresData))
+        setLeaderboard(filterHiddenPlayers(buildLeaderboardFromRoundScores(roundScoresData)))
       }
     } catch (error) {
       setError(error.message)
     } finally {
       setLoading(false)
     }
-  }, [roundNumber, tournamentId])
+  }, [roundNumber, tournamentId, includeWorldCupBonus])
 
   useEffect(() => {
     fetchLeaderboard()

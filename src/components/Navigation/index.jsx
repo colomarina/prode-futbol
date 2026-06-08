@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useTournament } from '../../contexts/TournamentContext'
 import { ALL_TABS } from './tabs.config'
 import { hasViewSections, getViewSections, getDefaultSection } from './pages-with-sections.config'
 import NavHeader from './NavHeader'
@@ -17,6 +18,8 @@ const PersonalStats = lazy(() => import('../PersonalStats'))
 const AdminPayments = lazy(() => import('../AdminPayments'))
 const AdminFinance = lazy(() => import('../AdminFinance'))
 const UserProfile = lazy(() => import('../UserProfile'))
+const WorldCupPredictions = lazy(() => import('../WorldCupPredictions'))
+const AdminWorldCupBonus = lazy(() => import('../AdminWorldCupBonus'))
 
 const getTabFromPath = () =>
   typeof window !== 'undefined' && window.location.pathname.startsWith('/profile')
@@ -32,6 +35,8 @@ export default function Navigation() {
     userId: '',
   })
   const { profile, isAdmin, signOut } = useAuth()
+  const { activeTournament } = useTournament()
+  const isMundial2026 = activeTournament?.slug === 'mundial-2026'
 
   useEffect(() => {
     const syncFromLocation = () => {
@@ -69,8 +74,37 @@ export default function Navigation() {
   // Determinar qué tabs mostrar según la vista activa (tabs principales o secciones)
   const tabsToShow = useMemo(() => {
     const viewSections = getViewSections(activeTab)
-    return viewSections || visibleTabs
-  }, [activeTab, visibleTabs])
+    if (!viewSections) return visibleTabs
+
+    if (!isMundial2026) {
+      return viewSections.filter(
+        section => section.id !== 'world-cup-predictions' && section.id !== 'admin-world-cup'
+      )
+    }
+
+    return viewSections
+  }, [activeTab, visibleTabs, isMundial2026])
+
+  useEffect(() => {
+    if (!hasViewSections(activeTab)) return
+
+    const sections = getViewSections(activeTab) || []
+    const allowedSections = !isMundial2026
+      ? sections.filter(
+          section => section.id !== 'world-cup-predictions' && section.id !== 'admin-world-cup'
+        )
+      : sections
+
+    const currentSection = activeSections[activeTab] || getDefaultSection(activeTab)
+    const isCurrentAllowed = allowedSections.some(section => section.id === currentSection)
+
+    if (!isCurrentAllowed && allowedSections.length > 0) {
+      setActiveSections(prev => ({
+        ...prev,
+        [activeTab]: allowedSections[0].id,
+      }))
+    }
+  }, [activeTab, activeSections, isMundial2026])
 
   // Determinar tab activo actual (puede ser sección o tab principal)
   const currentActiveTab = activeSections[activeTab] || activeTab
@@ -120,10 +154,18 @@ export default function Navigation() {
                 />
               </Suspense>
             )
+          case 'world-cup-predictions':
+            if (!isMundial2026) return null
+            return (
+              <Suspense fallback={<LoadingSpinner />}>
+                <WorldCupPredictions />
+              </Suspense>
+            )
           case 'leaderboard':
             return (
               <Suspense fallback={<LoadingSpinner />}>
                 <Leaderboard
+                  includeWorldCupBonus={activeTournament?.type === 'world_cup'}
                   onViewPredictions={({ userId, roundNumber }) => {
                     setAllPredictionsSelection({ roundNumber, userId })
                     setActiveSections(prev => ({ ...prev, tournament: 'all-predictions' }))
@@ -169,6 +211,10 @@ export default function Navigation() {
               <MatchManager />
             ) : currentSection === 'admin-rounds' ? (
               <RoundManager />
+            ) : currentSection === 'admin-world-cup' ? (
+              isMundial2026 ? (
+                <AdminWorldCupBonus />
+              ) : null
             ) : currentSection === 'admin-finance' ? (
               <AdminFinance />
             ) : (

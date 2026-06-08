@@ -5,6 +5,12 @@
 
 export const TOURNAMENT_SECTIONS = [
   { id: 'predictions', label: 'Mis Pronósticos', mobileLabel: 'Pronósticos', icon: '📊' },
+  {
+    id: 'world-cup-predictions',
+    label: 'Predicciones Mundialistas',
+    mobileLabel: 'Mundialistas',
+    icon: '🌍',
+  },
   { id: 'all-predictions', label: 'Ver Pronósticos', mobileLabel: 'Rivales', icon: '👀' },
   { id: 'leaderboard', label: 'Tabla de Posiciones', mobileLabel: 'Tabla', icon: '🏆' },
   { id: 'playoffs', label: 'Playoffs', mobileLabel: 'Playoffs', icon: '🥊' },
@@ -21,6 +27,12 @@ export const STATS_SECTIONS = [{ id: 'personal', label: 'Estadísticas Personale
 export const ADMIN_SECTIONS = [
   { id: 'admin-matches', label: 'Gestionar Partidos', mobileLabel: 'Partidos', icon: '⚽' },
   { id: 'admin-rounds', label: 'Gestionar Fechas', mobileLabel: 'Fechas', icon: '📅' },
+  {
+    id: 'admin-world-cup',
+    label: 'Predicciones Mundialistas',
+    mobileLabel: 'Mundialistas',
+    icon: '🌍',
+  },
   // { id: 'admin-payments', label: 'Pagos por Fecha', mobileLabel: 'Pagos', icon: '💸' },
   // { id: 'admin-finance', label: 'Finanzas', mobileLabel: 'Finanzas', icon: '📈' },
 ]

@@ -3,6 +3,7 @@ import { useRounds } from './useRounds'
 import { useMatches } from './useMatches'
 import { useTournament } from '../contexts/TournamentContext'
 import { supabase } from '../lib/supabase'
+import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 
 export function useAllPredictions({ initialRound = null, initialUser = '' } = {}) {
   const { activeTournament } = useTournament()
@@ -45,7 +46,7 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
           .select('id, username, full_name')
           .order('full_name')
         if (error) throw error
-        setUsers(data || [])
+        setUsers(filterHiddenPlayers(data || []))
       } catch {
         /* silent */
       }

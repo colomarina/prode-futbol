@@ -10,7 +10,11 @@ import ErrorMessage from './ErrorMessage'
 export default function Leaderboard({ onViewPredictions }) {
   const [selectedRound, setSelectedRound] = useState(null)
   const { activeTournament } = useTournament()
-  const { leaderboard, loading, error } = useLeaderboard(selectedRound, activeTournament?.id)
+  const { leaderboard, loading, error } = useLeaderboard(
+    selectedRound,
+    activeTournament?.id,
+    activeTournament?.type === 'world_cup'
+  )
   const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
 
   if (loading) {

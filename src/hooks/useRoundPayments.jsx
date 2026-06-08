@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRounds } from './useRounds'
 import { useTournament } from '../contexts/TournamentContext'
+import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 
 export function useRoundPayments() {
   const { activeTournament } = useTournament()
@@ -56,13 +57,15 @@ export function useRoundPayments() {
         }
 
         setPayments(
-          (data || []).map(row => ({
-            userId: row.user_id,
-            username: row.username,
-            fullName: row.full_name,
-            hasPaid: row.has_paid,
-            paidAt: row.paid_at,
-          }))
+          filterHiddenPlayers(
+            (data || []).map(row => ({
+              userId: row.user_id,
+              username: row.username,
+              fullName: row.full_name,
+              hasPaid: row.has_paid,
+              paidAt: row.paid_at,
+            }))
+          )
         )
 
         return { error: null }

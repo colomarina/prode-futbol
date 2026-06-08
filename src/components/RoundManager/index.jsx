@@ -4,6 +4,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { supabase } from '../../lib/supabase'
 import Toast from '../Common/Toast'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
+import { filterHiddenPlayers } from '../../constants/hiddenPlayers'
 
 export default function RoundManager() {
   const { activeTournament } = useTournament()
@@ -108,7 +109,7 @@ export default function RoundManager() {
           roundNumber: user.round_number ?? activeRound.round_number, // Para debug
         }))
 
-        setUsersPredictions(usersData)
+        setUsersPredictions(filterHiddenPlayers(usersData))
       } catch {
         // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
         // console.error('Error cargando predicciones de usuarios:', error)
