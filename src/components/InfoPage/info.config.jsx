@@ -55,3 +55,45 @@ export const specialRule = {
   description: 'Nadie puede ganar más de 3 fechas, después de eso solo se compite por el trofeo 🏆',
   note: 'Si pasa, el premio de la fecha se entrega al jugador que quedó en segunda posición.',
 }
+
+export const mundialTiebreakCriteria = [
+  {
+    order: '1️⃣',
+    title: 'Primer partido de cada fecha',
+    description: 'En cada fecha se toma como referencia el primer partido de la jornada.',
+  },
+  {
+    order: '2️⃣',
+    title: 'Comparativa partido donde hayan sacado más Puntos',
+  },
+  {
+    order: '3️⃣',
+    title: 'Mayor cantidad de resultados exactos',
+    description: 'Si persiste el empate, gana quien tenga más plenos.',
+  },
+  {
+    order: '4️⃣',
+    title: 'Sorteo',
+  },
+]
+
+export const mundialSpecialRule = {
+  icon: '🚫',
+  title: 'Regla especial:',
+  description: 'Nadie puede ganar más de 2 fechas, después de eso solo se compite por el trofeo 🏆',
+  note: 'Si pasa, el premio de la fecha se entrega al jugador que quedó en segunda posición.',
+}
+
+export const getTiebreakRules = tournamentSlug => {
+  if (tournamentSlug === 'mundial-2026') {
+    return {
+      tiebreakCriteria: mundialTiebreakCriteria,
+      specialRule: mundialSpecialRule,
+    }
+  }
+
+  return {
+    tiebreakCriteria,
+    specialRule,
+  }
+}

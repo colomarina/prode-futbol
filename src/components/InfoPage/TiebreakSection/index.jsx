@@ -2,9 +2,13 @@ import Card from '../Card'
 import SectionHeader from '../SectionHeader'
 import TiebreakItem from './TiebreakItem'
 import SpecialRulesBox from './SpecialRulesBox'
-import { tiebreakCriteria, specialRule } from '../info.config'
+import { useTournament } from '../../../contexts/TournamentContext'
+import { getTiebreakRules } from '../info.config'
 
 export default function TiebreakSection() {
+  const { activeTournament } = useTournament()
+  const { tiebreakCriteria, specialRule } = getTiebreakRules(activeTournament?.slug)
+
   return (
     <Card backgroundColor="rgba(59, 130, 246, 0.05)" borderColor="var(--color-info)">
       <SectionHeader
