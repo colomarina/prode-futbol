@@ -3,7 +3,6 @@ const HIDDEN_PLAYER_TOKEN_GROUPS = [
   ['geronimo', 'garcia'],
   ['lazaro', 'beldrio'],
   ['leo', 'sanchez'],
-  ['matias', 'rodriguez'],
   ['pablo', 'adrian'],
   ['jose', 'miner'],
 ]
