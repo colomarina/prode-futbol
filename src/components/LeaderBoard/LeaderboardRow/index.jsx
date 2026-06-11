@@ -3,7 +3,7 @@ import { POSITION_CONFIG } from '../leaderboard.config'
 import InfoButton from '../../Common/InfoButton'
 
 // Lista de jugadores suspendidos
-const SUSPENDED_PLAYERS = ['Lázaro Beldrio', 'Geronimo Andres Garcia', 'Ezequiel Cordoba']
+const SUSPENDED_PLAYERS = ['Geronimo Andres Garcia', 'Ezequiel Cordoba']
 
 const LeaderboardRow = memo(function LeaderboardRow({
   player,
