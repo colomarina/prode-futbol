@@ -15,8 +15,6 @@ const Playoffs = lazy(() => import('../Playoffs'))
 const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
 const PersonalStats = lazy(() => import('../PersonalStats'))
-const AdminPayments = lazy(() => import('../AdminPayments'))
-const AdminFinance = lazy(() => import('../AdminFinance'))
 const UserProfile = lazy(() => import('../UserProfile'))
 const WorldCupPredictions = lazy(() => import('../WorldCupPredictions'))
 const AdminWorldCupBonus = lazy(() => import('../AdminWorldCupBonus'))
@@ -215,11 +213,7 @@ export default function Navigation() {
               isMundial2026 ? (
                 <AdminWorldCupBonus />
               ) : null
-            ) : currentSection === 'admin-finance' ? (
-              <AdminFinance />
-            ) : (
-              <AdminPayments />
-            )}
+            ) : null}
           </Suspense>
         )
       }

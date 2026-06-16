@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import MatchSelector from '../MatchSelector'
 import SelectDropdown from '../../Common/SelectDropdown'
 
@@ -15,13 +15,13 @@ const RoundUserSelectors = ({
   selectedMatchId,
   onMatchChange,
 }) => {
-  const [showAllRounds, setShowAllRounds] = useState(false)
-
   // Seleccionar automáticamente la última fecha si no hay seleccionada
   useEffect(() => {
     if (!selectedRound && availableRounds.length > 0) {
-      const lastRound = availableRounds[availableRounds.length - 1]
-      onRoundChange(lastRound.round_number)
+      const closestRound = availableRounds.reduce((current, round) =>
+        Number(round.round_number) < Number(current.round_number) ? round : current
+      )
+      onRoundChange(closestRound.round_number)
     }
   }, [availableRounds, selectedRound, onRoundChange])
 
@@ -53,10 +53,6 @@ const RoundUserSelectors = ({
     }
   }, [viewMode, onMatchChange])
 
-  // Obtener las últimas 3 fechas
-  const recentRounds = availableRounds.slice(-3)
-  const allOtherRounds = availableRounds.slice(0, availableRounds.length - 3).reverse()
-
   const getRoundLabel = round => {
     return `Fecha ${round.round_number} ${round.status === 'finished' ? '🏁' : '⚽'}`
   }
@@ -68,136 +64,20 @@ const RoundUserSelectors = ({
         className="responsive-selectors"
       >
         <div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '6px',
-            }}
-          >
-            <label className="form-label" style={{ margin: 0 }}>
-              📅 Seleccioná una Fecha
-            </label>
-            {availableRounds.length > 3 && (
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setShowAllRounds(!showAllRounds)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-primary)',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    minHeight: 'min-content',
-                    padding: 0,
-                  }}
-                >
-                  Ver todas
-                </button>
-                {showAllRounds && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: 0,
-                      background: 'var(--color-surface)',
-                      border: '2px solid var(--color-primary)',
-                      borderRadius: '10px',
-                      minWidth: '250px',
-                      maxHeight: '300px',
-                      overflowY: 'auto',
-                      zIndex: 100,
-                      marginTop: '8px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    }}
-                  >
-                    {allOtherRounds.map(round => (
-                      <button
-                        key={round.id}
-                        onClick={() => {
-                          onRoundChange(round.round_number)
-                          setShowAllRounds(false)
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          border: 'none',
-                          background:
-                            selectedRound === round.round_number
-                              ? 'var(--color-primary)'
-                              : 'transparent',
-                          color:
-                            selectedRound === round.round_number
-                              ? 'white'
-                              : 'var(--color-text-primary)',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'background 200ms',
-                          borderBottom: '1px solid var(--color-border)',
-                          fontSize: '0.95rem',
-                        }}
-                        onMouseEnter={e => {
-                          if (selectedRound !== round.round_number) {
-                            e.target.style.background = 'var(--color-surface-variant)'
-                          }
-                        }}
-                        onMouseLeave={e => {
-                          if (selectedRound !== round.round_number) {
-                            e.target.style.background = 'transparent'
-                          }
-                        }}
-                      >
-                        {getRoundLabel(round)}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+          <label className="form-label">📅 Seleccioná una Fecha</label>
+          <SelectDropdown
+            items={availableRounds}
+            selectedId={selectedRound}
+            onSelect={onRoundChange}
+            valueKey="round_number"
+            placeholder="Seleccionar fecha..."
+            renderButton={round => (
+              <span style={{ fontWeight: '600' }}>{getRoundLabel(round)}</span>
             )}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-            {recentRounds.map(round => (
-              <button
-                key={round.id}
-                onClick={() => onRoundChange(round.round_number)}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '20px',
-                  border:
-                    selectedRound === round.round_number
-                      ? '2px solid var(--color-primary)'
-                      : '2px solid var(--color-border)',
-                  background:
-                    selectedRound === round.round_number
-                      ? 'var(--color-primary)'
-                      : 'var(--color-surface)',
-                  color:
-                    selectedRound === round.round_number ? 'white' : 'var(--color-text-primary)',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  font: '0.95rem',
-                  transition: 'all 200ms ease',
-                }}
-                onMouseEnter={e => {
-                  if (selectedRound !== round.round_number) {
-                    e.target.style.background = 'var(--color-surface-variant)'
-                    e.target.style.borderColor = 'var(--color-primary)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (selectedRound !== round.round_number) {
-                    e.target.style.background = 'var(--color-surface)'
-                    e.target.style.borderColor = 'var(--color-border)'
-                  }
-                }}
-              >
-                {getRoundLabel(round)}
-              </button>
-            ))}
-          </div>
+            renderOption={round => (
+              <span style={{ flex: 1, fontWeight: '600' }}>{getRoundLabel(round)}</span>
+            )}
+          />
         </div>
 
         {viewMode === 'by-user' ? (

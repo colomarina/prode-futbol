@@ -33,8 +33,6 @@ export const ADMIN_SECTIONS = [
     mobileLabel: 'Mundialistas',
     icon: '🌍',
   },
-  // { id: 'admin-payments', label: 'Pagos por Fecha', mobileLabel: 'Pagos', icon: '💸' },
-  // { id: 'admin-finance', label: 'Finanzas', mobileLabel: 'Finanzas', icon: '📈' },
 ]
 
 /**

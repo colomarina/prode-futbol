@@ -1,24 +1,20 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
-import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
-import { supabase } from '../../lib/supabase'
 import MatchPrediction from './MatchPrediction'
-import PaymentReminderModal from '../Common/PaymentReminderModal'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
 import LoadingState from '../Common/LoadingState'
 import EmptyState from '../Common/EmptyState'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
+import { canPredictMatch } from '../../utils/matchTiming'
 
 export default function PredictionForm() {
   const { activeTournament } = useTournament()
   const { rounds, activeRound, loading: roundsLoading } = useRounds(activeTournament?.id)
-  const { user } = useAuth()
 
-  // Inicializar selectedRound con activeRound cuando esté disponible
   const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
 
   const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
@@ -30,7 +26,7 @@ export default function PredictionForm() {
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const hasManualRoundSelection = useRef(false)
 
   const predictionsByMatchId = useMemo(() => {
     if (!predictions?.length) return new Map()
@@ -44,16 +40,19 @@ export default function PredictionForm() {
   )
 
   const availableRounds = useMemo(
-    () =>
-      (rounds || [])
-        .filter(r => ['open', 'locked', 'finished'].includes(r.status))
-        .sort((a, b) => b.round_number - a.round_number),
+    () => (rounds || []).slice().sort((a, b) => b.round_number - a.round_number),
     [rounds]
   )
 
-  const isRoundOpen = currentRound?.status === 'open'
-  const isRoundFinished = currentRound?.status === 'finished'
-  const isRoundLocked = currentRound?.status === 'locked'
+  const hasEditableMatches = useMemo(
+    () => matches.some(match => canPredictMatch(match.match_date)),
+    [matches]
+  )
+
+  const allMatchesLocked = useMemo(
+    () => matches.length > 0 && matches.every(match => !canPredictMatch(match.match_date)),
+    [matches]
+  )
 
   const handleValueChange = useCallback((matchId, field, value) => {
     setPredictionValues(prev => ({
@@ -69,7 +68,9 @@ export default function PredictionForm() {
     setSaving(true)
 
     // Preparar datos para batch upsert
-    const predictionsData = matches
+    const editableMatches = matches.filter(match => canPredictMatch(match.match_date))
+
+    const predictionsData = editableMatches
       .filter(match => {
         const values = predictionValues[match.id]
         return values?.home && values?.away
@@ -109,110 +110,36 @@ export default function PredictionForm() {
 
   // Verificar si hay al menos un pronóstico para guardar
   const hasValidPredictions = useMemo(
-    () => Object.values(predictionValues).some(v => v?.home && v?.away),
-    [predictionValues]
+    () =>
+      matches.some(match => {
+        if (!canPredictMatch(match.match_date)) return false
+
+        const values = predictionValues[match.id]
+        return values?.home && values?.away
+      }),
+    [matches, predictionValues]
   )
 
-  // Obtener estado visual
-  const statusBadge = useMemo(() => {
-    if (isRoundOpen) {
-      return {
-        color: '#10b981',
-        text: 'Abierta ✅',
-        description: 'Cargá tus pronósticos y guardalos todos al final',
-      }
-    }
-    if (isRoundFinished) {
-      return {
-        color: '#3b82f6',
-        text: 'Finalizada 🏁',
-        description: 'Mirá tus resultados y puntos obtenidos',
-      }
-    }
-    return {
-      color: '#ef4444',
-      text: 'En juego ⚽',
-      description: 'Esta fecha está en juego. No se pueden modificar pronósticos.',
-    }
-  }, [isRoundOpen, isRoundFinished])
-
-  // Auto-seleccionar la fecha activa (open) al cargar, o la más nueva si no hay ninguna activa
   useEffect(() => {
-    if (selectedRound) return
+    setSelectedRound(null)
+    setPredictionValues({})
+    hasManualRoundSelection.current = false
+  }, [activeTournament?.id])
 
-    if (availableRounds.length) {
-      const roundToSelect = activeRound ?? availableRounds[0]
-      if (roundToSelect) {
-        setSelectedRound(roundToSelect.round_number)
+  useEffect(() => {
+    if (availableRounds.length === 0) return
+
+    if (activeRound && !hasManualRoundSelection.current) {
+      if (selectedRound !== activeRound.round_number) {
+        setSelectedRound(activeRound.round_number)
       }
+      return
+    }
+
+    if (!selectedRound) {
+      setSelectedRound(availableRounds[0].round_number)
     }
   }, [activeRound, availableRounds, selectedRound])
-
-  // Verificar si debe mostrarse el recordatorio de pago
-  useEffect(() => {
-    if (!isRoundOpen || !selectedRound || !user?.id) {
-      setShowPaymentModal(false)
-      return
-    }
-
-    // Si marcó "Recordarme después" en esta sesión, no insistir
-    const laterStatus = sessionStorage.getItem(`payment_reminder_round_${selectedRound}`)
-    if (laterStatus === 'later') {
-      setShowPaymentModal(false)
-      return
-    }
-
-    let isCancelled = false
-
-    const checkPaymentStatus = async () => {
-      try {
-        let data = null
-
-        if (activeTournament?.id) {
-          const tournamentRpc = await supabase.rpc('get_my_round_payment_status_by_tournament', {
-            p_tournament_id: activeTournament.id,
-            p_round_number: selectedRound,
-          })
-
-          if (!tournamentRpc.error) {
-            data = tournamentRpc.data
-          }
-        }
-
-        if (data === null) {
-          const legacyRpc = await supabase.rpc('get_my_round_payment_status', {
-            p_round_number: selectedRound,
-          })
-
-          if (legacyRpc.error) throw legacyRpc.error
-          data = legacyRpc.data
-        }
-
-        // Si ya está pagada según admin/sistema, no mostrar más la modal
-        if (!isCancelled) {
-          setShowPaymentModal(data !== true)
-        }
-      } catch {
-        // Si falla la verificación, mostrar recordatorio para no perder el aviso
-        if (!isCancelled) {
-          setShowPaymentModal(true)
-        }
-      }
-    }
-
-    checkPaymentStatus()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [isRoundOpen, selectedRound, user?.id, activeTournament?.id])
-
-  const handleClosePaymentModal = useCallback(() => {
-    if (selectedRound) {
-      sessionStorage.setItem(`payment_reminder_round_${selectedRound}`, 'later')
-    }
-    setShowPaymentModal(false)
-  }, [selectedRound])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {
@@ -263,28 +190,17 @@ export default function PredictionForm() {
           <SelectDropdown
             items={availableRounds}
             selectedId={selectedRound}
-            onSelect={setSelectedRound}
+            onSelect={roundNumber => {
+              hasManualRoundSelection.current = true
+              setSelectedRound(roundNumber)
+            }}
             valueKey="round_number"
             placeholder="Seleccionar fecha..."
             renderButton={round => (
-              <span style={{ fontWeight: '600' }}>
-                {getRoundDisplayName(round)}{' '}
-                {round.status === 'open'
-                  ? '(Abierta ✅)'
-                  : round.status === 'finished'
-                    ? '(Finalizada 🏁)'
-                    : '(En juego ⚽)'}
-              </span>
+              <span style={{ fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
             )}
             renderOption={round => (
-              <span style={{ flex: 1, fontWeight: '600' }}>
-                {getRoundDisplayName(round)}{' '}
-                {round.status === 'open'
-                  ? '(Abierta ✅)'
-                  : round.status === 'finished'
-                    ? '(Finalizada 🏁)'
-                    : '(En juego ⚽)'}
-              </span>
+              <span style={{ flex: 1, fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
             )}
           />
         </div>
@@ -311,35 +227,22 @@ export default function PredictionForm() {
           items={availableRounds}
           selectedId={selectedRound}
           onSelect={roundNumber => {
+            hasManualRoundSelection.current = true
             setSelectedRound(roundNumber)
             setPredictionValues({}) // Limpiar valores al cambiar de fecha
           }}
           valueKey="round_number"
           placeholder="Seleccionar fecha..."
           renderButton={round => (
-            <span style={{ fontWeight: '600' }}>
-              {getRoundDisplayName(round)}{' '}
-              {round.status === 'open'
-                ? '(Abierta ✅)'
-                : round.status === 'finished'
-                  ? '(Finalizada 🏁)'
-                  : '(En juego ⚽)'}
-            </span>
+            <span style={{ fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
           )}
           renderOption={round => (
-            <span style={{ flex: 1, fontWeight: '600' }}>
-              {getRoundDisplayName(round)}{' '}
-              {round.status === 'open'
-                ? '(Abierta ✅)'
-                : round.status === 'finished'
-                  ? '(Finalizada 🏁)'
-                  : '(En juego ⚽)'}
-            </span>
+            <span style={{ flex: 1, fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
           )}
         />
       </div>
 
-      {/* Header con estado de la fecha */}
+      {/* Resumen de la fecha */}
       <div style={{ marginBottom: '16px', textAlign: 'center' }}>
         <div
           style={{
@@ -349,27 +252,20 @@ export default function PredictionForm() {
             gap: '8px',
             padding: '16px 24px',
             borderRadius: '12px',
-            backgroundColor: `${statusBadge.color}15`,
-            border: `2px solid ${statusBadge.color}`,
+            backgroundColor: 'var(--color-surface-variant)',
+            border: '2px solid var(--color-border)',
             width: '100%',
           }}
         >
           <span
-            style={{
-              background: statusBadge.color,
-              color: 'white',
-              padding: '6px 16px',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              fontWeight: '700',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
+            style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--color-text-primary)' }}
           >
-            {statusBadge.text}
+            {currentRound ? getRoundDisplayName(currentRound) : 'Fecha seleccionada'}
           </span>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-            {statusBadge.description}
+            {allMatchesLocked
+              ? 'Todos los partidos de esta fecha ya superaron el límite de edición: podés cargar pronósticos hasta 10 minutos antes del horario de cada partido.'
+              : 'Todavía podés cargar y actualizar pronósticos en los partidos que sigan habilitados. El límite es 10 minutos antes del horario de cada partido.'}
           </p>
         </div>
       </div>
@@ -405,7 +301,6 @@ export default function PredictionForm() {
           <MatchPrediction
             key={`${match.round_number}-${match.match_number}-${match.id}`}
             match={match}
-            isRoundOpen={isRoundOpen}
             predictionValue={predictionValues[match.id]}
             existingPrediction={predictionsByMatchId.get(match.id)}
             onValueChange={handleValueChange}
@@ -413,8 +308,8 @@ export default function PredictionForm() {
         ))}
       </div>
 
-      {/* Botón único para guardar todos - Solo si la fecha está abierta */}
-      {isRoundOpen && (
+      {/* Botón único para guardar todos */}
+      {hasEditableMatches && (
         <div style={{ marginTop: '24px', position: 'sticky', bottom: '20px', zIndex: 10 }}>
           <button
             onClick={handleSaveAll}
@@ -440,8 +335,8 @@ export default function PredictionForm() {
         </div>
       )}
 
-      {/* Mensaje cuando la fecha está bloqueada/finalizada */}
-      {(isRoundLocked || isRoundFinished) && (
+      {/* Mensaje cuando todos los partidos ya pasaron el cutoff */}
+      {allMatchesLocked && (
         <div
           style={{
             marginTop: '24px',
@@ -452,22 +347,14 @@ export default function PredictionForm() {
           }}
         >
           <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
-            {isRoundFinished
-              ? '🏁 Esta fecha ya finalizó. Los resultados están calculados.'
-              : '⚽ Esta fecha está en juego. No se pueden modificar pronósticos.'}
+            ⚽ Esta fecha ya pasó su ventana de edición. Los pronósticos que no estén guardados ya
+            no se pueden modificar.
           </p>
         </div>
       )}
 
       {/* Toast notifications */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
-      {/* Payment Reminder Modal */}
-      <PaymentReminderModal
-        isOpen={showPaymentModal}
-        onClose={handleClosePaymentModal}
-        roundNumber={selectedRound}
-      />
     </div>
   )
 }

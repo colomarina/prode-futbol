@@ -1,7 +1,10 @@
 import { useEffect, useCallback, memo, useRef, useMemo } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
 import InfoButton from '../../Common/InfoButton'
-import { PREDICTION_CUTOFF_MINUTES } from '../../../constants/predictions'
+import {
+  canLoadResult as canLoadResultByTime,
+  canPredictMatch as canPredictMatchByTime,
+} from '../../../utils/matchTiming'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
 
@@ -25,13 +28,7 @@ const resolveTeamName = (teamId, match) => {
   return 'Sin definir'
 }
 
-const MatchPrediction = ({
-  match,
-  existingPrediction,
-  isRoundOpen,
-  predictionValue,
-  onValueChange,
-}) => {
+const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueChange }) => {
   const { activeTournament } = useTournament()
   const awayInputRef = useRef(null)
 
@@ -42,15 +39,15 @@ const MatchPrediction = ({
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
   const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)
 
-  const canPredict = useCallback(matchDate => {
-    const cutoffTime = new Date(
-      new Date(matchDate).getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000
-    )
-    return new Date() < cutoffTime
-  }, [])
-
-  // Solo se puede predecir si la fecha está abierta y faltan más minutos que el corte configurado
-  const canPredictMatch = isRoundOpen && canPredict(match.match_date)
+  const canPredictMatch = canPredictMatchByTime(match.match_date)
+  const canLoadMatchResult = canLoadResultByTime(match.match_date)
+  const matchDateMs = new Date(match.match_date).getTime()
+  const nowMs = Date.now()
+  const hasMatchStarted = nowMs >= matchDateMs
+  const showMissedPredictionWarning =
+    hasMatchStarted && canLoadMatchResult && !match.is_finished && !existingPrediction
+  const showLockedPredictionWarning =
+    hasMatchStarted && !canLoadMatchResult && !match.is_finished && !existingPrediction
 
   // Inicializar valores desde predicción existente.
   // Solo se setea un campo si todavía es undefined — nunca se pisa un valor que el usuario editó.
@@ -253,7 +250,7 @@ const MatchPrediction = ({
         >
           Finalizado
         </div>
-      ) : !canPredict(match.match_date) ? (
+      ) : hasMatchStarted && !canPredictMatch ? (
         <div
           style={{
             position: 'absolute',
@@ -664,7 +661,7 @@ const MatchPrediction = ({
       )}
 
       {/* Warnings */}
-      {!isRoundOpen && !match.is_finished && !existingPrediction && (
+      {showMissedPredictionWarning ? (
         <div
           style={{
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -679,9 +676,7 @@ const MatchPrediction = ({
         >
           🔒 No cargaste pronóstico para este partido
         </div>
-      )}
-
-      {isRoundOpen && !canPredict(match.match_date) && !match.is_finished && (
+      ) : showLockedPredictionWarning ? (
         <div
           style={{
             backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -696,7 +691,7 @@ const MatchPrediction = ({
         >
           ⏰ Ya no se pueden cargar pronósticos para este partido
         </div>
-      )}
+      ) : null}
 
       {/* Indicador de pronóstico guardado */}
       {canPredictMatch && existingPrediction && (

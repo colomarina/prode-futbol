@@ -4,12 +4,14 @@ import { useMatches } from './useMatches'
 import { useTournament } from '../contexts/TournamentContext'
 import { supabase } from '../lib/supabase'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
+import { hasMatchStarted } from '../utils/matchTiming'
 
 export function useAllPredictions({ initialRound = null, initialUser = '' } = {}) {
   const { activeTournament } = useTournament()
   const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(initialRound || null)
   const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
+  const [allMatches, setAllMatches] = useState([])
   const [roundPredictions, setRoundPredictions] = useState({})
   const [matchPredictions, setMatchPredictions] = useState({})
   const [users, setUsers] = useState([])
@@ -17,11 +19,11 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
   const [selectedMatchId, setSelectedMatchId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [matchLoading, setMatchLoading] = useState(false)
-  const [viewMode, setViewMode] = useState('by-user')
+  const [viewMode, setViewMode] = useState('by-match')
 
   useEffect(() => {
-    if (initialUser) setSelectedUser(initialUser)
-  }, [initialUser])
+    if (initialUser && viewMode === 'by-user') setSelectedUser(initialUser)
+  }, [initialUser, viewMode])
 
   useEffect(() => {
     setSelectedMatchId(null)
@@ -54,15 +56,38 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     fetchUsers()
   }, [])
 
-  const currentRound = useMemo(
-    () => rounds.find(r => r.round_number === selectedRound),
-    [rounds, selectedRound]
-  )
-  const isRoundOpen = currentRound?.status === 'open'
+  useEffect(() => {
+    const fetchAllMatches = async () => {
+      try {
+        let query = supabase.from('matches').select('id, round_number, match_date')
+
+        if (activeTournament?.id) {
+          query = query.eq('tournament_id', activeTournament.id)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+
+        setAllMatches(data || [])
+      } catch {
+        setAllMatches([])
+      }
+    }
+
+    fetchAllMatches()
+  }, [activeTournament?.id])
 
   const availableRounds = useMemo(
-    () => rounds.filter(r => ['locked', 'finished'].includes(r.status)),
-    [rounds]
+    () =>
+      rounds
+        .filter(round =>
+          allMatches.some(
+            match => match.round_number === round.round_number && hasMatchStarted(match.match_date)
+          )
+        )
+        .sort((a, b) => a.round_number - b.round_number),
+    [allMatches, rounds]
   )
 
   const selectedUserData = useMemo(
@@ -75,7 +100,10 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     [matches, selectedMatchId]
   )
 
-  const hasMatchStarted = useCallback(match => new Date() >= new Date(match.match_date), [])
+  const selectedRoundHasStartedMatches = useMemo(
+    () => matches.some(match => hasMatchStarted(match.match_date)),
+    [matches]
+  )
 
   const fetchPredictionsForRound = useCallback(async () => {
     if (!selectedRound || !selectedUser || !matches.length) return
@@ -125,15 +153,27 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
 
   useEffect(() => {
     if (viewMode !== 'by-user') return
-    if (selectedRound && selectedUser && !isRoundOpen) fetchPredictionsForRound()
+    if (selectedRound && selectedUser && selectedRoundHasStartedMatches) fetchPredictionsForRound()
     else setRoundPredictions({})
-  }, [viewMode, selectedRound, selectedUser, isRoundOpen, fetchPredictionsForRound])
+  }, [
+    viewMode,
+    selectedRound,
+    selectedUser,
+    selectedRoundHasStartedMatches,
+    fetchPredictionsForRound,
+  ])
 
   useEffect(() => {
     if (viewMode !== 'by-match') return
-    if (selectedRound && selectedMatchId && !isRoundOpen) fetchPredictionsForMatch()
-    else setMatchPredictions({})
-  }, [viewMode, selectedRound, selectedMatchId, isRoundOpen, fetchPredictionsForMatch])
+    if (
+      selectedRound &&
+      selectedMatchId &&
+      selectedMatch &&
+      hasMatchStarted(selectedMatch.match_date)
+    ) {
+      fetchPredictionsForMatch()
+    } else setMatchPredictions({})
+  }, [viewMode, selectedRound, selectedMatchId, selectedMatch, fetchPredictionsForMatch])
 
   return {
     rounds,
@@ -152,7 +192,6 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     selectedMatch,
     viewMode,
     setViewMode,
-    isRoundOpen,
     roundPredictions,
     matchPredictions,
     loading,

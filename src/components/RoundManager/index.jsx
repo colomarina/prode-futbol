@@ -76,16 +76,33 @@ export default function RoundManager() {
       }
 
       try {
-        // Prefer tournament-aware RPC when available, fallback to legacy.
+        // Prefer the versioned tournament-aware RPC when available, fallback to the current one,
+        // and keep the legacy RPC as the last compatibility layer.
         let data = null
         if (activeTournament?.id) {
-          const tournamentRpc = await supabase.rpc('get_round_predictions_summary_by_tournament', {
-            p_tournament_id: activeTournament.id,
-            p_round_num: activeRound.round_number,
-          })
+          const tournamentRpc = await supabase.rpc(
+            'get_round_predictions_summary_by_tournament_v2',
+            {
+              p_tournament_id: activeTournament.id,
+              p_round_num: activeRound.round_number,
+            }
+          )
 
           if (!tournamentRpc.error) {
             data = tournamentRpc.data
+          }
+        }
+
+        if (!data) {
+          if (activeTournament?.id) {
+            const currentRpc = await supabase.rpc('get_round_predictions_summary_by_tournament', {
+              p_tournament_id: activeTournament.id,
+              p_round_num: activeRound.round_number,
+            })
+
+            if (!currentRpc.error) {
+              data = currentRpc.data
+            }
           }
         }
 
@@ -428,7 +445,7 @@ export default function RoundManager() {
                   letterSpacing: '0.8px',
                 }}
               >
-                Fecha Activa
+                Fecha activa por partidas
               </span>
             </div>
 
@@ -476,7 +493,7 @@ export default function RoundManager() {
                     margin: 0,
                   }}
                 >
-                  Los usuarios pueden cargar sus pronósticos
+                  La fecha activa se calcula por el partido más próximo que todavía no empezó
                 </p>
               </div>
             </div>

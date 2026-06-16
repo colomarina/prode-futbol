@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getNextActiveRoundNumber } from '../utils/matchTiming'
 
 export const useRounds = (tournamentId = null) => {
   const [rounds, setRounds] = useState([])
   const [activeRound, setActiveRound] = useState(null)
+  const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -22,8 +24,20 @@ export const useRounds = (tournamentId = null) => {
 
       setRounds(data || [])
 
-      // Encontrar la fecha activa (open)
-      const active = (data || []).find(r => r.status === 'open')
+      let matchesQuery = supabase.from('matches').select('id, round_number, match_date')
+
+      if (tournamentId) {
+        matchesQuery = matchesQuery.eq('tournament_id', tournamentId)
+      }
+
+      const { data: matchesData, error: matchesError } = await matchesQuery
+
+      if (matchesError) throw matchesError
+
+      setMatches(matchesData || [])
+
+      const activeRoundNumber = getNextActiveRoundNumber(data || [], matchesData || [])
+      const active = (data || []).find(r => r.round_number === activeRoundNumber) || null
       setActiveRound(active)
     } catch (error) {
       setError(error.message)
@@ -57,7 +71,8 @@ export const useRounds = (tournamentId = null) => {
             ? { ...r, status, updated_at: new Date().toISOString() }
             : r
         )
-        const active = updated.find(r => r.status === 'open')
+        const activeRoundNumber = getNextActiveRoundNumber(updated, matches)
+        const active = updated.find(r => r.round_number === activeRoundNumber) || null
         setActiveRound(active)
         return updated
       })
@@ -89,7 +104,8 @@ export const useRounds = (tournamentId = null) => {
             ? { ...r, status: 'locked', updated_at: new Date().toISOString() }
             : r
         )
-        const active = updated.find(r => r.status === 'open')
+        const activeRoundNumber = getNextActiveRoundNumber(updated, matches)
+        const active = updated.find(r => r.round_number === activeRoundNumber) || null
         setActiveRound(active)
         return updated
       })
@@ -121,7 +137,8 @@ export const useRounds = (tournamentId = null) => {
             ? { ...r, status: 'finished', updated_at: new Date().toISOString() }
             : r
         )
-        const active = updated.find(r => r.status === 'open')
+        const activeRoundNumber = getNextActiveRoundNumber(updated, matches)
+        const active = updated.find(r => r.round_number === activeRoundNumber) || null
         setActiveRound(active)
         return updated
       })

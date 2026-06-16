@@ -3,7 +3,7 @@
 export const MENU_ITEMS = [
   {
     id: 'tournament',
-    label: 'Torneo Local',
+    label: 'Pronósticos',
     icon: '🏆',
     description: 'Pronósticos, rivales y tabla',
     adminOnly: false,
@@ -11,7 +11,7 @@ export const MENU_ITEMS = [
   },
   {
     id: 'info',
-    label: 'Información del Torneo',
+    label: 'Reglas',
     icon: 'ℹ️',
     description: 'Reglas, puntos y desempates',
     adminOnly: false,

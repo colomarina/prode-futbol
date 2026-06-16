@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { PREDICTION_CUTOFF_MINUTES } from '../constants/predictions'
+import { PREDICTION_CUTOFF_MINUTES } from '../utils/matchTiming'
 
 export const usePredictions = (roundNumber = null, tournamentId = null) => {
   const [predictions, setPredictions] = useState([])

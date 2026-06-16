@@ -1,5 +1,6 @@
 import { useCallback, memo, useEffect, useMemo, useRef } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
+import { canLoadResult } from '../../../utils/matchTiming'
 
 const parseScoreValue = value => {
   if (value === '' || value === null || value === undefined) return null
@@ -16,9 +17,12 @@ const getWinnerTeamId = (homeScore, awayScore, match) => {
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
   const awayInputRef = useRef(null)
+  const canEditResult = canLoadResult(match.match_date)
 
   const handleInputChange = useCallback(
     (field, value) => {
+      if (!canEditResult) return
+
       // Permitir vacío o solo un dígito (0-9)
       if (value === '' || /^[0-9]$/.test(value)) {
         onValueChange(match.id, field, value)
@@ -29,7 +33,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         }
       }
     },
-    [onValueChange, match.id]
+    [canEditResult, onValueChange, match.id]
   )
 
   const homeScore = resultValues[match.id]?.home || ''
@@ -206,6 +210,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
             onChange={e => handleInputChange('home', e.target.value)}
             onFocus={e => e.target.select()}
             placeholder="-"
+            disabled={match.is_finished || !canEditResult}
             style={{
               width: '50px',
               padding: '10px 6px',
@@ -215,10 +220,17 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
               borderRadius: '10px',
               border: match.is_finished
                 ? '3px solid var(--color-success)'
-                : '3px solid var(--color-primary)',
+                : !canEditResult
+                  ? '3px solid var(--color-border)'
+                  : '3px solid var(--color-primary)',
               backgroundColor: 'var(--color-surface)',
-              color: match.is_finished ? 'var(--color-success)' : 'var(--color-primary)',
+              color: match.is_finished
+                ? 'var(--color-success)'
+                : !canEditResult
+                  ? 'var(--color-text-secondary)'
+                  : 'var(--color-primary)',
               outline: 'none',
+              opacity: match.is_finished || !canEditResult ? 0.7 : 1,
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             }}
@@ -246,6 +258,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
             onChange={e => handleInputChange('away', e.target.value)}
             onFocus={e => e.target.select()}
             placeholder="-"
+            disabled={match.is_finished || !canEditResult}
             style={{
               width: '50px',
               padding: '10px 6px',
@@ -255,10 +268,17 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
               borderRadius: '10px',
               border: match.is_finished
                 ? '3px solid var(--color-success)'
-                : '3px solid var(--color-primary)',
+                : !canEditResult
+                  ? '3px solid var(--color-border)'
+                  : '3px solid var(--color-primary)',
               backgroundColor: 'var(--color-surface)',
-              color: match.is_finished ? 'var(--color-success)' : 'var(--color-primary)',
+              color: match.is_finished
+                ? 'var(--color-success)'
+                : !canEditResult
+                  ? 'var(--color-text-secondary)'
+                  : 'var(--color-primary)',
               outline: 'none',
+              opacity: match.is_finished || !canEditResult ? 0.7 : 1,
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             }}
@@ -330,6 +350,29 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         </div>
       )}
 
+      {!canEditResult && !match.is_finished && (
+        <p
+          style={{
+            textAlign: 'center',
+            marginTop: '8px',
+            fontSize: '0.85rem',
+            color: 'var(--color-text-secondary)',
+            fontWeight: '600',
+          }}
+        >
+          Disponible a las{' '}
+          {new Date(new Date(match.match_date).getTime() + 2 * 60 * 60 * 1000).toLocaleTimeString(
+            'es-AR',
+            {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+              timeZone: 'America/Argentina/Buenos_Aires',
+            }
+          )}
+        </p>
+      )}
+
       {/* Indicador de resultado guardado */}
       {match.is_finished && (
         <p
@@ -346,7 +389,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           }}
         >
           <span>✓</span>
-          <span>Resultado guardado (se actualizará al guardar todos)</span>
+          <span>Resultado guardado</span>
         </p>
       )}
     </div>

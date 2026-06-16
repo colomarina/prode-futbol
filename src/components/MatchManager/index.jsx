@@ -1,7 +1,9 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { useTournament } from '../../contexts/TournamentContext'
+import { supabase } from '../../lib/supabase'
+import { canLoadResult } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
 import Toast from '../Common/Toast'
 
@@ -9,6 +11,7 @@ export default function MatchManager() {
   const { activeTournament } = useTournament()
   const { rounds } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
+  const [matchesMeta, setMatchesMeta] = useState([])
   const {
     matches,
     loading: matchesLoading,
@@ -18,8 +21,37 @@ export default function MatchManager() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
 
-  // Filtrar solo fechas cerradas
-  const closedRounds = useMemo(() => rounds.filter(r => r.status === 'locked'), [rounds])
+  useEffect(() => {
+    const fetchMatchesMeta = async () => {
+      try {
+        let query = supabase.from('matches').select('id, round_number, match_date')
+
+        if (activeTournament?.id) {
+          query = query.eq('tournament_id', activeTournament.id)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+
+        setMatchesMeta(data || [])
+      } catch {
+        setMatchesMeta([])
+      }
+    }
+
+    fetchMatchesMeta()
+  }, [activeTournament?.id])
+
+  const closedRounds = useMemo(
+    () =>
+      rounds.filter(round =>
+        matchesMeta.some(
+          match => match.round_number === round.round_number && canLoadResult(match.match_date)
+        )
+      ),
+    [matchesMeta, rounds]
+  )
 
   const handleValueChange = useCallback((matchId, field, value) => {
     setResultValues(prev => ({

@@ -22,7 +22,6 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
     selectedMatch,
     viewMode,
     setViewMode,
-    isRoundOpen,
     roundPredictions,
     matchPredictions,
     loading,
@@ -42,13 +41,16 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
     (viewMode === 'by-user' && !selectedUser) ||
     (viewMode === 'by-match' && !selectedMatchId)
 
+  const selectedRoundHasStartedMatches = matches.some(match => hasMatchStarted(match.match_date))
+  const selectedMatchHasStarted = selectedMatch ? hasMatchStarted(selectedMatch.match_date) : false
+
   const showByUser =
     viewMode === 'by-user' &&
     selectedRound &&
     selectedUser &&
     !matchesLoading &&
     matches.length > 0 &&
-    !isRoundOpen
+    selectedRoundHasStartedMatches
 
   const showByMatch =
     viewMode === 'by-match' &&
@@ -56,7 +58,7 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
     selectedMatchId &&
     !matchesLoading &&
     matches.length > 0 &&
-    !isRoundOpen
+    selectedMatchHasStarted
 
   return (
     <div className="container" style={{ maxWidth: '1000px' }}>
@@ -76,8 +78,8 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
       {availableRounds.length === 0 && (
         <EmptyState
           icon="🔒"
-          title="Todavía no hay fechas para ver"
-          description="Los pronósticos de otros usuarios se podrán ver cuando las fechas estén bloqueadas o finalizadas. Por ahora, todas las fechas están abiertas o pendientes."
+          title="Todavía no hay partidos para ver"
+          description="Los pronósticos de otros usuarios aparecerán cuando exista al menos un partido iniciado."
         />
       )}
 
@@ -122,7 +124,7 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
         selectedRound &&
         !matchesLoading &&
         matches.length === 0 &&
-        !isRoundOpen && (
+        !selectedRoundHasStartedMatches && (
           <EmptyState
             icon="⚽"
             title="No hay partidos cargados"
@@ -134,11 +136,12 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
         selectedRound &&
         ((viewMode === 'by-user' && selectedUser) ||
           (viewMode === 'by-match' && selectedMatchId)) &&
-        isRoundOpen && (
+        ((viewMode === 'by-user' && !selectedRoundHasStartedMatches) ||
+          (viewMode === 'by-match' && !selectedMatchHasStarted)) && (
           <EmptyState
             icon="🔒"
-            title="Fecha abierta"
-            description="Los pronósticos se pueden ver una vez que la fecha esté cerrada"
+            title="Todavía no comenzó"
+            description="Los pronósticos de rivales se muestran cuando el partido ya empezó."
           />
         )}
 
