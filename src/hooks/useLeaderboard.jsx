@@ -43,7 +43,11 @@ const fetchTournamentRoundNumbers = async tournamentId => {
   return uniqueRoundNumbers
 }
 
-export const useLeaderboard = (roundNumber = null, tournamentId = null, includeWorldCupBonus = false) => {
+export const useLeaderboard = (
+  roundNumber = null,
+  tournamentId = null,
+  includeWorldCupBonus = false
+) => {
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -54,6 +58,10 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null, includeW
       setError(null)
 
       const tournamentRoundNumbers = await fetchTournamentRoundNumbers(tournamentId)
+      const normalizedRoundNumber =
+        roundNumber !== null && roundNumber !== undefined && roundNumber !== 'playoffs'
+          ? Number(roundNumber)
+          : roundNumber
 
       if (tournamentId && (!tournamentRoundNumbers || tournamentRoundNumbers.length === 0)) {
         setLeaderboard([])
@@ -135,23 +143,19 @@ export const useLeaderboard = (roundNumber = null, tournamentId = null, includeW
         }))
 
         setLeaderboard(filterHiddenPlayers(formattedData))
-      } else if (roundNumber) {
-        if (tournamentId && !tournamentRoundNumbers.includes(roundNumber)) {
+      } else if (normalizedRoundNumber) {
+        if (tournamentId && !tournamentRoundNumbers.includes(normalizedRoundNumber)) {
           setLeaderboard([])
           return
         }
 
         // Tabla de posiciones por fecha específica
-        const roundScoresData = await fetchRoundScoresByRounds([roundNumber])
+        const roundScoresData = await fetchRoundScoresByRounds([normalizedRoundNumber])
 
-        // Transformar los datos al formato esperado
-        const formattedData = roundScoresData.map(item => ({
-          id: item.profiles.id,
-          username: item.profiles.username,
-          full_name: item.profiles.full_name,
-          avatar_url: item.profiles.avatar_url,
-          round_number: roundNumber,
-          total_points: item.total_points,
+        // Unificar con la general para evitar filas duplicadas por usuario
+        const formattedData = buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
+          ...item,
+          round_number: normalizedRoundNumber,
         }))
 
         setLeaderboard(filterHiddenPlayers(formattedData))
