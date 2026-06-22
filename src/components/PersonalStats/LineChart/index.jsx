@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { getRoundDisplayNameByNumber } from '../../../utils/roundLabels'
 import styles from './LineChart.module.css'
 
-export const LineChart = ({ data }) => {
+export const LineChart = ({ data, rounds = [] }) => {
   const [hoveredRound, setHoveredRound] = useState(null)
   const [selectedRound, setSelectedRound] = useState(null)
 
@@ -160,7 +161,7 @@ export const LineChart = ({ data }) => {
                       textAnchor="middle"
                       className={styles.tooltipText}
                     >
-                      Fecha {d.roundNumber}
+                      {getRoundDisplayNameByNumber(d.roundNumber, rounds)}
                     </text>
                     <text
                       x={tooltipX + 50}
@@ -180,7 +181,7 @@ export const LineChart = ({ data }) => {
                   textAnchor="middle"
                   className={styles.axisLabel}
                 >
-                  Fecha {d.roundNumber}
+                  {getRoundDisplayNameByNumber(d.roundNumber, rounds)}
                 </text>
               </g>
             )

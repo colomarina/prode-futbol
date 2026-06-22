@@ -91,10 +91,10 @@ export default function AdminWorldCupBonus() {
 
     const lockDateObj = new Date(config.lock_at)
     const localDate = `${lockDateObj.getFullYear()}-${String(lockDateObj.getMonth() + 1).padStart(2, '0')}-${String(
-      lockDateObj.getDate(),
+      lockDateObj.getDate()
     ).padStart(2, '0')}`
     const localTime = `${String(lockDateObj.getHours()).padStart(2, '0')}:${String(
-      lockDateObj.getMinutes(),
+      lockDateObj.getMinutes()
     ).padStart(2, '0')}`
 
     setLockDate(localDate)
@@ -261,7 +261,11 @@ export default function AdminWorldCupBonus() {
               </label>
               {question.type === 'team' && (
                 <SelectDropdown
-                  items={question.key === 'best_debutant_team_id' ? teams.filter(team => DEBUTANT_TEAM_SLUGS.includes(team.slug)) : teams}
+                  items={
+                    question.key === 'best_debutant_team_id'
+                      ? teams.filter(team => DEBUTANT_TEAM_SLUGS.includes(team.slug))
+                      : teams
+                  }
                   selectedId={resultsForm[question.key]}
                   onSelect={value => setField(question.key, value)}
                   valueKey="id"

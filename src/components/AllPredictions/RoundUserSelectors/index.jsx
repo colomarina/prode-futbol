@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import MatchSelector from '../MatchSelector'
 import SelectDropdown from '../../Common/SelectDropdown'
+import { getRoundDisplayName } from '../../../utils/roundLabels'
 
 const RoundUserSelectors = ({
   availableRounds,
@@ -54,7 +55,7 @@ const RoundUserSelectors = ({
   }, [viewMode, onMatchChange])
 
   const getRoundLabel = round => {
-    return `Fecha ${round.round_number} ${round.status === 'finished' ? '🏁' : '⚽'}`
+    return `${getRoundDisplayName(round)} ${round.status === 'finished' ? '🏁' : '⚽'}`
   }
 
   return (

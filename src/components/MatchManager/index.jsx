@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { useTournament } from '../../contexts/TournamentContext'
+import { getRoundDisplayName } from '../../utils/roundLabels'
 import { supabase } from '../../lib/supabase'
 import { canLoadResult } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
@@ -189,7 +190,7 @@ export default function MatchManager() {
           <option value="">Seleccionar fecha...</option>
           {closedRounds.map(round => (
             <option key={round.id} value={round.round_number}>
-              Fecha {round.round_number}
+              {getRoundDisplayName(round)}
             </option>
           ))}
         </select>

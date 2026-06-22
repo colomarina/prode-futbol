@@ -1,13 +1,6 @@
-const PLAYOFF_ROUND_NAMES = {
-  17: 'Octavos de Final',
-  18: 'Cuartos de Final',
-  19: 'Semifinal',
-  20: 'Final',
-}
-
 export function getFallbackRoundName(roundNumber) {
   if (roundNumber === null || roundNumber === undefined) return 'Sin fecha'
-  return PLAYOFF_ROUND_NAMES[roundNumber] || `Fecha ${roundNumber}`
+  return `Fecha ${roundNumber}`
 }
 
 export function getRoundDisplayName(round) {

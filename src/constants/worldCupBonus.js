@@ -20,7 +20,12 @@ export const WORLD_CUP_BONUS_QUESTIONS = [
     points: 2,
     type: 'boolean',
   },
-  { key: 'argentina_stage', label: 'Hasta que instancia llega Argentina?', points: 4, type: 'stage' },
+  {
+    key: 'argentina_stage',
+    label: 'Hasta que instancia llega Argentina?',
+    points: 4,
+    type: 'stage',
+  },
   { key: 'final_goals', label: 'Cuantos goles tendra la final?', points: 2, type: 'number' },
   {
     key: 'best_debutant_team_id',

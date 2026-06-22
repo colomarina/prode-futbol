@@ -1,5 +1,6 @@
 import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
+import { useRounds } from '../../hooks/useRounds'
 import { usePersonalStats } from '../../hooks/usePersonalStats'
 import { MetricCard } from './MetricCard'
 import { LineChart } from './LineChart'
@@ -11,6 +12,7 @@ import styles from './PersonalStats.module.css'
 export default function PersonalStats() {
   const { user } = useAuth()
   const { activeTournament } = useTournament()
+  const { rounds } = useRounds(activeTournament?.id)
   const { stats, loading, error } = usePersonalStats(user?.id, activeTournament?.id)
 
   if (loading) {
@@ -63,7 +65,7 @@ export default function PersonalStats() {
       {/* Sección 2: Gráfico de evolución */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Evolución de Puntos</h2>
-        <LineChart data={stats.evolutionByRound} />
+        <LineChart data={stats.evolutionByRound} rounds={rounds} />
       </section>
 
       {/* Sección 3: Mejor y Peor fecha */}
@@ -73,11 +75,13 @@ export default function PersonalStats() {
           <BestWorstCard
             type="best"
             roundNumber={stats.bestRound.roundNumber}
+            rounds={rounds}
             points={stats.bestRound.points}
           />
           <BestWorstCard
             type="worst"
             roundNumber={stats.worstRound.roundNumber}
+            rounds={rounds}
             points={stats.worstRound.points}
           />
         </div>

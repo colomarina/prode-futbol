@@ -60,16 +60,8 @@ const buildInitialValues = source => ({
 
 export default function WorldCupPredictions() {
   const { activeTournament } = useTournament()
-  const {
-    config,
-    teams,
-    prediction,
-    bonusScore,
-    loading,
-    error,
-    upsertPrediction,
-    fetchData,
-  } = useWorldCupBonus(activeTournament?.id)
+  const { config, teams, prediction, bonusScore, loading, error, upsertPrediction, fetchData } =
+    useWorldCupBonus(activeTournament?.id)
 
   const [toast, setToast] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -80,7 +72,9 @@ export default function WorldCupPredictions() {
   }, [prediction])
 
   const isWorldCupTournament = activeTournament?.type === 'world_cup'
-  const isLocked = Boolean(config?.is_locked || (config?.lock_at && new Date() >= new Date(config.lock_at)))
+  const isLocked = Boolean(
+    config?.is_locked || (config?.lock_at && new Date() >= new Date(config.lock_at))
+  )
 
   const isQuestionAnswered = question => {
     const value = form[question.key]
@@ -105,7 +99,9 @@ export default function WorldCupPredictions() {
       return
     }
 
-    const podium = [form.champion_team_id, form.runner_up_team_id, form.third_place_team_id].filter(Boolean)
+    const podium = [form.champion_team_id, form.runner_up_team_id, form.third_place_team_id].filter(
+      Boolean
+    )
     if (new Set(podium).size !== podium.length) {
       setToast({
         message: 'Campeon, subcampeon y tercer puesto deben ser selecciones distintas.',
@@ -164,7 +160,13 @@ export default function WorldCupPredictions() {
         <p style={{ margin: '8px 0 0', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
           Progreso: {completedCount}/{totalQuestions} respuestas completas
         </p>
-        <div style={{ marginTop: '12px', fontWeight: 600, color: isLocked ? 'var(--color-error)' : '#10b981' }}>
+        <div
+          style={{
+            marginTop: '12px',
+            fontWeight: 600,
+            color: isLocked ? 'var(--color-error)' : '#10b981',
+          }}
+        >
           {isLocked
             ? 'Estado: Bloqueado. Ya no se pueden editar respuestas.'
             : `Estado: Abierto${config?.lock_at ? ` hasta ${new Date(config.lock_at).toLocaleString('es-AR')}` : ''}`}
