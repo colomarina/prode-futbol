@@ -43,7 +43,6 @@ export const PersonalRecords = ({ records, rounds }) => {
         title="Partido Más Acertado"
         iconBg={iconStyles['Partido Más Acertado'].bg}
         iconColor={iconStyles['Partido Más Acertado'].color}
-        className={styles.cardWide}
       >
         {records.bestMatch ? (
           <>
