@@ -1,6 +1,6 @@
 import styles from './MetricCard.module.css'
 
-export const MetricCard = ({ icon, label, value, unit = '' }) => {
+export const MetricCard = ({ icon, label, value, unit = '', subtext = '' }) => {
   return (
     <div className={styles.card}>
       <div className={styles.icon}>{icon}</div>
@@ -10,6 +10,7 @@ export const MetricCard = ({ icon, label, value, unit = '' }) => {
           {value}
           {unit && <span className={styles.unit}>{unit}</span>}
         </p>
+        {subtext && <p className={styles.subtext}>{subtext}</p>}
       </div>
     </div>
   )

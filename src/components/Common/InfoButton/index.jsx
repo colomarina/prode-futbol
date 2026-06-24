@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import Tippy from '@tippyjs/react'
+import 'tippy.js/dist/tippy.css'
+import '../../../styles/tippy-theme.css'
 
 const INFO_BUTTON_TYPES = {
   info: {
@@ -19,51 +21,23 @@ const INFO_BUTTON_TYPES = {
   },
 }
 
-const TOOLTIP_POSITIONS = {
-  right: {
-    top: '-5px',
-    left: '43px',
-  },
-  left: {
-    top: '-5px',
-    right: '43px',
-  },
-  top: {
-    bottom: '43px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-  },
-  bottom: {
-    top: '43px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-  },
-}
-
-const InfoButton = ({ message, type = 'info', position = 'right', ariaLabel = 'Información' }) => {
-  const [isInfoOpen, setIsInfoOpen] = useState(false)
+const InfoButton = ({ message, type = 'info', ariaLabel = 'Información', placement = 'right' }) => {
   const config = INFO_BUTTON_TYPES[type] || INFO_BUTTON_TYPES.info
-  const tooltipPosition = TOOLTIP_POSITIONS[position] || TOOLTIP_POSITIONS.right
+
+  const tippyProps = {
+    placement,
+    arrow: true,
+    delay: [60, 0],
+    interactive: false,
+    hideOnClick: false,
+    touch: ['mouseenter', 'touchstart'],
+  }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <Tippy content={message} {...tippyProps} theme="app">
       <button
         type="button"
         aria-label={ariaLabel}
-        onClick={e => {
-          e.preventDefault()
-          e.stopPropagation()
-          setIsInfoOpen(!isInfoOpen)
-        }}
-        onMouseEnter={() => setIsInfoOpen(true)}
-        onMouseLeave={() => setIsInfoOpen(false)}
         style={{
           padding: '6px 12px',
           borderRadius: '12px',
@@ -81,29 +55,7 @@ const InfoButton = ({ message, type = 'info', position = 'right', ariaLabel = 'I
       >
         {config.icon}
       </button>
-      {isInfoOpen && (
-        <div
-          role="tooltip"
-          style={{
-            position: 'absolute',
-            ...tooltipPosition,
-            backgroundColor: 'var(--color-surface)',
-            color: 'var(--color-text-primary)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '10px',
-            padding: '8px 10px',
-            fontSize: '0.8rem',
-            fontWeight: '600',
-            whiteSpace: 'nowrap',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
-            pointerEvents: 'none',
-            zIndex: 10,
-          }}
-        >
-          {message}
-        </div>
-      )}
-    </div>
+    </Tippy>
   )
 }
 

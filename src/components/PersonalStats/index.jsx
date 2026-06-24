@@ -2,11 +2,16 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
 import { useRounds } from '../../hooks/useRounds'
 import { usePersonalStats } from '../../hooks/usePersonalStats'
-import { MetricCard } from './MetricCard'
 import { LineChart } from './LineChart'
-import { BestWorstCard } from './BestWorstCard'
 import { AccuracyBreakdown } from './AccuracyBreakdown'
+import { PositionChart } from './PositionChart'
+import { PerformanceOverview } from './PerformanceOverview'
+import { StreakStats } from './StreakStats'
+import { TeamStats } from './TeamStats'
+import { PersonalRecords } from './PersonalRecords'
+import { HistoryStats } from './HistoryStats'
 import { AdditionalStats } from './AdditionalStats'
+import StatSection from './StatSection'
 import styles from './PersonalStats.module.css'
 
 export default function PersonalStats() {
@@ -37,67 +42,81 @@ export default function PersonalStats() {
 
   return (
     <div className={styles.container}>
-      {/* Encabezado */}
       <div className={styles.header}>
         <h1>Mis Estadísticas</h1>
         <p className={styles.subtitle}>Análisis detallado de tu desempeño</p>
       </div>
 
-      {/* Sección 1: Métricas principales */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Resumen de Desempeño</h2>
-        <div className={styles.metricsGrid}>
-          <MetricCard icon="🎯" label="Total de Puntos" value={stats.metrics.totalPoints} />
-          <MetricCard
-            icon="✅"
-            label="Porcentaje de Aciertos"
-            value={stats.metrics.hitPercentage}
-            unit="%"
-          />
-          <MetricCard
-            icon="📊"
-            label="Promedio por Fecha"
-            value={stats.metrics.avgPerRound.toFixed(1)}
-          />
-        </div>
-      </section>
+      <StatSection
+        title="Rendimiento General"
+        tooltip="Muestra tu total acumulado, posición general, promedio por fecha y precisión global."
+      >
+        <PerformanceOverview metrics={stats.metrics} />
+      </StatSection>
 
-      {/* Sección 2: Gráfico de evolución */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Evolución de Puntos</h2>
+      <StatSection
+        title="Evolución"
+        tooltip="Representa tus puntos por fecha para ver tus altibajos y fechas más fuertes."
+      >
         <LineChart data={stats.evolutionByRound} rounds={rounds} />
-      </section>
+      </StatSection>
 
-      {/* Sección 3: Mejor y Peor fecha */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Desempeño Extremo</h2>
-        <div className={styles.bestWorstGrid}>
-          <BestWorstCard
-            type="best"
-            roundNumber={stats.bestRound.roundNumber}
-            rounds={rounds}
-            points={stats.bestRound.points}
-          />
-          <BestWorstCard
-            type="worst"
-            roundNumber={stats.worstRound.roundNumber}
-            rounds={rounds}
-            points={stats.worstRound.points}
-          />
-        </div>
-      </section>
+      <StatSection
+        title="Posición por Fecha"
+        tooltip="Muestra tu puesto en la tabla general luego de cada fecha."
+      >
+        <PositionChart data={stats.positionByRound} rounds={rounds} />
+      </StatSection>
 
-      {/* Sección 4: Desglose de aciertos */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Desglose de Aciertos</h2>
+      <StatSection
+        title="Rachas"
+        tooltip="Resumen de tus mejores y más largas rachas de puntos, pleno y top 3/top 10."
+      >
+        <StreakStats streaks={stats.streaks} />
+      </StatSection>
+
+      <StatSection
+        title="Perfil del Pronosticador"
+        tooltip="Desglose de aciertos exactos, ganador, diferencia de goles y errores."
+      >
         <AccuracyBreakdown breakdown={stats.accuracyBreakdown} />
-      </section>
+      </StatSection>
 
-      {/* Sección 5: Datos adicionales */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Datos Adicionales</h2>
+      <StatSection
+        title="Equipos"
+        tooltip="Resalta tus equipos favoritos según predicciones y los equipos con mejor/peor porcentaje de aciertos."
+      >
+        <TeamStats teamStats={stats.teamStats} />
+      </StatSection>
+
+      <StatSection
+        title="Récords Personales"
+        tooltip="Muestra tus mejores fechas y partidos según puntos y precisión."
+      >
+        <PersonalRecords
+          records={{
+            bestRound: stats.bestRound,
+            worstRound: stats.worstRound,
+            bestMatch: stats.personalRecords?.bestMatch ?? null,
+            mostPreciseRound: stats.personalRecords?.mostPreciseRound ?? null,
+          }}
+          rounds={rounds}
+        />
+      </StatSection>
+
+      <StatSection
+        title="Historial"
+        tooltip="Calcula podios, fechas ganadas, mejor posición y rachas de mejora por cada ronda."
+      >
+        <HistoryStats history={stats.history} />
+      </StatSection>
+
+      <StatSection
+        title="Datos Adicionales"
+        tooltip="Muestra puntaje promedio por partido, pronósticos totales y partidos analizados."
+      >
         <AdditionalStats stats={stats.additionalStats} />
-      </section>
+      </StatSection>
     </div>
   )
 }

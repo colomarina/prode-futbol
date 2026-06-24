@@ -1,0 +1,23 @@
+/* Tippy theme to match app variables */
+.tippy-box[data-theme~='app'] {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+  padding: 8px 10px !important;
+  font-weight: 600 !important;
+}
+
+.tippy-box[data-theme~='app'] .tippy-arrow {
+  color: var(--color-surface) !important;
+}
+
+/* Allow multi-line tooltips and a sensible max width */
+.tippy-box[data-theme~='app'] {
+  max-width: 240px !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
+}

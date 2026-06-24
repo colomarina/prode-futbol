@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { getRoundDisplayNameByNumber } from '../../../utils/roundLabels'
 import styles from './LineChart.module.css'
 
-export const LineChart = ({ data, rounds = [] }) => {
+export const LineChart = ({
+  data,
+  rounds = [],
+  yLabel = 'Puntos',
+  unit = 'pts',
+  invertYAxis = false,
+}) => {
   const [hoveredRound, setHoveredRound] = useState(null)
   const [selectedRound, setSelectedRound] = useState(null)
 
@@ -10,30 +16,36 @@ export const LineChart = ({ data, rounds = [] }) => {
 
   const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
 
-  // Calcular dimensiones y escala
   const padding = { top: 40, right: 40, bottom: 60, left: 60 }
-  const baseWidth = 600
+  const baseWidth = 360
   const pointSpacing = 88
   const width = Math.max(baseWidth, padding.left + padding.right + (data.length - 1) * pointSpacing)
   const height = 300
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
 
-  const maxPoints = Math.max(...data.map(d => d.points))
-  const minPoints = Math.min(...data.map(d => d.points))
+  const values = data.map(d => d.points)
+  const maxPoints = Math.max(...values)
+  const minPoints = Math.min(...values)
   const range = maxPoints - minPoints || 10
   const paddingValue = range * 0.1
 
   const maxY = maxPoints + paddingValue
-  const minY = Math.max(0, minPoints - paddingValue)
+  const minY = Math.min(0, minPoints - paddingValue)
 
-  // Funciones de conversion
   const getX = index => {
     if (data.length === 1) return padding.left + chartWidth / 2
     return padding.left + (index / (data.length - 1)) * chartWidth
   }
 
-  const getY = points => height - padding.bottom - ((points - minY) / (maxY - minY)) * chartHeight
+  const getY = points => {
+    const ratio = (points - minY) / (maxY - minY)
+    if (invertYAxis) {
+      return padding.top + ratio * chartHeight
+    }
+    return height - padding.bottom - ratio * chartHeight
+  }
+
   const activeRound = selectedRound ?? hoveredRound
 
   const getTooltipX = x => {
@@ -169,7 +181,7 @@ export const LineChart = ({ data, rounds = [] }) => {
                       textAnchor="middle"
                       className={styles.tooltipValue}
                     >
-                      {d.points} pts
+                      {d.points} {unit}
                     </text>
                   </>
                 )}
@@ -205,10 +217,10 @@ export const LineChart = ({ data, rounds = [] }) => {
 
           {/* Etiquetas de ejes */}
           <text x={padding.left - 35} y={padding.top - 10} className={styles.axisTitle}>
-            Puntos
+            {yLabel}
           </text>
           <text x={width / 2} y={height - 15} textAnchor="middle" className={styles.axisTitle}>
-            Numero de Fecha
+            Número de Fecha
           </text>
         </svg>
       </div>
