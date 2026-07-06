@@ -43,6 +43,8 @@ const fetchTournamentRoundNumbers = async tournamentId => {
   return uniqueRoundNumbers
 }
 
+const STANDALONE_TABLE_ROUNDS = new Set([4, 5])
+
 export const useLeaderboard = (
   roundNumber = null,
   tournamentId = null,
@@ -129,6 +131,8 @@ export const useLeaderboard = (
 
           playoffRounds = [...new Set((playoffMatches || []).map(match => match.round_number))]
         }
+
+        playoffRounds = playoffRounds.filter(r => !STANDALONE_TABLE_ROUNDS.has(r))
 
         if (!playoffRounds.length) {
           setLeaderboard([])

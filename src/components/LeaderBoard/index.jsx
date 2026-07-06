@@ -40,6 +40,7 @@ export default function Leaderboard({ onViewPredictions }) {
         setSelectedRound={setSelectedRound}
         rounds={rounds}
         roundsLoading={roundsLoading}
+        isWorldCupTournament={activeTournament?.type === 'world_cup'}
       />
 
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
