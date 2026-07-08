@@ -15,6 +15,7 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
   isWorldCupTournament = false,
 }) {
   const playoffRounds = new Set([17, 18, 19, 20])
+  const playoffLabel = isWorldCupTournament ? '🥊 Cuartos a Final' : '🥊 Playoffs'
   const standaloneRoundNumbers = new Set(STANDALONE_TABLE_ROUNDS.map(round => round.round_number))
   const roundOptions = [
     { id: null, round_number: null, name: '🏆 General' },
@@ -33,7 +34,7 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
 
   const renderRoundLabel = round => {
     if (round.round_number === null) return '🏆 General'
-    if (round.round_number === 'playoffs') return '🥊 Playoffs'
+    if (round.round_number === 'playoffs') return playoffLabel
     return `📅 ${getRoundDisplayName(round)}`
   }
 
