@@ -14,6 +14,7 @@ const InfoPage = lazy(() => import('../InfoPage'))
 const Playoffs = lazy(() => import('../Playoffs'))
 const MatchManager = lazy(() => import('../MatchManager'))
 const RoundManager = lazy(() => import('../RoundManager'))
+const AdminMatchSchedule = lazy(() => import('../AdminMatchSchedule'))
 const PersonalStats = lazy(() => import('../PersonalStats'))
 const UserProfile = lazy(() => import('../UserProfile'))
 const WorldCupPredictions = lazy(() => import('../WorldCupPredictions'))
@@ -209,6 +210,8 @@ export default function Navigation() {
               <MatchManager />
             ) : currentSection === 'admin-rounds' ? (
               <RoundManager />
+            ) : currentSection === 'admin-match-schedule' ? (
+              <AdminMatchSchedule />
             ) : currentSection === 'admin-world-cup' ? (
               isMundial2026 ? (
                 <AdminWorldCupBonus />

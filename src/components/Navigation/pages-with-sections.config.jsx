@@ -28,6 +28,12 @@ export const ADMIN_SECTIONS = [
   { id: 'admin-matches', label: 'Gestionar Partidos', mobileLabel: 'Partidos', icon: '⚽' },
   { id: 'admin-rounds', label: 'Gestionar Fechas', mobileLabel: 'Fechas', icon: '📅' },
   {
+    id: 'admin-match-schedule',
+    label: 'Horarios de Partidos',
+    mobileLabel: 'Horarios',
+    icon: '🕒',
+  },
+  {
     id: 'admin-world-cup',
     label: 'Predicciones Mundialistas',
     mobileLabel: 'Mundialistas',

@@ -605,11 +605,11 @@ export default function RoundManager() {
                 >
                   <div
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: 'var(--color-surface)',
                       padding: '12px',
                       borderRadius: '10px',
                       textAlign: 'center',
-                      border: '2px solid rgba(16, 185, 129, 0.2)',
+                      border: '2px solid #10b981',
                     }}
                   >
                     <div
@@ -628,11 +628,11 @@ export default function RoundManager() {
                   </div>
                   <div
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: 'var(--color-surface)',
                       padding: '12px',
                       borderRadius: '10px',
                       textAlign: 'center',
-                      border: '2px solid rgba(245, 158, 11, 0.3)',
+                      border: '2px solid #f59e0b',
                     }}
                   >
                     <div
@@ -651,11 +651,11 @@ export default function RoundManager() {
                   </div>
                   <div
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: 'var(--color-surface)',
                       padding: '12px',
                       borderRadius: '10px',
                       textAlign: 'center',
-                      border: '2px solid rgba(239, 68, 68, 0.3)',
+                      border: '2px solid #ef4444',
                     }}
                   >
                     <div
@@ -691,7 +691,7 @@ export default function RoundManager() {
                           <div
                             key={user.id}
                             style={{
-                              backgroundColor: 'white',
+                              backgroundColor: 'var(--color-surface)',
                               padding: '12px 16px',
                               borderRadius: '10px',
                               border: `2px solid ${

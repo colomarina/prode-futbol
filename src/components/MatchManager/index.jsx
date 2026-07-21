@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { canLoadResult } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
 import Toast from '../Common/Toast'
+import SelectDropdown from '../Common/SelectDropdown'
 
 export default function MatchManager() {
   const { activeTournament } = useTournament()
@@ -164,36 +165,19 @@ export default function MatchManager() {
       </div>
 
       {/* Selector de fecha */}
-      <div className="card" style={{ marginBottom: '16px', padding: '0px' }}>
-        <label
-          className="form-label"
-          style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '12px', display: 'block' }}
-        >
-          📅 Seleccioná una Fecha Cerrada
-        </label>
-        <select
-          value={selectedRound || ''}
-          onChange={e => {
-            setSelectedRound(Number(e.target.value))
+      <div style={{ marginBottom: '16px' }}>
+        <SelectDropdown
+          items={closedRounds}
+          selectedId={selectedRound}
+          onSelect={roundNumber => {
+            setSelectedRound(roundNumber)
             setResultValues({}) // Limpiar valores al cambiar de fecha
           }}
-          className="form-input"
-          style={{
-            width: '100%',
-            padding: '14px 16px',
-            fontSize: '1rem',
-            borderRadius: '10px',
-            border: '2px solid var(--color-primary)',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="">Seleccionar fecha...</option>
-          {closedRounds.map(round => (
-            <option key={round.id} value={round.round_number}>
-              {getRoundDisplayName(round)}
-            </option>
-          ))}
-        </select>
+          placeholder="Seleccionar fecha..."
+          valueKey="round_number"
+          renderButton={round => getRoundDisplayName(round)}
+          renderOption={round => getRoundDisplayName(round)}
+        />
       </div>
 
       {/* Lista de partidos */}
