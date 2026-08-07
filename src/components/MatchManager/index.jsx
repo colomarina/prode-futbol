@@ -4,16 +4,18 @@ import { useMatches } from '../../hooks/useMatches'
 import { useTournament } from '../../contexts/TournamentContext'
 import { getRoundDisplayName } from '../../utils/roundLabels'
 import { supabase } from '../../lib/supabase'
-import { canLoadResult } from '../../utils/matchTiming'
+import { canLoadResult, RESULT_LOAD_DELAY_HOURS } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
+import EmptyState from '../Common/EmptyState'
 
 export default function MatchManager() {
   const { activeTournament } = useTournament()
   const { rounds } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
   const [matchesMeta, setMatchesMeta] = useState([])
+  const [matchesMetaError, setMatchesMetaError] = useState(null)
   const {
     matches,
     loading: matchesLoading,
@@ -37,8 +39,12 @@ export default function MatchManager() {
         if (error) throw error
 
         setMatchesMeta(data || [])
+        setMatchesMetaError(null)
       } catch {
+        // Sin esto, un fallo de la query se veia igual que "todavia no hay
+        // fechas habilitadas": el select quedaba vacio sin explicar por que.
         setMatchesMeta([])
+        setMatchesMetaError('No se pudieron cargar los partidos del torneo')
       }
     }
 
@@ -179,6 +185,23 @@ export default function MatchManager() {
           renderOption={round => getRoundDisplayName(round)}
         />
       </div>
+
+      {/* Un select vacío no explica nada por sí solo: puede ser que la carga
+          falló o que todavía ninguna fecha cumple el delay de RESULT_LOAD_DELAY_HOURS. */}
+      {closedRounds.length === 0 &&
+        (matchesMetaError ? (
+          <EmptyState
+            icon="⚠️"
+            title={matchesMetaError}
+            description="Probá recargar la página. Si sigue pasando, revisá la conexión con la base."
+          />
+        ) : (
+          <EmptyState
+            icon="🕒"
+            title="Todavía no hay fechas para cargar"
+            description={`Una fecha aparece acá recién ${RESULT_LOAD_DELAY_HOURS} horas después de que empiece alguno de sus partidos, para no cargar resultados de partidos en curso.`}
+          />
+        ))}
 
       {/* Lista de partidos */}
       {selectedRound ? (
