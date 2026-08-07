@@ -1,1 +1,0 @@
-export const PREDICTION_CUTOFF_MINUTES = 10
