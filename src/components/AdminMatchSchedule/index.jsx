@@ -123,9 +123,15 @@ export default function AdminMatchSchedule() {
     setSaving(false)
 
     if (successCount > 0 && errorCount === 0) {
-      setToast({ message: `${successCount} horario${successCount > 1 ? 's' : ''} actualizado${successCount > 1 ? 's' : ''}`, type: 'success' })
+      setToast({
+        message: `${successCount} horario${successCount > 1 ? 's' : ''} actualizado${successCount > 1 ? 's' : ''}`,
+        type: 'success',
+      })
     } else if (successCount > 0 && errorCount > 0) {
-      setToast({ message: `${successCount} actualizado${successCount > 1 ? 's' : ''}, ${errorCount} falló${errorCount > 1 ? 'n' : ''}`, type: 'warning' })
+      setToast({
+        message: `${successCount} actualizado${successCount > 1 ? 's' : ''}, ${errorCount} falló${errorCount > 1 ? 'n' : ''}`,
+        type: 'warning',
+      })
     } else {
       setToast({ message: 'No se pudieron guardar los horarios', type: 'error' })
     }
@@ -146,7 +152,8 @@ export default function AdminMatchSchedule() {
       <div className="card" style={{ marginBottom: '16px' }}>
         <h2 style={{ marginBottom: '8px' }}>🕒 Reprogramar partidos</h2>
         <p style={{ marginTop: 0, color: 'var(--color-text-secondary)' }}>
-          Ajustá los horarios de los partidos por fecha para cubrir aplazos, suspensiones o cambios de agenda.
+          Ajustá los horarios de los partidos por fecha para cubrir aplazos, suspensiones o cambios
+          de agenda.
         </p>
 
         <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>
@@ -175,13 +182,31 @@ export default function AdminMatchSchedule() {
             {matches.map(match => {
               const matchDateValue = scheduleValues[match.id] ?? ''
               const currentDateLabel = formatMatchDate(match.match_date)
-              const hasChanges = scheduleValues[match.id] !== undefined && scheduleValues[match.id] !== toDatetimeLocalValue(match.match_date)
+              const hasChanges =
+                scheduleValues[match.id] !== undefined &&
+                scheduleValues[match.id] !== toDatetimeLocalValue(match.match_date)
 
               return (
                 <div key={match.id} className="card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: '16px',
+                      flexWrap: 'wrap',
+                      alignItems: 'flex-start',
+                    }}
+                  >
                     <div style={{ flex: 1, minWidth: '240px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                          marginBottom: '8px',
+                        }}
+                      >
                         <TeamDisplay team={match.home_team} size="md" />
                         <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>vs</span>
                         <TeamDisplay team={match.away_team} size="md" />
@@ -190,13 +215,31 @@ export default function AdminMatchSchedule() {
                       <div style={{ fontWeight: '700', marginBottom: '6px' }}>
                         Partido {match.match_number}
                       </div>
-                      <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                        <div style={{ fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: '4px' }}>
+                      <div
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontSize: '0.95rem',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: '600',
+                            color: 'var(--color-text-primary)',
+                            marginBottom: '4px',
+                          }}
+                        >
                           Horario actual
                         </div>
                         <div>{currentDateLabel}</div>
                         {hasChanges && (
-                          <div style={{ marginTop: '4px', color: 'var(--color-warning)', fontWeight: '600' }}>
+                          <div
+                            style={{
+                              marginTop: '4px',
+                              color: 'var(--color-warning)',
+                              fontWeight: '600',
+                            }}
+                          >
                             Cambiará al guardar
                           </div>
                         )}

@@ -1,4 +1,5 @@
 import { useId } from 'react'
+// eslint-disable-next-line import-x/no-named-as-default
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { es } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
