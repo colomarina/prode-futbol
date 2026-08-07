@@ -78,7 +78,7 @@ No hay react-router. `src/components/Navigation/index.jsx` es el shell y hace:
 - Todas las vistas de contenido son `React.lazy` + `Suspense`, envueltas en un `ErrorBoundary` con `key` por vista+sección: `Suspense` cubre la carga pero **no** los errores, así que sin el boundary un chunk que falla (deploy nuevo con la pestaña vieja abierta) dejaba la pantalla en blanco. `Common/ErrorBoundary` distingue ese caso y ofrece recargar.
 - Solo maneja dos paths reales (`/` y `/profile`) con `history.pushState` + listener de `popstate`.
 
-`tabs.config.jsx` (`ALL_TABS`) quedó vacío a propósito tras la migración al menú hamburguesa. Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o en las `*_SECTIONS` correspondientes, más el `case` en el `renderContent()` de `Navigation`.
+La navegación de nivel superior vive **solo** en el menú hamburguesa (`tabs.config.jsx` con su `ALL_TABS` vacío se eliminó). Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o en las `*_SECTIONS` correspondientes, más el `case` en el `renderContent()` de `Navigation`.
 
 ### Capa de datos
 
@@ -86,9 +86,11 @@ No hay react-router. `src/components/Navigation/index.jsx` es el shell y hace:
 
 Tablas/vistas: `tournaments`, `rounds`, `matches`, `teams`, `predictions`, `profiles`, `round_scores`, `general_leaderboard` (vista), `world_cup_*` (`teams`, `predictions`, `bonus_config`, `bonus_scores`, `official_results`).
 
-RPCs: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_predictions_summary[_by_tournament]`, `get_round_payments_status[_by_tournament]`, `register_payment[_by_tournament]`, `remove_round_allocation[_by_tournament]`, `upsert_round_finance[_by_tournament]`, `get_all_round_financial_summaries`, `upsert_world_cup_prediction`, `admin_set_world_cup_lock`, `admin_lock_world_cup_predictions`, `recalculate_world_cup_bonus`.
+RPCs que usa el cliente: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_predictions_summary[_by_tournament][_v2]`, `upsert_world_cup_prediction`, `admin_set_world_cup_lock`, `admin_lock_world_cup_predictions`, `recalculate_world_cup_bonus`.
 
-**Patrón de fallback legacy**: varios hooks (`useRoundPayments`, `useRoundFinance`, `useLeaderboard`, `RoundManager`) intentan primero la variante `*_by_tournament` y, si falla, caen a la RPC/consulta pre-multi-torneo. Es intencional (soporta bases sin las funciones nuevas). Al agregar RPCs con scope de torneo, mantener el patrón o eliminarlo deliberadamente en todos los lugares a la vez.
+En Supabase existen además las RPCs de pagos y finanzas (`get_round_payments_status`, `register_payment`, `remove_round_allocation`, `upsert_round_finance`, `get_all_round_financial_summaries`, con sus variantes `_by_tournament`), pero **ya no las llama nadie**: los paneles que las usaban se borraron por no estar cableados.
+
+**Patrón de fallback legacy**: quedan dos lugares que intentan primero la variante con scope de torneo y, si falla, caen a la consulta pre-multi-torneo: `useLeaderboard` y `RoundManager` (este último con una cadena de tres niveles, incluido un `_v2`). ⚠️ El de `useLeaderboard` es peligroso: el fallback repite la query de `round_scores` **sin** el filtro `tournament_id`, así que ante cualquier error transitorio la tabla de posiciones mezcla puntos de todos los torneos en silencio. No replicar el patrón; la idea es eliminarlo.
 
 El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` / RPCs (triggers o funciones en Supabase). No hay migraciones ni SQL en este repo, pero sí un snapshot del esquema en `docs/supabase-schema.md` (tablas, CHECK constraints y qué valores acepta cada campo de estado). No incluye RLS ni triggers.
 
@@ -96,7 +98,7 @@ El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` 
 
 - `src/utils/matchTiming.js` — fuente única de verdad de tiempos: `PREDICTION_CUTOFF_MINUTES = 10` (cierre de pronósticos), `RESULT_LOAD_DELAY_HOURS = 2` (cuándo el admin puede cargar el resultado), y `getNextActiveRoundNumber()`, que deriva la fecha activa desde los `match_date` (no desde `round.status`). Usar `canPredictMatch()` antes de habilitar cualquier input de pronóstico.
 - `src/constants/hiddenPlayers.js` — `filterHiddenPlayers()` oculta jugadores por coincidencia de nombre normalizado. Se aplica en leaderboard, pagos y stats; si agregás una vista con listas de usuarios, aplicalo también.
-- `src/constants/predictions.js` duplica `PREDICTION_CUTOFF_MINUTES`; preferir el de `utils/matchTiming.js`.
+- `PREDICTION_CUTOFF_MINUTES` vive solo en `utils/matchTiming.js` (se borró la copia de `constants/predictions.js`). No volver a duplicarla.
 - `src/constants/worldCupBonus.js` — preguntas bonus del Mundial con sus puntos (`WORLD_CUP_BONUS_MAX_POINTS = 50`) y el mapa slug → código de país para las banderas de flagcdn.
 - Sistema de puntos y desempates (texto que ve el usuario): `src/components/InfoPage/info.config.jsx`. El README describe un esquema de puntos viejo (5/3/1) que ya no aplica.
 
@@ -106,8 +108,7 @@ Tres mecanismos conviven: `*.module.css` por componente (lo preferido en código
 
 ## Puntos a tener en cuenta
 
-- `src/components/Navigation/indexs.old.jsx` es código muerto de la navegación anterior.
-- `AdminFinance/` y `AdminPayments/` (con sus hooks `useRoundFinance` / `useRoundPayments`) están completos pero **no están cableados a ninguna vista** — no aparecen en `ADMIN_SECTIONS` ni en `renderContent()`.
-- `RoundManager/index.jsx` (1273 líneas) y `PredictionForm/MatchPrediction/index.jsx` (719) concentran la mayor complejidad.
+- `PredictionForm/MatchPrediction/index.jsx` (719 líneas) y `RoundManager/index.jsx` (~890) concentran la mayor complejidad.
+- Los paneles de finanzas y pagos (`AdminFinance/`, `AdminPayments/` y sus hooks) se **borraron**: estaban terminados pero no cableados a ninguna vista. Están en el historial de git si algún día se retoma la feature; antes hay que arreglar el esquema, porque `round_finances` y `round_payments` no tienen `tournament_id`.
 - `no-console` es warning; el código existente usa `// eslint-disable-next-line no-console` para los `console.error` de catch.
 - Hay números de fecha hardcodeados (p. ej. `STANDALONE_TABLE_ROUNDS = [4, 5]` y el fallback de playoffs `[17, 18, 19, 20]` en `useLeaderboard.jsx`).
