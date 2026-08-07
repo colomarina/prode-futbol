@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
+import { compareByPoints } from '../utils/ranking'
 
 const buildLeaderboardFromRoundScores = roundScoresData => {
   const totalsByUser = new Map()
@@ -26,7 +27,12 @@ const buildLeaderboardFromRoundScores = roundScoresData => {
     }
   })
 
-  return Array.from(totalsByUser.values()).sort((a, b) => b.total_points - a.total_points)
+  return Array.from(totalsByUser.values()).sort(
+    compareByPoints(
+      entry => entry.total_points,
+      entry => entry.id
+    )
+  )
 }
 
 const fetchTournamentRoundNumbers = async tournamentId => {
@@ -96,25 +102,23 @@ export const useLeaderboard = (
             )
           `
 
-        if (tournamentId) {
-          const scopedAttempt = await supabase
-            .from('round_scores')
-            .select(baseSelect)
-            .eq('tournament_id', tournamentId)
-            .in('round_number', roundNumbers)
-
-          if (!scopedAttempt.error) {
-            return scopedAttempt.data || []
-          }
-        }
-
-        const legacyAttempt = await supabase
+        // Nunca consultar round_scores sin filtrar por torneo: los round_number
+        // se repiten entre torneos, asi que una query sin scope suma los puntos
+        // de todos. Antes habia un fallback que hacia exactamente eso cuando la
+        // query con tournament_id fallaba, y mezclaba las tablas en silencio.
+        let query = supabase
           .from('round_scores')
           .select(baseSelect)
           .in('round_number', roundNumbers)
 
-        if (legacyAttempt.error) throw legacyAttempt.error
-        return legacyAttempt.data || []
+        if (tournamentId) {
+          query = query.eq('tournament_id', tournamentId)
+        }
+
+        const { data, error: roundScoresError } = await query
+
+        if (roundScoresError) throw roundScoresError
+        return data || []
       }
 
       if (roundNumber === 'playoffs') {
