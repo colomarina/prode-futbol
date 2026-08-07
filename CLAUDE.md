@@ -19,7 +19,9 @@ pnpm format         # prettier --write sobre src/
 pnpm format:check
 ```
 
-**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.js` → `matchTiming.test.js`). Cobertura actual: `utils/matchTiming.js`, `constants/hiddenPlayers.js` y `Common/ErrorBoundary`.
+**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.js` → `matchTiming.test.js`).
+
+Para testear un hook de datos: `src/test/supabaseMock.js` arma un mock del query builder encadenable de Supabase y cuenta consultas por tabla (útil para verificar que el cache deduplica). Ver `useRounds.test.jsx` como referencia — hay que mockear `../lib/supabase` con un getter y envolver el `renderHook` en un `QueryClientProvider` con `retry: false`.
 
 CI en `.github/workflows/ci.yml`: corre `lint`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
 
@@ -82,7 +84,15 @@ La navegación de nivel superior vive **solo** en el menú hamburguesa (`tabs.co
 
 ### Capa de datos
 
-`src/lib/supabase.jsx` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`; los componentes no llaman a Supabase salvo `MatchManager` y `RoundManager`.
+`src/lib/supabase.jsx` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`. La única lectura que queda fuera de un hook es la RPC de progreso de jugadores en `RoundManager`.
+
+**TanStack Query** (migración en curso). Ya migrados: `useRounds`, `useMatchesMeta`, `useMatches`, `usePlayoffs`. Todavía con `useState` + `useEffect`: `usePredictions`, `useLeaderboard`, `usePersonalStats`, `useAllPredictions`, `useWorldCupBonus`.
+
+- Cliente y defaults en `src/lib/queryClient.js` (`staleTime` 30s, `retry` 1 en lecturas y **0 en mutaciones**, porque reintentar una escritura duplicaría un pronóstico).
+- **Las query keys se arman siempre con `src/lib/queryKeys.js` y empiezan por el id del torneo.** Es lo que impide que el cache mezcle torneos, igual que el filtro `tournament_id` en las queries. Nunca escribir un array de key a mano.
+- `useMatchesMeta` es la consulta compartida de "todos los partidos del torneo" (`id, round_number, match_date, is_finished`). Su select es un superconjunto a propósito: la usan `useRounds`, `MatchManager` y `RoundManager`. Si necesitás otra columna de esa lista, agregala ahí en vez de crear una query nueva.
+- Las mutaciones invalidan en vez de parchear estado local, y conservan el contrato `{ data, error }` que ya usan los componentes.
+- Las devtools están disponibles en `pnpm dev` (botón abajo a la izquierda); son la forma de verificar que no haya queries duplicadas.
 
 Tablas/vistas: `tournaments`, `rounds`, `matches`, `teams`, `predictions`, `profiles`, `round_scores`, `general_leaderboard` (vista), `world_cup_*` (`teams`, `predictions`, `bonus_config`, `bonus_scores`, `official_results`).
 
