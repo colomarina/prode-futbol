@@ -37,6 +37,8 @@ En `.env` (no versionado), prefijo `VITE_`:
 
 `.env.example` tiene la lista completa con comentarios.
 
+`src/lib/supabase.jsx` **no** debe tirar si faltan las variables: `createClient` se ejecuta al evaluar el módulo, o sea antes de que React monte, así que un throw ahí deja la pantalla en blanco sin mensaje (ni el `ErrorBoundary` llega a existir). En su lugar construye el cliente con placeholders y exporta `missingSupabaseEnvVars`; `App.jsx` lo chequea antes de los providers y renderiza `Common/ConfigError`. En Vercel las variables se configuran por entorno: Production, Preview y Development son listas separadas.
+
 Deploy en Vercel; `vercel.json` reescribe todo a `/index.html` (SPA) y define los headers de seguridad. La CSP incluye `style-src 'unsafe-inline'` porque la app todavía usa cientos de estilos inline y bloques `<style>` inyectados; se puede endurecer cuando eso se migre.
 
 ## Arquitectura

@@ -7,6 +7,8 @@ import Login from './components/Login'
 import Navigation from './components/Navigation'
 import TournamentSelector from './components/TournamentSelector'
 import ErrorBoundary from './components/Common/ErrorBoundary'
+import ConfigError from './components/Common/ConfigError'
+import { missingSupabaseEnvVars } from './lib/supabase'
 // import PredictionForm from './components/PredictionForm'
 
 // Optional switch:
@@ -164,6 +166,12 @@ function AppContent() {
 }
 
 function App() {
+  // Antes que los providers: sin credenciales de Supabase no hay nada que
+  // renderizar, y todos ellos intentarian consultar apenas montan.
+  if (missingSupabaseEnvVars.length > 0) {
+    return <ConfigError missingVars={missingSupabaseEnvVars} />
+  }
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
