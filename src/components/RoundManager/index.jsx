@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRounds } from '../../hooks/useRounds'
+import { useMatchesMeta } from '../../hooks/useMatchesMeta'
 import { useTournament } from '../../contexts/TournamentContext'
 import { supabase } from '../../lib/supabase'
 import Toast from '../Common/Toast'
@@ -11,7 +12,7 @@ export default function RoundManager() {
   const { rounds, activeRound, updateRoundStatus, finishRound, loading } = useRounds(
     activeTournament?.id
   )
-  const [matchesByRound, setMatchesByRound] = useState({})
+  const { matchesMeta } = useMatchesMeta(activeTournament?.id)
   const [toast, setToast] = useState(null)
   const [usersPredictions, setUsersPredictions] = useState([])
   const [showDetails, setShowDetails] = useState(false)
@@ -21,49 +22,23 @@ export default function RoundManager() {
     [rounds]
   )
 
-  // Cargar información de partidos para cada fecha
-  useEffect(() => {
-    const fetchMatchesInfo = async () => {
-      if (!rounds || rounds.length === 0) return
+  // Cuántos partidos tiene cada fecha y cuántos ya terminaron. Sale de la misma
+  // query compartida que usa useRounds, no de una consulta propia.
+  const matchesByRound = useMemo(() => {
+    const byRound = {}
 
-      try {
-        let query = supabase
-          .from('matches')
-          .select('id, round_number, is_finished')
-          .order('round_number', { ascending: true })
-
-        if (activeTournament?.id) {
-          query = query.eq('tournament_id', activeTournament.id)
-        }
-
-        const { data: matches, error } = await query
-
-        if (error) throw error
-
-        // Organizar partidos por fecha
-        const matchesMap = {}
-        matches?.forEach(match => {
-          if (!matchesMap[match.round_number]) {
-            matchesMap[match.round_number] = {
-              total: 0,
-              finished: 0,
-            }
-          }
-          matchesMap[match.round_number].total += 1
-          if (match.is_finished) {
-            matchesMap[match.round_number].finished += 1
-          }
-        })
-
-        setMatchesByRound(matchesMap)
-      } catch {
-        // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
-        // console.error('Error cargando información de partidos:', error)
+    matchesMeta.forEach(match => {
+      if (!byRound[match.round_number]) {
+        byRound[match.round_number] = { total: 0, finished: 0 }
       }
-    }
+      byRound[match.round_number].total += 1
+      if (match.is_finished) {
+        byRound[match.round_number].finished += 1
+      }
+    })
 
-    fetchMatchesInfo()
-  }, [rounds, activeTournament?.id])
+    return byRound
+  }, [matchesMeta])
 
   // Cargar información de predicciones de usuarios para la fecha activa
   useEffect(() => {

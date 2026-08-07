@@ -1,9 +1,9 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
+import { useMatchesMeta } from '../../hooks/useMatchesMeta'
 import { useTournament } from '../../contexts/TournamentContext'
 import { getRoundDisplayName } from '../../utils/roundLabels'
-import { supabase } from '../../lib/supabase'
 import { canLoadResult, RESULT_LOAD_DELAY_HOURS } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
 import Toast from '../Common/Toast'
@@ -14,8 +14,9 @@ export default function MatchManager() {
   const { activeTournament } = useTournament()
   const { rounds } = useRounds(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
-  const [matchesMeta, setMatchesMeta] = useState([])
-  const [matchesMetaError, setMatchesMetaError] = useState(null)
+  // Comparte cache con useRounds: antes este componente repetia la misma query
+  // por su cuenta, y ademas se tragaba el error en un catch vacio.
+  const { matchesMeta, error: matchesMetaError } = useMatchesMeta(activeTournament?.id)
   const {
     matches,
     loading: matchesLoading,
@@ -24,32 +25,6 @@ export default function MatchManager() {
   const [resultValues, setResultValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
-
-  useEffect(() => {
-    const fetchMatchesMeta = async () => {
-      try {
-        let query = supabase.from('matches').select('id, round_number, match_date')
-
-        if (activeTournament?.id) {
-          query = query.eq('tournament_id', activeTournament.id)
-        }
-
-        const { data, error } = await query
-
-        if (error) throw error
-
-        setMatchesMeta(data || [])
-        setMatchesMetaError(null)
-      } catch {
-        // Sin esto, un fallo de la query se veia igual que "todavia no hay
-        // fechas habilitadas": el select quedaba vacio sin explicar por que.
-        setMatchesMeta([])
-        setMatchesMetaError('No se pudieron cargar los partidos del torneo')
-      }
-    }
-
-    fetchMatchesMeta()
-  }, [activeTournament?.id])
 
   const closedRounds = useMemo(
     () =>
@@ -192,7 +167,7 @@ export default function MatchManager() {
         (matchesMetaError ? (
           <EmptyState
             icon="⚠️"
-            title={matchesMetaError}
+            title="No se pudieron cargar los partidos del torneo"
             description="Probá recargar la página. Si sigue pasando, revisá la conexión con la base."
           />
         ) : (
