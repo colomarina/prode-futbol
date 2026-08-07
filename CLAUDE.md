@@ -56,6 +56,8 @@ React 19 + Vite (SWC) + Supabase. Sin router, sin librería de estado, sin CSS f
 
 Son accesibles los torneos con `status === 'active'` y `'finished'` (más `upcoming` para admins si el flag de entorno está activo). Hay un guard con `useEffect` que limpia el torneo si alguien fuerza uno bloqueado vía localStorage.
 
+**Torneos de prueba** (`src/utils/tournamentAccess.js`): los que tienen slug con prefijo `test-` solo son accesibles y visibles para admins. Se distinguen por slug y no por `status` a propósito — quedan en `active`, o sea escribibles, porque cualquier otro status los volvería `isReadOnly` e inservibles para probar. El filtro se aplica en `App.jsx` (acceso + lista del selector) y en `Sidebar` (contador de "Cambiar torneo"). No hay entorno de desarrollo separado: es el mecanismo para probar contra la base real sin tocar un torneo en curso.
+
 **Modo consulta**: `TournamentContext` expone `isReadOnly` (`activeTournament.status !== 'active'`). Es la única definición de "torneo cerrado a escrituras" y la consumen `PredictionForm`, `MatchPrediction`, `WorldCupPredictions`, `Sidebar` (oculta administración), `NavHeader` (badge 🏁) y `Navigation` (entra por la tabla de posiciones en vez del formulario). Cualquier escritura nueva tiene que respetarlo — el gating por status no vive en ningún otro lado. Son guards de UI; qué hace RLS con esas escrituras no está verificado.
 
 ### Multi-torneo: el eje central del código
