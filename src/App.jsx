@@ -9,7 +9,6 @@ import TournamentSelector from './components/TournamentSelector'
 import ErrorBoundary from './components/Common/ErrorBoundary'
 import ConfigError from './components/Common/ConfigError'
 import { missingSupabaseEnvVars } from './lib/supabase'
-// import PredictionForm from './components/PredictionForm'
 
 // Optional switch:
 // - false (default): only active tournaments are accessible to everyone.
@@ -42,11 +41,6 @@ function AppContent() {
     },
     [isUserAdmin]
   )
-
-  // const accessibleTournaments = useMemo(
-  //   () => tournaments.filter(canAccessTournament),
-  //   [tournaments, canAccessTournament]
-  // )
 
   const handleSelectTournament = useCallback(
     tournament => {
