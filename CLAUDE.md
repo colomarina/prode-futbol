@@ -88,13 +88,17 @@ La navegación de nivel superior vive **solo** en el menú hamburguesa (`tabs.co
 
 `src/lib/supabase.jsx` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`. La única lectura que queda fuera de un hook es la RPC de progreso de jugadores en `RoundManager`.
 
-**TanStack Query** (migración en curso). Ya migrados: `useRounds`, `useMatchesMeta`, `useMatches`, `usePlayoffs`. Todavía con `useState` + `useEffect`: `usePredictions`, `useLeaderboard`, `usePersonalStats`, `useAllPredictions`, `useWorldCupBonus`.
+**TanStack Query**: todos los hooks de datos están migrados. Ya no queda ningún `useEffect` de fetching en `src/hooks/`.
 
 - Cliente y defaults en `src/lib/queryClient.js` (`staleTime` 30s, `retry` 1 en lecturas y **0 en mutaciones**, porque reintentar una escritura duplicaría un pronóstico).
 - **Las query keys se arman siempre con `src/lib/queryKeys.js` y empiezan por el id del torneo.** Es lo que impide que el cache mezcle torneos, igual que el filtro `tournament_id` en las queries. Nunca escribir un array de key a mano.
 - `useMatchesMeta` es la consulta compartida de "todos los partidos del torneo" (`id, round_number, match_date, is_finished`). Su select es un superconjunto a propósito: la usan `useRounds`, `MatchManager` y `RoundManager`. Si necesitás otra columna de esa lista, agregala ahí en vez de crear una query nueva.
 - Las mutaciones invalidan en vez de parchear estado local, y conservan el contrato `{ data, error }` que ya usan los componentes.
 - Las devtools están disponibles en `pnpm dev` (botón abajo a la izquierda); son la forma de verificar que no haya queries duplicadas.
+- Cuándo pedir datos se expresa con `enabled`, no con un `if` adentro de un efecto. Si `enabled` es `false`, `isPending` queda en `true` para siempre: por eso los hooks devuelven `loading` combinado con la misma condición (ver `useMatches`, `usePredictions`).
+- `useLeaderboard` exporta `fetchLeaderboardData` aparte del hook: la lógica de ramas (general / por fecha / playoffs / con bonus) vive en una función suelta para que se pueda testear sin montar React.
+
+Los `value` de `TournamentContext` y `ThemeContext` van con `useMemo` y sus funciones con `useCallback`. `TournamentContext` lo consumen ~15 componentes: un objeto nuevo por render re-renderiza el árbol entero.
 
 Tablas/vistas: `tournaments`, `rounds`, `matches`, `teams`, `predictions`, `profiles`, `round_scores`, `general_leaderboard` (vista), `world_cup_*` (`teams`, `predictions`, `bonus_config`, `bonus_scores`, `official_results`).
 
