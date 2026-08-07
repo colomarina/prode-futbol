@@ -1,122 +1,136 @@
-import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { queryKeys } from '../lib/queryKeys'
 
+const MATCH_WITH_TEAMS = `
+  *,
+  home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
+  away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
+  qualifier_team:teams!matches_qualifier_team_id_fkey(id, name, slug, logo_url)
+`
+
+/**
+ * Partidos de una fecha, con los equipos embebidos.
+ *
+ * Antes había un `useLayoutEffect` que forzaba `loading` al cambiar de fecha
+ * para tapar un flash de EmptyState. Ya no hace falta: al cambiar la query key
+ * React Query no sirve los datos de la fecha anterior, así que no hay un
+ * intervalo en el que el estado diga "listo" con los datos viejos.
+ *
+ * @param {number|null} roundNumber
+ * @param {string|null} tournamentId
+ */
 export const useMatches = (roundNumber = null, tournamentId = null) => {
-  const [matches, setMatches] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  // Marcar como loading inmediatamente (antes del paint) cuando cambia roundNumber,
-  // para evitar el flash de EmptyState entre el cambio de ronda y el arranque del fetch.
-  useLayoutEffect(() => {
-    if (roundNumber) {
-      setLoading(true)
-    }
-  }, [roundNumber])
-
-  const fetchMatches = useCallback(async () => {
-    // Si no hay roundNumber, no traer nada
-    if (!roundNumber) {
-      setMatches([])
-      setLoading(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      let query = supabase.from('matches').select(
-        `
-          *,
-          home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
-          away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
-          qualifier_team:teams!matches_qualifier_team_id_fkey(id, name, slug, logo_url)
-        `
-      )
-
-      query = query.eq('round_number', roundNumber)
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: queryKeys.matchesByRound(tournamentId, roundNumber),
+    enabled: Boolean(roundNumber),
+    queryFn: async () => {
+      let query = supabase.from('matches').select(MATCH_WITH_TEAMS).eq('round_number', roundNumber)
 
       if (tournamentId) {
         query = query.eq('tournament_id', tournamentId)
       }
 
-      const { data, error } = await query
+      const { data: matches, error: matchesError } = await query
         .order('match_number', { ascending: true })
         .order('match_date', { ascending: true })
 
-      if (error) throw error
-      setMatches(data || [])
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [roundNumber, tournamentId])
+      if (matchesError) throw matchesError
+      return matches || []
+    },
+  })
 
-  useEffect(() => {
-    fetchMatches()
-  }, [fetchMatches])
+  /**
+   * Cualquier escritura sobre partidos invalida tambien matchesMeta: de ahi
+   * salen la fecha activa y que fechas admiten carga de resultados.
+   */
+  const invalidateMatches = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.matchesByRound(tournamentId, roundNumber) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.matchesMeta(tournamentId) })
+  }, [queryClient, tournamentId, roundNumber])
 
-  const createMatch = async matchData => {
-    try {
-      const { data, error } = await supabase.from('matches').insert([matchData]).select(`
-          *,
-          home_team:teams!matches_home_team_id_fkey(*),
-          away_team:teams!matches_away_team_id_fkey(*),
-          qualifier_team:teams!matches_qualifier_team_id_fkey(*)
-        `)
+  const createMutation = useMutation({
+    mutationFn: async matchData => {
+      const { data: created, error: createError } = await supabase
+        .from('matches')
+        .insert([matchData])
+        .select(MATCH_WITH_TEAMS)
 
-      if (error) throw error
-      if (data && data.length > 0) {
-        setMatches(prev =>
-          [...prev, ...data].sort((a, b) => {
-            if (a.match_number !== b.match_number) return a.match_number - b.match_number
-            return new Date(a.match_date) - new Date(b.match_date)
-          })
-        )
+      if (createError) throw createError
+      return created
+    },
+    onSuccess: invalidateMatches,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ matchId, updates }) => {
+      const { data: updated, error: updateError } = await supabase
+        .from('matches')
+        .update(updates)
+        .eq('id', matchId)
+        .select(MATCH_WITH_TEAMS)
+
+      if (updateError) throw updateError
+      return updated
+    },
+    onSuccess: invalidateMatches,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async matchId => {
+      const { error: deleteError } = await supabase.from('matches').delete().eq('id', matchId)
+      if (deleteError) throw deleteError
+    },
+    onSuccess: invalidateMatches,
+  })
+
+  // Se conserva el contrato { data, error } que ya usan los componentes.
+  const createMatch = useCallback(
+    async matchData => {
+      try {
+        const created = await createMutation.mutateAsync(matchData)
+        return { data: created, error: null }
+      } catch (error) {
+        return { data: null, error }
       }
-      return { data, error: null }
-    } catch (error) {
-      return { data: null, error }
-    }
-  }
+    },
+    [createMutation]
+  )
 
-  const updateMatch = async (matchId, updates) => {
-    try {
-      const { data, error } = await supabase.from('matches').update(updates).eq('id', matchId)
-        .select(`
-          *,
-          home_team:teams!matches_home_team_id_fkey(*),
-          away_team:teams!matches_away_team_id_fkey(*),
-          qualifier_team:teams!matches_qualifier_team_id_fkey(*)
-        `)
-
-      if (error) throw error
-      if (data && data.length > 0) {
-        setMatches(prev => prev.map(match => (match.id === matchId ? data[0] : match)))
+  const updateMatch = useCallback(
+    async (matchId, updates) => {
+      try {
+        const updated = await updateMutation.mutateAsync({ matchId, updates })
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error }
       }
-      return { data, error: null }
-    } catch (error) {
-      return { data: null, error }
-    }
-  }
+    },
+    [updateMutation]
+  )
 
-  const deleteMatch = async matchId => {
-    try {
-      const { error } = await supabase.from('matches').delete().eq('id', matchId)
-
-      if (error) throw error
-      setMatches(prev => prev.filter(match => match.id !== matchId))
-      return { error: null }
-    } catch (error) {
-      return { error }
-    }
-  }
+  const deleteMatch = useCallback(
+    async matchId => {
+      try {
+        await deleteMutation.mutateAsync(matchId)
+        return { error: null }
+      } catch (error) {
+        return { error }
+      }
+    },
+    [deleteMutation]
+  )
 
   return {
-    matches,
-    loading,
-    error,
-    fetchMatches,
+    matches: data ?? [],
+    // Sin roundNumber la query queda deshabilitada y React Query la reporta como
+    // pendiente para siempre; para el consumidor eso no es "cargando".
+    loading: Boolean(roundNumber) && isPending,
+    error: error ? error.message : null,
+    fetchMatches: refetch,
     createMatch,
     updateMatch,
     deleteMatch,
