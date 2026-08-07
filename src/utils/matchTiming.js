@@ -8,12 +8,16 @@ export const canPredictMatch = matchDate => {
 
 export const hasMatchStarted = matchDate => new Date() >= new Date(matchDate)
 
-export const canLoadResult = matchDate => {
-  const loadTime = new Date(
-    new Date(matchDate).getTime() + RESULT_LOAD_DELAY_HOURS * 60 * 60 * 1000
-  )
-  return new Date() >= loadTime
-}
+/**
+ * Momento a partir del cual el admin puede cargar el resultado.
+ * Existe para que la UI no reimplemente el calculo del delay: si se cambia
+ * RESULT_LOAD_DELAY_HOURS, el texto que ve el admin tiene que cambiar con el.
+ * @returns {Date}
+ */
+export const getResultLoadTime = matchDate =>
+  new Date(new Date(matchDate).getTime() + RESULT_LOAD_DELAY_HOURS * 60 * 60 * 1000)
+
+export const canLoadResult = matchDate => new Date() >= getResultLoadTime(matchDate)
 
 export const secondsUntilCutoff = matchDate => {
   const cutoff = new Date(new Date(matchDate).getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000)

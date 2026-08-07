@@ -233,7 +233,7 @@ export default function AdminWorldCupBonus() {
           <button className="btn btn-primary" onClick={onSaveLock} disabled={saving}>
             Guardar lock
           </button>
-          <button className="btn btn-danger" onClick={onForceLock} disabled={saving}>
+          <button className="btn btn-error" onClick={onForceLock} disabled={saving}>
             Bloquear ahora
           </button>
         </div>

@@ -10,7 +10,7 @@ import ErrorMessage from './ErrorMessage'
 export default function Leaderboard({ onViewPredictions }) {
   const [selectedRound, setSelectedRound] = useState(null)
   const { activeTournament } = useTournament()
-  const { leaderboard, loading, error } = useLeaderboard(
+  const { leaderboard, loading, error, fetchLeaderboard } = useLeaderboard(
     selectedRound,
     activeTournament?.id,
     activeTournament?.type === 'world_cup'
@@ -28,7 +28,7 @@ export default function Leaderboard({ onViewPredictions }) {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1000px' }}>
-        <ErrorMessage error={error} />
+        <ErrorMessage error={error} onRetry={fetchLeaderboard} />
       </div>
     )
   }

@@ -1,6 +1,6 @@
 import { useCallback, memo, useEffect, useMemo, useRef } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
-import { canLoadResult } from '../../../utils/matchTiming'
+import { canLoadResult, getResultLoadTime } from '../../../utils/matchTiming'
 
 const parseScoreValue = value => {
   if (value === '' || value === null || value === undefined) return null
@@ -361,15 +361,12 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           }}
         >
           Disponible a las{' '}
-          {new Date(new Date(match.match_date).getTime() + 2 * 60 * 60 * 1000).toLocaleTimeString(
-            'es-AR',
-            {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-              timeZone: 'America/Argentina/Buenos_Aires',
-            }
-          )}
+          {getResultLoadTime(match.match_date).toLocaleTimeString('es-AR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'America/Argentina/Buenos_Aires',
+          })}
         </p>
       )}
 
