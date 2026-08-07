@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
@@ -35,6 +36,7 @@ const validateUsername = value => {
 
 export default function UserProfile() {
   const { profile, user, updateProfile, changePassword, signOut, isPasswordRecovery } = useAuth()
+  const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [fullName, setFullName] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -133,7 +135,7 @@ export default function UserProfile() {
           type: 'success',
         })
         await signOut()
-        window.history.pushState({}, '', '/')
+        navigate('/', { replace: true })
         return
       }
 

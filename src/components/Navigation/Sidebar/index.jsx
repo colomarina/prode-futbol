@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { MENU_ITEMS } from './menu.config'
@@ -12,6 +13,7 @@ export default function Sidebar({ onNavigate, onSignOut }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { isAdmin } = useAuth()
   const { tournaments, setActiveTournament, isReadOnly } = useTournament()
+  const navigate = useNavigate()
 
   // Filtrar items del menú según permisos.
   // En un torneo finalizado la administración se oculta para todos: el torneo es solo lectura.
@@ -60,15 +62,8 @@ export default function Sidebar({ onNavigate, onSignOut }) {
   const handleSelectItem = async item => {
     if (item.type === 'change_tournament') {
       setActiveTournament(null)
-
-      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
-        window.history.pushState({}, '', '/')
-      }
-
-      if (onNavigate) {
-        onNavigate('tournament')
-      }
-
+      // A la raiz: sin torneo activo, App muestra el selector.
+      navigate('/', { replace: true })
       setIsOpen(false)
       return
     }

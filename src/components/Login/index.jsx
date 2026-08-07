@@ -4,6 +4,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { getTournamentConfig } from '../../config/tournaments.config'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
+import { PROFILE_PATH } from '../Navigation/pages-with-sections.config'
 
 const RESET_COOLDOWN_MS = 5 * 60 * 1000
 const RESET_COOLDOWN_STORAGE_KEY = 'auth_reset_cooldown_until'
@@ -204,7 +205,9 @@ export default function Login() {
     setIsSendingReset(true)
 
     try {
-      const redirectTo = `${window.location.origin}/profile`
+      // Se arma con PROFILE_PATH y no a mano: si cambia la ruta del perfil, el
+      // mail de recuperacion tiene que seguir apuntando al lugar correcto.
+      const redirectTo = `${window.location.origin}${PROFILE_PATH}`
       const { error } = await resetPassword(email.trim(), redirectTo)
 
       if (error) throw error
