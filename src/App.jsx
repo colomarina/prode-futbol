@@ -6,6 +6,7 @@ import { getTournamentConfig } from './config/tournaments.config'
 import Login from './components/Login'
 import Navigation from './components/Navigation'
 import TournamentSelector from './components/TournamentSelector'
+import ErrorBoundary from './components/Common/ErrorBoundary'
 // import PredictionForm from './components/PredictionForm'
 
 // Optional switch:
@@ -164,13 +165,15 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <TournamentProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </TournamentProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <TournamentProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </TournamentProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   )
 }
 

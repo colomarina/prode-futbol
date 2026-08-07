@@ -5,6 +5,7 @@ import { ALL_TABS } from './tabs.config'
 import { hasViewSections, getViewSections, getDefaultSection } from './pages-with-sections.config'
 import NavHeader from './NavHeader'
 import NavTabs from './NavTabs'
+import ErrorBoundary from '../Common/ErrorBoundary'
 
 // Lazy loading de componentes de contenido
 const PredictionForm = lazy(() => import('../PredictionForm'))
@@ -259,7 +260,11 @@ export default function Navigation() {
       {/* Content */}
       <div style={{ paddingTop: '24px', paddingBottom: '24px' }}>
         <div role="tabpanel" aria-labelledby={`tab-${activeTab}`} id={`panel-${activeTab}`}>
-          {renderContent()}
+          {/* La key resetea el boundary al navegar: si una vista falla, el resto
+              de la app sigue usable en vez de quedar la pantalla en blanco. */}
+          <ErrorBoundary key={`${activeTab}-${activeSections[activeTab] || ''}`}>
+            {renderContent()}
+          </ErrorBoundary>
         </div>
       </div>
 
