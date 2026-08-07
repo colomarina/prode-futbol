@@ -10,27 +10,34 @@ Package manager: **pnpm** (hay `pnpm-lock.yaml` y `pnpm-workspace.yaml`). Node 2
 pnpm dev            # Vite dev server
 pnpm build          # build de producción a dist/
 pnpm preview        # servir el build
+pnpm test           # vitest run
+pnpm test:watch
+pnpm test:coverage
 pnpm lint           # eslint src
 pnpm lint:fix
 pnpm format         # prettier --write sobre src/
 pnpm format:check
 ```
 
-No hay framework de testing configurado — no existen tests ni script `test`.
+**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.js` → `matchTiming.test.js`). Cobertura actual: `utils/matchTiming.js`, `constants/hiddenPlayers.js` y `Common/ErrorBoundary`.
+
+CI en `.github/workflows/ci.yml`: corre `lint`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
 
 Prettier corre **como regla de ESLint** (`prettier/prettier: error`), así que `pnpm lint` falla por problemas de formato. Config: sin punto y coma, comillas simples, `printWidth: 100`, `arrowParens: avoid`.
 
-`.gitignore` ignora `*.config.js` en la raíz con la excepción `!src/config/*.config.js`. Los archivos `eslint.config.js` / `vite.config.js` ya están trackeados, pero un nuevo `*.config.js` en la raíz no se va a agregar solo.
+`.gitignore` ignora `*.config.js` en la raíz, con excepciones explícitas para `src/config/*.config.js`, `eslint.config.js`, `vite.config.js` y `vitest.config.js`. **Un `*.config.js` nuevo en la raíz no se agrega solo: hay que sumarle su propia excepción.**
 
 ## Variables de entorno
 
 En `.env` (no versionado), prefijo `VITE_`:
 
 - `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY` — ojo: **no** es `VITE_SUPABASE_ANON_KEY` (el README está desactualizado en esto)
+- `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY` — ojo: **no** es `VITE_SUPABASE_ANON_KEY`
 - `VITE_ALLOW_UPCOMING_TOURNAMENTS_FOR_ADMINS` — si es `'true'`, los admins también pueden entrar a torneos con status `upcoming`
 
-Deploy en Vercel; `vercel.json` reescribe todo a `/index.html` (SPA).
+`.env.example` tiene la lista completa con comentarios.
+
+Deploy en Vercel; `vercel.json` reescribe todo a `/index.html` (SPA) y define los headers de seguridad. La CSP incluye `style-src 'unsafe-inline'` porque la app todavía usa cientos de estilos inline y bloques `<style>` inyectados; se puede endurecer cuando eso se migre.
 
 ## Arquitectura
 
@@ -38,7 +45,7 @@ React 19 + Vite (SWC) + Supabase. Sin router, sin librería de estado, sin CSS f
 
 ### Composición de providers y gating (`src/App.jsx`)
 
-`ThemeProvider` → `TournamentProvider` → `AuthProvider` → `AppContent`. El gating es en cascada y determina qué se renderiza:
+`ErrorBoundary` → `ThemeProvider` → `TournamentProvider` → `AuthProvider` → `AppContent`. El gating es en cascada y determina qué se renderiza:
 
 1. Sin `user` → `<Login />`
 2. Ruta `/profile` → `<Navigation />` (única vista que no exige torneo activo)
@@ -66,7 +73,7 @@ No hay react-router. `src/components/Navigation/index.jsx` es el shell y hace:
 
 - Navegación global vía menú hamburguesa → `Sidebar/menu.config.jsx` (`MENU_ITEMS`, con `viewType`: `tournament`, `info`, `stats`, `profile`, `admin`).
 - Sub-navegación por vista vía `pages-with-sections.config.jsx` (`PAGES_WITH_SECTIONS`), que se renderiza en `NavTabs`. El estado `activeSections` es un objeto `{ viewType: sectionId }`.
-- Todas las vistas de contenido son `React.lazy` + `Suspense`.
+- Todas las vistas de contenido son `React.lazy` + `Suspense`, envueltas en un `ErrorBoundary` con `key` por vista+sección: `Suspense` cubre la carga pero **no** los errores, así que sin el boundary un chunk que falla (deploy nuevo con la pestaña vieja abierta) dejaba la pantalla en blanco. `Common/ErrorBoundary` distingue ese caso y ofrece recargar.
 - Solo maneja dos paths reales (`/` y `/profile`) con `history.pushState` + listener de `popstate`.
 
 `tabs.config.jsx` (`ALL_TABS`) quedó vacío a propósito tras la migración al menú hamburguesa. Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o en las `*_SECTIONS` correspondientes, más el `case` en el `renderContent()` de `Navigation`.
