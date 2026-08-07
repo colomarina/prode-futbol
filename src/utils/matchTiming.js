@@ -20,6 +20,20 @@ export const secondsUntilCutoff = matchDate => {
   return Math.floor((cutoff - new Date()) / 1000)
 }
 
+/**
+ * Number(null), Number(undefined) y Number('') devuelven 0 o NaN de forma
+ * inconsistente, y Number.isFinite(0) es true: sin este guard un round_number
+ * nulo se colaba como "fecha 0" y ganaba cualquier Math.min.
+ * @returns {number|null}
+ */
+const toRoundNumber = value => {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const isNotNull = value => value !== null
+
 export const getNextActiveRoundNumber = (rounds, matches) => {
   const now = new Date()
   const cutoffMs = PREDICTION_CUTOFF_MINUTES * 60 * 1000
@@ -28,8 +42,8 @@ export const getNextActiveRoundNumber = (rounds, matches) => {
   )
 
   const predictableRoundNumbers = predictableMatches
-    .map(m => Number(m.round_number))
-    .filter(Number.isFinite)
+    .map(m => toRoundNumber(m.round_number))
+    .filter(isNotNull)
 
   if (predictableRoundNumbers.length > 0) {
     return Math.min(...predictableRoundNumbers)
@@ -37,15 +51,15 @@ export const getNextActiveRoundNumber = (rounds, matches) => {
 
   // No hay partidos predecibles: ir a la ronda más reciente con partido futuro
   const futureMatches = (matches || []).filter(match => new Date(match.match_date) > now)
-  const futureRoundNumbers = futureMatches.map(m => Number(m.round_number)).filter(Number.isFinite)
+  const futureRoundNumbers = futureMatches.map(m => toRoundNumber(m.round_number)).filter(isNotNull)
 
   if (futureRoundNumbers.length > 0) {
     return Math.min(...futureRoundNumbers)
   }
 
   const allRoundNumbers = (rounds || [])
-    .map(round => Number(round.round_number))
-    .filter(Number.isFinite)
+    .map(round => toRoundNumber(round.round_number))
+    .filter(isNotNull)
 
   if (allRoundNumbers.length > 0) {
     return Math.max(...allRoundNumbers)

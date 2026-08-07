@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
-import { ALL_TABS } from './tabs.config'
 import { hasViewSections, getViewSections, getDefaultSection } from './pages-with-sections.config'
 import NavHeader from './NavHeader'
 import NavTabs from './NavTabs'
+import ErrorBoundary from '../Common/ErrorBoundary'
 
 // Lazy loading de componentes de contenido
 const PredictionForm = lazy(() => import('../PredictionForm'))
@@ -60,9 +60,6 @@ export default function Navigation() {
     }
   }, [activeTab])
 
-  // Filtrar tabs visibles según permisos
-  const visibleTabs = useMemo(() => ALL_TABS.filter(tab => !tab.adminOnly || isAdmin()), [isAdmin])
-
   // Handler para navegación desde menú hamburguesa
   const handleNavigationFromMenu = viewType => {
     setActiveTab(viewType)
@@ -78,7 +75,9 @@ export default function Navigation() {
   // Determinar qué tabs mostrar según la vista activa (tabs principales o secciones)
   const tabsToShow = useMemo(() => {
     const viewSections = getViewSections(activeTab)
-    if (!viewSections) return visibleTabs
+    // Sin secciones no hay nada que mostrar: la navegación de nivel superior
+    // vive en el menú hamburguesa, no en tabs.
+    if (!viewSections) return []
 
     if (!isMundial2026) {
       return viewSections.filter(
@@ -87,7 +86,7 @@ export default function Navigation() {
     }
 
     return viewSections
-  }, [activeTab, visibleTabs, isMundial2026])
+  }, [activeTab, isMundial2026])
 
   useEffect(() => {
     if (!hasViewSections(activeTab)) return
@@ -114,7 +113,7 @@ export default function Navigation() {
   const currentActiveTab = activeSections[activeTab] || activeTab
 
   // Verificar si debemos mostrar tabs
-  const shouldShowTabs = visibleTabs.some(tab => tab.id === activeTab) || hasViewSections(activeTab)
+  const shouldShowTabs = hasViewSections(activeTab)
 
   // Handler para cambiar tabs (genérico para tabs principales o secciones)
   const handleTabChange = tabId => {
@@ -259,7 +258,11 @@ export default function Navigation() {
       {/* Content */}
       <div style={{ paddingTop: '24px', paddingBottom: '24px' }}>
         <div role="tabpanel" aria-labelledby={`tab-${activeTab}`} id={`panel-${activeTab}`}>
-          {renderContent()}
+          {/* La key resetea el boundary al navegar: si una vista falla, el resto
+              de la app sigue usable en vez de quedar la pantalla en blanco. */}
+          <ErrorBoundary key={`${activeTab}-${activeSections[activeTab] || ''}`}>
+            {renderContent()}
+          </ErrorBoundary>
         </div>
       </div>
 

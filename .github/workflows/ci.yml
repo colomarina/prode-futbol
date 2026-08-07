@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Si se pushea dos veces seguidas, cancelar la corrida vieja.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, tests y build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinneado a 10 a proposito: es la version que usa Vercel para instalar.
+      # Si el CI usara otra, un install que rompe el deploy pasaria en verde.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # --frozen-lockfile falla si package.json y el lockfile no coinciden.
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Formato
+        run: pnpm format:check
+
+      - name: Tests
+        run: pnpm test
+
+      # Valores dummy: el build no se conecta a Supabase, pero el cliente se
+      # instancia al importar el modulo y necesita que las variables existan.
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: dummy-key-for-ci

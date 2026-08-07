@@ -30,3 +30,8 @@ yarn-error.log*
 *.config.js
 *.config.cjs
 !src/config/*.config.js
+# Las configs de build/lint del proyecto SI se versionan: sin esto un clone
+# limpio se queda sin reglas de ESLint ni config de Vite.
+!eslint.config.js
+!vite.config.js
+!vitest.config.js
