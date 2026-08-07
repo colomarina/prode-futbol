@@ -45,7 +45,9 @@ React 19 + Vite (SWC) + Supabase. Sin router, sin librería de estado, sin CSS f
 3. Con user pero sin `activeTournament` → `<TournamentSelector />`
 4. Con torneo accesible → `<Navigation />`
 
-Solo son accesibles los torneos con `status === 'active'` (más `upcoming` para admins si el flag de entorno está activo). Hay un guard con `useEffect` que limpia el torneo si alguien fuerza uno bloqueado vía localStorage.
+Son accesibles los torneos con `status === 'active'` y `'finished'` (más `upcoming` para admins si el flag de entorno está activo). Hay un guard con `useEffect` que limpia el torneo si alguien fuerza uno bloqueado vía localStorage.
+
+**Modo consulta**: `TournamentContext` expone `isReadOnly` (`activeTournament.status !== 'active'`). Es la única definición de "torneo cerrado a escrituras" y la consumen `PredictionForm`, `MatchPrediction`, `WorldCupPredictions`, `Sidebar` (oculta administración), `NavHeader` (badge 🏁) y `Navigation` (entra por la tabla de posiciones en vez del formulario). Cualquier escritura nueva tiene que respetarlo — el gating por status no vive en ningún otro lado. Ojo: son guards client-side, no hay RLS que los respalde.
 
 ### Multi-torneo: el eje central del código
 
@@ -79,7 +81,7 @@ RPCs: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_
 
 **Patrón de fallback legacy**: varios hooks (`useRoundPayments`, `useRoundFinance`, `useLeaderboard`, `RoundManager`) intentan primero la variante `*_by_tournament` y, si falla, caen a la RPC/consulta pre-multi-torneo. Es intencional (soporta bases sin las funciones nuevas). Al agregar RPCs con scope de torneo, mantener el patrón o eliminarlo deliberadamente en todos los lugares a la vez.
 
-El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` / RPCs (triggers o funciones en Supabase). No hay migraciones ni SQL en este repo.
+El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` / RPCs (triggers o funciones en Supabase). No hay migraciones ni SQL en este repo, pero sí un snapshot del esquema en `docs/supabase-schema.md` (tablas, CHECK constraints y qué valores acepta cada campo de estado). No incluye RLS ni triggers.
 
 ### Reglas de dominio en el cliente
 
