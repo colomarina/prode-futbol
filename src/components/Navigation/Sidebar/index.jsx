@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { MENU_ITEMS } from './menu.config'
+import { filterVisibleTournaments } from '../../../utils/tournamentAccess'
 import HamburgerButton from './HamburgerButton'
 import TournamentDrawer from './TournamentDrawer'
 import MainMenuView from './Views/MainMenuView'
@@ -19,8 +20,15 @@ export default function Sidebar({ onNavigate, onSignOut }) {
     [isAdmin, isReadOnly]
   )
 
+  // Se cuentan solo los que este usuario puede ver: si el unico torneo extra es
+  // uno de prueba, ofrecerle "Cambiar torneo" no tendria a donde llevarlo.
+  const visibleTournamentCount = useMemo(
+    () => filterVisibleTournaments(tournaments, isAdmin()).length,
+    [tournaments, isAdmin]
+  )
+
   const menuItems = useMemo(() => {
-    if (tournaments.length <= 1) {
+    if (visibleTournamentCount <= 1) {
       return visibleMenuItems
     }
 
@@ -44,7 +52,7 @@ export default function Sidebar({ onNavigate, onSignOut }) {
       changeTournamentItem,
       ...visibleMenuItems.slice(logoutIndex),
     ]
-  }, [tournaments.length, visibleMenuItems])
+  }, [visibleTournamentCount, visibleMenuItems])
 
   const handleOpen = () => setIsOpen(true)
   const handleClose = () => setIsOpen(false)
