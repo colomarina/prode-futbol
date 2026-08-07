@@ -1,25 +1,43 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useRounds } from './useRounds'
 import { useMatches } from './useMatches'
+import { useMatchesMeta } from './useMatchesMeta'
 import { useTournament } from '../contexts/TournamentContext'
 import { supabase } from '../lib/supabase'
+import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 import { hasMatchStarted } from '../utils/matchTiming'
 
+/** Convierte una lista de pronósticos en un mapa por la clave indicada. */
+const indexBy = (predictions, key) =>
+  Object.fromEntries((predictions || []).map(prediction => [prediction[key], prediction]))
+
 export function useAllPredictions({ initialRound = null, initialUser = '' } = {}) {
   const { activeTournament } = useTournament()
-  const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
+  const tournamentId = activeTournament?.id
+  const { rounds, loading: roundsLoading } = useRounds(tournamentId)
+  const { matchesMeta } = useMatchesMeta(tournamentId)
+
   const [selectedRound, setSelectedRound] = useState(initialRound || null)
-  const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
-  const [allMatches, setAllMatches] = useState([])
-  const [roundPredictions, setRoundPredictions] = useState({})
-  const [matchPredictions, setMatchPredictions] = useState({})
-  const [users, setUsers] = useState([])
   const [selectedUser, setSelectedUser] = useState('')
   const [selectedMatchId, setSelectedMatchId] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [matchLoading, setMatchLoading] = useState(false)
   const [viewMode, setViewMode] = useState('by-match')
+
+  const { matches, loading: matchesLoading } = useMatches(selectedRound, tournamentId)
+
+  const { data: users } = useQuery({
+    queryKey: queryKeys.profiles(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, full_name')
+        .order('full_name')
+
+      if (error) throw error
+      return filterHiddenPlayers(data || [])
+    },
+  })
 
   useEffect(() => {
     if (initialUser && viewMode === 'by-user') setSelectedUser(initialUser)
@@ -27,76 +45,37 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
 
   useEffect(() => {
     setSelectedMatchId(null)
-    setMatchPredictions({})
   }, [selectedRound])
 
   useEffect(() => {
     if (viewMode === 'by-user') {
       setSelectedMatchId(null)
-      setMatchPredictions({})
     } else {
       setSelectedUser('')
-      setRoundPredictions({})
     }
   }, [viewMode])
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, username, full_name')
-          .order('full_name')
-        if (error) throw error
-        setUsers(filterHiddenPlayers(data || []))
-      } catch {
-        /* silent */
-      }
-    }
-    fetchUsers()
-  }, [])
-
-  useEffect(() => {
-    const fetchAllMatches = async () => {
-      try {
-        let query = supabase.from('matches').select('id, round_number, match_date')
-
-        if (activeTournament?.id) {
-          query = query.eq('tournament_id', activeTournament.id)
-        }
-
-        const { data, error } = await query
-
-        if (error) throw error
-
-        setAllMatches(data || [])
-      } catch {
-        setAllMatches([])
-      }
-    }
-
-    fetchAllMatches()
-  }, [activeTournament?.id])
-
+  // Solo se listan las fechas que ya empezaron: antes de eso, mostrar los
+  // pronosticos ajenos seria espiar.
   const availableRounds = useMemo(
     () =>
       rounds
         .filter(round =>
-          allMatches.some(
+          matchesMeta.some(
             match => match.round_number === round.round_number && hasMatchStarted(match.match_date)
           )
         )
         .sort((a, b) => a.round_number - b.round_number),
-    [allMatches, rounds]
+    [matchesMeta, rounds]
   )
 
   const selectedUserData = useMemo(
-    () => users.find(u => u.id === selectedUser),
+    () => (users ?? []).find(user => user.id === selectedUser),
     [users, selectedUser]
   )
 
   const selectedMatch = useMemo(
-    () => matches.find(m => m.id === selectedMatchId),
+    () => matches.find(match => match.id === selectedMatchId),
     [matches, selectedMatchId]
   )
 
@@ -105,75 +84,49 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     [matches]
   )
 
-  const fetchPredictionsForRound = useCallback(async () => {
-    if (!selectedRound || !selectedUser || !matches.length) return
-    setLoading(true)
-    try {
+  const matchIds = useMemo(() => matches.map(match => match.id), [matches])
+
+  const roundPredictionsEnabled =
+    viewMode === 'by-user' &&
+    Boolean(selectedRound) &&
+    Boolean(selectedUser) &&
+    matchIds.length > 0 &&
+    selectedRoundHasStartedMatches
+
+  const roundPredictionsQuery = useQuery({
+    queryKey: queryKeys.predictionsOfUserInRound(tournamentId, selectedRound, selectedUser),
+    enabled: roundPredictionsEnabled,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('predictions')
         .select('*')
-        .in(
-          'match_id',
-          matches.map(m => m.id)
-        )
+        .in('match_id', matchIds)
         .eq('user_id', selectedUser)
-      if (error) throw error
-      const byMatch = {}
-      data?.forEach(pred => {
-        byMatch[pred.match_id] = pred
-      })
-      setRoundPredictions(byMatch)
-    } catch {
-      setRoundPredictions({})
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedRound, selectedUser, matches])
 
-  const fetchPredictionsForMatch = useCallback(async () => {
-    if (!selectedMatchId) return
-    setMatchLoading(true)
-    try {
+      if (error) throw error
+      return indexBy(data, 'match_id')
+    },
+  })
+
+  const matchPredictionsEnabled =
+    viewMode === 'by-match' &&
+    Boolean(selectedMatchId) &&
+    Boolean(selectedMatch) &&
+    hasMatchStarted(selectedMatch?.match_date)
+
+  const matchPredictionsQuery = useQuery({
+    queryKey: queryKeys.predictionsByMatch(tournamentId, selectedMatchId),
+    enabled: matchPredictionsEnabled,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('predictions')
         .select('*')
         .eq('match_id', selectedMatchId)
+
       if (error) throw error
-      const byUser = {}
-      data?.forEach(pred => {
-        byUser[pred.user_id] = pred
-      })
-      setMatchPredictions(byUser)
-    } catch {
-      setMatchPredictions({})
-    } finally {
-      setMatchLoading(false)
-    }
-  }, [selectedMatchId])
-
-  useEffect(() => {
-    if (viewMode !== 'by-user') return
-    if (selectedRound && selectedUser && selectedRoundHasStartedMatches) fetchPredictionsForRound()
-    else setRoundPredictions({})
-  }, [
-    viewMode,
-    selectedRound,
-    selectedUser,
-    selectedRoundHasStartedMatches,
-    fetchPredictionsForRound,
-  ])
-
-  useEffect(() => {
-    if (viewMode !== 'by-match') return
-    if (
-      selectedRound &&
-      selectedMatchId &&
-      selectedMatch &&
-      hasMatchStarted(selectedMatch.match_date)
-    ) {
-      fetchPredictionsForMatch()
-    } else setMatchPredictions({})
-  }, [viewMode, selectedRound, selectedMatchId, selectedMatch, fetchPredictionsForMatch])
+      return indexBy(data, 'user_id')
+    },
+  })
 
   return {
     rounds,
@@ -181,7 +134,7 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     availableRounds,
     matches,
     matchesLoading,
-    users,
+    users: users ?? [],
     selectedUser,
     setSelectedUser,
     selectedUserData,
@@ -192,10 +145,11 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     selectedMatch,
     viewMode,
     setViewMode,
-    roundPredictions,
-    matchPredictions,
-    loading,
-    matchLoading,
+    // Sin seleccion no hay nada que mostrar: el mapa vacio es el estado correcto.
+    roundPredictions: roundPredictionsEnabled ? (roundPredictionsQuery.data ?? {}) : {},
+    matchPredictions: matchPredictionsEnabled ? (matchPredictionsQuery.data ?? {}) : {},
+    loading: roundPredictionsEnabled && roundPredictionsQuery.isPending,
+    matchLoading: matchPredictionsEnabled && matchPredictionsQuery.isPending,
     hasMatchStarted,
   }
 }
