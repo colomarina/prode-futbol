@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -11,6 +11,7 @@ import ErrorBoundary from './components/Common/ErrorBoundary'
 import ConfigError from './components/Common/ConfigError'
 import { missingSupabaseEnvVars } from './lib/supabase'
 import { createQueryClient } from './lib/queryClient'
+import { filterVisibleTournaments, isTestTournament } from './utils/tournamentAccess'
 
 // Lazy + solo en dev: en produccion el chunk no se pide nunca.
 const ReactQueryDevtools = import.meta.env.DEV
@@ -42,6 +43,9 @@ function AppContent() {
   const canAccessTournament = useCallback(
     tournament => {
       if (!tournament) return false
+      // Los torneos de prueba quedan activos para poder escribir en ellos, asi
+      // que el unico filtro es este: fuera de los admins, no existen.
+      if (isTestTournament(tournament) && !isUserAdmin) return false
       if (tournament.status === 'active') return true
       // Los torneos terminados quedan accesibles en modo consulta (ver isReadOnly en TournamentContext)
       if (tournament.status === 'finished') return true
@@ -49,6 +53,12 @@ function AppContent() {
       return false
     },
     [isUserAdmin]
+  )
+
+  // Los de prueba no se muestran deshabilitados: directamente no se listan.
+  const visibleTournaments = useMemo(
+    () => filterVisibleTournaments(tournaments, isUserAdmin),
+    [tournaments, isUserAdmin]
   )
 
   const handleSelectTournament = useCallback(
@@ -136,10 +146,10 @@ function AppContent() {
   }
 
   // User logged in but no tournament selected and tournaments loaded
-  if (!activeTournament && tournaments.length > 0) {
+  if (!activeTournament && visibleTournaments.length > 0) {
     return (
       <TournamentSelector
-        tournaments={tournaments}
+        tournaments={visibleTournaments}
         loading={tournamentLoading}
         onSelect={handleSelectTournament}
         isTournamentDisabled={tournament => !canAccessTournament(tournament)}
