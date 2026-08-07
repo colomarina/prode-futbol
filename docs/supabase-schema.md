@@ -84,7 +84,7 @@ intenta esa primero, cayendo a la legacy si falla.
 
 ## Pendiente de documentar
 
-- **Políticas RLS**: no capturadas. Importa saber si alguna restringe escrituras según el estado
-  del torneo — hoy todos los guards de "torneo finalizado = solo lectura" son client-side.
+- **Políticas RLS**: no capturadas en este snapshot. Para ver cuáles hay y qué restringen,
+  consultar `pg_policies` en el schema `public`.
 - **Triggers**: el cálculo de puntos (`predictions.points` y `round_scores.total_points`) ocurre
   server-side, pero no está documentado si es por trigger sobre `matches` o dentro de una RPC.
