@@ -1,108 +1,97 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { queryKeys } from '../lib/queryKeys'
 import { useAuth } from '../contexts/AuthContext'
-import { PREDICTION_CUTOFF_MINUTES } from '../utils/matchTiming'
+import { canPredictMatch } from '../utils/matchTiming'
 
+const PREDICTION_WITH_MATCH = `
+  *,
+  matches!inner (
+    id,
+    home_team_id,
+    away_team_id,
+    home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
+    away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
+    match_date,
+    home_score,
+    away_score,
+    is_finished,
+    round_number,
+    is_playoff,
+    playoff_stage,
+    qualifier_team_id
+  )
+`
+
+/**
+ * Pronósticos del usuario para una fecha.
+ *
+ * El embed es `matches!inner` y no `matches`: en PostgREST, filtrar por columnas
+ * de un recurso embebido sin inner join no descarta las filas de arriba, así que
+ * con el embed común esto traía todo el historial del usuario en cada cambio de
+ * fecha.
+ *
+ * @param {number|null} roundNumber
+ * @param {string|null} tournamentId
+ */
 export const usePredictions = (roundNumber = null, tournamentId = null) => {
-  const [predictions, setPredictions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const userId = user?.id ?? null
 
-  useEffect(() => {
-    if (user) {
-      fetchPredictions()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, roundNumber, tournamentId])
-
-  const fetchPredictions = async () => {
-    if (!user) return
-
-    // Si no hay roundNumber, no traer nada
-    if (!roundNumber) {
-      setPredictions([])
-      setLoading(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      // matches!inner y no matches: en PostgREST, filtrar por una columna de un
-      // recurso embebido sin inner join NO filtra las filas de arriba. Con el
-      // embed comun, los .eq('matches.*') no descartaban nada y esto traia todos
-      // los pronosticos historicos del usuario, de todos los torneos, en cada
-      // cambio de fecha.
+  const { data, isPending, error } = useQuery({
+    queryKey: queryKeys.predictions(tournamentId, roundNumber, userId),
+    enabled: Boolean(userId) && Boolean(roundNumber),
+    queryFn: async () => {
       let query = supabase
         .from('predictions')
-        .select(
-          `
-          *,
-          matches!inner (
-            id,
-            home_team_id,
-            away_team_id,
-            home_team:teams!matches_home_team_id_fkey(id, name, slug, logo_url),
-            away_team:teams!matches_away_team_id_fkey(id, name, slug, logo_url),
-            match_date,
-            home_score,
-            away_score,
-            is_finished,
-            round_number,
-            is_playoff,
-            playoff_stage,
-            qualifier_team_id
-          )
-        `
-        )
-        .eq('user_id', user.id)
+        .select(PREDICTION_WITH_MATCH)
+        .eq('user_id', userId)
         .eq('matches.round_number', roundNumber)
 
       if (tournamentId) {
         query = query.eq('matches.tournament_id', tournamentId)
       }
 
-      const { data, error } = await query
+      const { data: predictions, error: predictionsError } = await query
 
-      if (error) throw error
-      setPredictions(data)
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+      if (predictionsError) throw predictionsError
+      return predictions || []
+    },
+  })
 
-  const createPrediction = async (
-    matchId,
-    homePrediction,
-    awayPrediction,
-    qualifierPredictionId = null
-  ) => {
-    if (!user) return { data: null, error: 'No autenticado' }
+  // useMemo y no `data ?? []` a secas: el array literal seria una referencia
+  // nueva por render y romperia la memoizacion de todo lo que dependa de el.
+  const predictions = useMemo(() => data ?? [], [data])
 
-    try {
-      // Verificar si el partido aún permite predicciones
+  const invalidatePredictions = useCallback(
+    () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.predictions(tournamentId, roundNumber, userId),
+      }),
+    [queryClient, tournamentId, roundNumber, userId]
+  )
+
+  const createMutation = useMutation({
+    mutationFn: async ({ matchId, homePrediction, awayPrediction, qualifierPredictionId }) => {
+      // Revalidación contra la fecha real del partido: el guard de la UI puede
+      // estar desactualizado si la pestaña quedó abierta un rato largo.
       const { data: match } = await supabase
         .from('matches')
         .select('match_date')
         .eq('id', matchId)
         .single()
 
-      if (match) {
-        const matchDate = new Date(match.match_date)
-        const cutoffTime = new Date(matchDate.getTime() - PREDICTION_CUTOFF_MINUTES * 60 * 1000) // minutos antes configurables
-
-        if (new Date() >= cutoffTime) {
-          return { data: null, error: 'Ya no se pueden cargar predicciones para este partido' }
-        }
+      if (match && !canPredictMatch(match.match_date)) {
+        throw new Error('Ya no se pueden cargar predicciones para este partido')
       }
 
-      const { data, error } = await supabase
+      const { data: created, error: createError } = await supabase
         .from('predictions')
         .insert([
           {
-            user_id: user.id,
+            user_id: userId,
             match_id: matchId,
             home_prediction: homePrediction,
             away_prediction: awayPrediction,
@@ -111,29 +100,15 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
         ])
         .select()
 
-      if (error) throw error
+      if (createError) throw createError
+      return created
+    },
+    onSuccess: invalidatePredictions,
+  })
 
-      // Actualizar estado local en lugar de refetch completo
-      if (data && data[0]) {
-        setPredictions(prev => [...prev, data[0]])
-      }
-
-      return { data, error: null }
-    } catch (error) {
-      return { data: null, error }
-    }
-  }
-
-  const updatePrediction = async (
-    predictionId,
-    homePrediction,
-    awayPrediction,
-    qualifierPredictionId = null
-  ) => {
-    if (!user) return { data: null, error: 'No autenticado' }
-
-    try {
-      const { data, error } = await supabase
+  const updateMutation = useMutation({
+    mutationFn: async ({ predictionId, homePrediction, awayPrediction, qualifierPredictionId }) => {
+      const { data: updated, error: updateError } = await supabase
         .from('predictions')
         .update({
           home_prediction: homePrediction,
@@ -142,31 +117,21 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', predictionId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select()
 
-      if (error) throw error
+      if (updateError) throw updateError
+      return updated
+    },
+    onSuccess: invalidatePredictions,
+  })
 
-      // Actualizar estado local en lugar de refetch completo
-      if (data && data[0]) {
-        setPredictions(prev => prev.map(p => (p.id === predictionId ? data[0] : p)))
-      }
-
-      return { data, error: null }
-    } catch (error) {
-      return { data: null, error }
-    }
-  }
-
-  // Nueva función para operaciones batch (mucho más eficiente)
-  const batchUpsertPredictions = async predictionsData => {
-    if (!user) return { data: null, error: 'No autenticado' }
-
-    try {
+  const batchUpsertMutation = useMutation({
+    mutationFn: async predictionsData => {
       const now = new Date().toISOString()
-      const predictions = predictionsData.map(
+      const rows = predictionsData.map(
         ({ matchId, homePrediction, awayPrediction, qualifierPredictionId = null }) => ({
-          user_id: user.id,
+          user_id: userId,
           match_id: matchId,
           home_prediction: homePrediction,
           away_prediction: awayPrediction,
@@ -175,46 +140,71 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
         })
       )
 
-      // Upsert: inserta si no existe, actualiza si existe
-      const { data, error } = await supabase
+      const { data: upserted, error: upsertError } = await supabase
         .from('predictions')
-        .upsert(predictions, {
-          onConflict: 'user_id,match_id',
-          ignoreDuplicates: false,
-        })
+        .upsert(rows, { onConflict: 'user_id,match_id', ignoreDuplicates: false })
         .select()
 
-      if (error) throw error
+      if (upsertError) throw upsertError
+      return upserted
+    },
+    onSuccess: invalidatePredictions,
+  })
 
-      // Actualizar estado local eficientemente
-      if (data) {
-        setPredictions(prev => {
-          const updated = [...prev]
-          data.forEach(newPred => {
-            const index = updated.findIndex(p => p.match_id === newPred.match_id)
-            if (index >= 0) {
-              updated[index] = newPred
-            } else {
-              updated.push(newPred)
-            }
-          })
-          return updated
-        })
+  /** Se conserva el contrato { data, error } que ya usan los componentes. */
+  const runMutation = useCallback(
+    async (mutation, variables) => {
+      if (!userId) return { data: null, error: 'No autenticado' }
+
+      try {
+        const result = await mutation.mutateAsync(variables)
+        return { data: result, error: null }
+      } catch (error) {
+        return { data: null, error }
       }
+    },
+    [userId]
+  )
 
-      return { data, error: null }
-    } catch (error) {
-      return { data: null, error }
-    }
-  }
+  const createPrediction = useCallback(
+    (matchId, homePrediction, awayPrediction, qualifierPredictionId = null) =>
+      runMutation(createMutation, {
+        matchId,
+        homePrediction,
+        awayPrediction,
+        qualifierPredictionId,
+      }),
+    [runMutation, createMutation]
+  )
 
-  const getUserPredictionForMatch = matchId => predictions.find(p => p.match_id === matchId)
+  const updatePrediction = useCallback(
+    (predictionId, homePrediction, awayPrediction, qualifierPredictionId = null) =>
+      runMutation(updateMutation, {
+        predictionId,
+        homePrediction,
+        awayPrediction,
+        qualifierPredictionId,
+      }),
+    [runMutation, updateMutation]
+  )
+
+  const batchUpsertPredictions = useCallback(
+    predictionsData => runMutation(batchUpsertMutation, predictionsData),
+    [runMutation, batchUpsertMutation]
+  )
+
+  const getUserPredictionForMatch = useCallback(
+    matchId => predictions.find(prediction => prediction.match_id === matchId),
+    [predictions]
+  )
 
   return {
     predictions,
-    loading,
-    error,
-    fetchPredictions,
+    // Sin usuario o sin fecha la query queda deshabilitada; para el consumidor
+    // eso no es "cargando".
+    loading: Boolean(userId) && Boolean(roundNumber) && isPending,
+    error: error ? error.message : null,
+    fetchPredictions: invalidatePredictions,
     createPrediction,
     updatePrediction,
     batchUpsertPredictions,
