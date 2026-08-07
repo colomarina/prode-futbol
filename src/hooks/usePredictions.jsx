@@ -28,12 +28,17 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
 
     try {
       setLoading(true)
+      // matches!inner y no matches: en PostgREST, filtrar por una columna de un
+      // recurso embebido sin inner join NO filtra las filas de arriba. Con el
+      // embed comun, los .eq('matches.*') no descartaban nada y esto traia todos
+      // los pronosticos historicos del usuario, de todos los torneos, en cada
+      // cambio de fecha.
       let query = supabase
         .from('predictions')
         .select(
           `
           *,
-          matches (
+          matches!inner (
             id,
             home_team_id,
             away_team_id,
