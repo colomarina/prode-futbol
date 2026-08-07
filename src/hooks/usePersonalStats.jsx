@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { isHiddenPlayer } from '../constants/hiddenPlayers'
+import { compareByPoints, assignPositions } from '../utils/ranking'
 
 const emptyStats = {
   metrics: {
@@ -147,18 +149,20 @@ const buildPositionHistory = (roundScores, userId) => {
 
   roundNumbers.forEach(roundNumber => {
     const scores = scoresByRound.get(roundNumber) || []
-    const rankedUsers = scores
-      .slice()
-      .sort(
-        (a, b) =>
-          Number(b.total_points || 0) - Number(a.total_points || 0) ||
-          String(a.user_id).localeCompare(String(b.user_id))
-      )
-      .map((score, index) => ({
-        userId: String(score.user_id),
-        totalPoints: Number(score.total_points || 0),
-        position: index + 1,
-      }))
+    const rankedUsers = assignPositions(
+      scores
+        .slice()
+        .sort(
+          compareByPoints(
+            score => score.total_points,
+            score => score.user_id
+          )
+        )
+        .map(score => ({
+          userId: String(score.user_id),
+          totalPoints: Number(score.total_points || 0),
+        }))
+    )
 
     const userEntry = rankedUsers.find(item => item.userId === userIdString)
     if (userEntry) {
@@ -181,16 +185,19 @@ const buildOverallRanking = roundScores => {
     totalsByUser.set(userIdString, current + Number(score.total_points || 0))
   })
 
-  return Array.from(totalsByUser.entries())
-    .map(([userId, totalPoints]) => ({
-      userId,
-      totalPoints,
-    }))
-    .sort((a, b) => b.totalPoints - a.totalPoints || a.userId.localeCompare(b.userId))
-    .map((entry, index) => ({
-      ...entry,
-      position: index + 1,
-    }))
+  return assignPositions(
+    Array.from(totalsByUser.entries())
+      .map(([userId, totalPoints]) => ({
+        userId,
+        totalPoints,
+      }))
+      .sort(
+        compareByPoints(
+          entry => entry.totalPoints,
+          entry => entry.userId
+        )
+      )
+  )
 }
 
 const buildTournamentStats = (matches, predictions, roundScores, userId) => {
@@ -558,9 +565,13 @@ export const usePersonalStats = (userId, tournamentId = null) => {
           .eq('user_id', userId)
           .in('match_id', matchIds)
 
+        // Se trae el perfil embebido solo para poder descartar a los jugadores
+        // ocultos: sin eso, la posicion y el total de participantes que se
+        // muestran aca no coinciden con los de la tabla de posiciones, que si
+        // los filtra.
         const { data: roundScoresData, error: roundScoresError } = await supabase
           .from('round_scores')
-          .select('user_id, round_number, total_points')
+          .select('user_id, round_number, total_points, profiles (username, full_name)')
           .eq('tournament_id', tournamentId)
 
         if (!mounted) return
@@ -571,11 +582,17 @@ export const usePersonalStats = (userId, tournamentId = null) => {
           return
         }
 
+        // Al usuario propio nunca se lo descarta, aunque este en la lista de
+        // ocultos: si no, su propia pagina de estadisticas se queda sin posicion.
+        const visibleRoundScores = (roundScoresData || []).filter(
+          score => String(score.user_id) === String(userId) || !isHiddenPlayer(score.profiles)
+        )
+
         setStats(
           buildTournamentStats(
             tournamentMatches || [],
             predictionsData || [],
-            roundScoresData || [],
+            visibleRoundScores,
             userId
           )
         )

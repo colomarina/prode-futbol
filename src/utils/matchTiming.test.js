@@ -5,6 +5,7 @@ import {
   canPredictMatch,
   hasMatchStarted,
   canLoadResult,
+  getResultLoadTime,
   secondsUntilCutoff,
   getNextActiveRoundNumber,
 } from './matchTiming'
@@ -86,6 +87,24 @@ describe('canLoadResult', () => {
 
   it('habilita la carga pasado el delay', () => {
     expect(canLoadResult(matchAt(-5 * HOUR))).toBe(true)
+  })
+})
+
+describe('getResultLoadTime', () => {
+  it('devuelve el horario del partido mas el delay', () => {
+    const kickoff = matchAt(0)
+
+    expect(getResultLoadTime(kickoff).getTime()).toBe(
+      new Date(kickoff).getTime() + RESULT_LOAD_DELAY_HOURS * HOUR
+    )
+  })
+
+  it('es coherente con canLoadResult', () => {
+    // Si estos dos se desincronizan, el admin ve un horario que no coincide con
+    // el momento en que el boton realmente se habilita.
+    const kickoff = matchAt(-RESULT_LOAD_DELAY_HOURS * HOUR)
+
+    expect(canLoadResult(kickoff)).toBe(getResultLoadTime(kickoff) <= NOW)
   })
 })
 

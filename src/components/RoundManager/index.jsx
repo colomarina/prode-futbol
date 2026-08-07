@@ -74,60 +74,63 @@ export default function RoundManager() {
       }
 
       try {
-        // Prefer the versioned tournament-aware RPC when available, fallback to the current one,
-        // and keep the legacy RPC as the last compatibility layer.
         let data = null
+        let lastError = null
+
         if (activeTournament?.id) {
-          const tournamentRpc = await supabase.rpc(
+          // Las dos variantes filtran por torneo; se prueban en orden porque no
+          // todas las bases tienen la _v2. Se usa un flag y no la truthiness de
+          // data: un [] legitimo tiene que cortar la cadena.
+          const scopedRpcNames = [
             'get_round_predictions_summary_by_tournament_v2',
-            {
-              p_tournament_id: activeTournament.id,
-              p_round_num: activeRound.round_number,
-            }
-          )
+            'get_round_predictions_summary_by_tournament',
+          ]
 
-          if (!tournamentRpc.error) {
-            data = tournamentRpc.data
-          }
-        }
-
-        if (!data) {
-          if (activeTournament?.id) {
-            const currentRpc = await supabase.rpc('get_round_predictions_summary_by_tournament', {
+          for (const rpcName of scopedRpcNames) {
+            const attempt = await supabase.rpc(rpcName, {
               p_tournament_id: activeTournament.id,
               p_round_num: activeRound.round_number,
             })
 
-            if (!currentRpc.error) {
-              data = currentRpc.data
+            if (!attempt.error) {
+              data = attempt.data || []
+              break
             }
+            lastError = attempt.error
           }
-        }
 
-        if (!data) {
+          // Antes, si las dos fallaban se caia a get_round_predictions_summary,
+          // que no filtra por torneo: los round_number se repiten entre torneos,
+          // asi que el admin veia el progreso de jugadores de otro torneo como
+          // si fuera de este. Mejor no mostrar nada y avisar.
+          if (data === null) throw lastError || new Error('No se pudo consultar el progreso')
+        } else {
           const legacyRpc = await supabase.rpc('get_round_predictions_summary', {
             round_num: activeRound.round_number,
           })
 
           if (legacyRpc.error) throw legacyRpc.error
-          data = legacyRpc.data
+          data = legacyRpc.data || []
         }
 
         // Mapear los datos al formato que usa el componente
-        const usersData = (data || []).map(user => ({
+        const usersData = data.map(user => ({
           id: user.user_id,
           name: user.user_name,
           totalMatches: user.total_matches,
           predictedCount: user.predicted_count,
           missingMatches: user.missing_matches,
           progress: parseFloat(user.progress),
-          roundNumber: user.round_number ?? activeRound.round_number, // Para debug
+          roundNumber: user.round_number ?? activeRound.round_number,
         }))
 
         setUsersPredictions(filterHiddenPlayers(usersData))
       } catch {
-        // TODO: manejar error de forma más elegante, quizás con un toast específico para esta sección
-        // console.error('Error cargando predicciones de usuarios:', error)
+        setUsersPredictions([])
+        setToast({
+          message: 'No se pudo cargar el progreso de los jugadores',
+          type: 'error',
+        })
       }
     }
 
