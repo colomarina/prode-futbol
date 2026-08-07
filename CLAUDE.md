@@ -73,16 +73,21 @@ Existen dos ejes de variación por torneo:
 
 `ThemeContext` (dark/light) y el tema del torneo están acoplados: al togglear el tema se re-aplica `applyTournamentTheme` leyendo el slug desde localStorage.
 
-### Navegación (sin router)
+### Navegación (React Router)
 
-No hay react-router. `src/components/Navigation/index.jsx` es el shell y hace:
+**`src/components/Navigation/pages-with-sections.config.jsx` es la fuente única**: cada sección declara su `id`, su `label` y su **`path`**, y de ahí salen tanto los tabs como el mapa de rutas. Hay tests que verifican que no se desincronicen.
 
-- Navegación global vía menú hamburguesa → `Sidebar/menu.config.jsx` (`MENU_ITEMS`, con `viewType`: `tournament`, `info`, `stats`, `profile`, `admin`).
-- Sub-navegación por vista vía `pages-with-sections.config.jsx` (`PAGES_WITH_SECTIONS`), que se renderiza en `NavTabs`. El estado `activeSections` es un objeto `{ viewType: sectionId }`.
-- Todas las vistas de contenido son `React.lazy` + `Suspense`, envueltas en un `ErrorBoundary` con `key` por vista+sección: `Suspense` cubre la carga pero **no** los errores, así que sin el boundary un chunk que falla (deploy nuevo con la pestaña vieja abierta) dejaba la pantalla en blanco. `Common/ErrorBoundary` distingue ese caso y ofrece recargar.
-- Solo maneja dos paths reales (`/` y `/profile`) con `history.pushState` + listener de `popstate`.
+- `src/routes.jsx` — tabla de rutas. Todas las vistas son `React.lazy`, envueltas en `<Page>` (`ErrorBoundary` + `Suspense`): `Suspense` cubre la carga pero **no** los errores, así que sin el boundary un chunk que falla (deploy nuevo con la pestaña vieja abierta) deja la pantalla en blanco.
+- Dos guards: `AdminRoute` (rol **y** torneo no finalizado) y `MundialRoute`. Cuando no corresponde, **redirigen** — antes devolvían `null`, o sea una pantalla en blanco.
+- `src/components/Navigation/index.jsx` es solo el shell: header, tabs y área de contenido. Deriva la vista y la sección activas de la URL con `resolveRoute`; no tiene estado de navegación propio.
+- Navegación global vía menú hamburguesa → `Sidebar/menu.config.jsx` (`MENU_ITEMS`, con `viewType`: `tournament`, `info`, `stats`, `profile`, `admin`). Cada `viewType` resuelve su path con `getViewDefaultPath`.
+- `useHomePath()` decide a dónde lleva `/`: la tabla de posiciones en un torneo finalizado, los pronósticos en uno activo.
 
-La navegación de nivel superior vive **solo** en el menú hamburguesa (`tabs.config.jsx` con su `ALL_TABS` vacío se eliminó). Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o en las `*_SECTIONS` correspondientes, más el `case` en el `renderContent()` de `Navigation`.
+Rutas: `/pronosticos`, `/mundialistas`, `/rivales`, `/posiciones`, `/playoffs`, `/reglas/:seccion`, `/estadisticas`, `/perfil`, `/admin/{partidos,fechas,horarios,mundial}`.
+
+**Nunca usar `window.history` ni `window.location` para navegar**: cambia la URL sin avisarle al router, que sigue mostrando la ruta anterior. Usar `useNavigate`. El link del mail de recuperación de contraseña se arma con `PROFILE_PATH` por el mismo motivo.
+
+Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o en las `*_SECTIONS` correspondientes **con su `path`**, más su `<Route>` en `routes.jsx`.
 
 ### Capa de datos
 
