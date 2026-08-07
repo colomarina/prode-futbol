@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 
 const SELECT_STYLE = {
   width: '100%',
@@ -22,6 +22,8 @@ const SelectDropdown = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
+  const listRef = useRef(null)
+  const selectedOptionRef = useRef(null)
   const selectedItem = items.find(item => item[valueKey] === selectedId)
 
   // Cerrar dropdown cuando se clickea afuera
@@ -39,6 +41,19 @@ const SelectDropdown = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
+  }, [isOpen])
+
+  // Al abrir, centrar la opción seleccionada dentro de la lista para que siempre quede a la vista.
+  // Se calcula el scrollTop a mano (en vez de scrollIntoView) para no arrastrar el scroll de la página.
+  useLayoutEffect(() => {
+    if (!isOpen) return
+
+    const list = listRef.current
+    const option = selectedOptionRef.current
+    if (!list || !option) return
+
+    const centeredTop = option.offsetTop - list.clientHeight / 2 + option.offsetHeight / 2
+    list.scrollTop = Math.max(0, Math.min(centeredTop, list.scrollHeight - list.clientHeight))
   }, [isOpen])
 
   const handleSelect = id => {
@@ -84,6 +99,7 @@ const SelectDropdown = ({
 
       {isOpen && !disabled && (
         <div
+          ref={listRef}
           style={{
             position: 'absolute',
             top: '100%',
@@ -102,6 +118,7 @@ const SelectDropdown = ({
           {items.map(item => (
             <button
               key={item[valueKey]}
+              ref={selectedId === item[valueKey] ? selectedOptionRef : null}
               onClick={() => handleSelect(item[valueKey])}
               style={{
                 width: '100%',
