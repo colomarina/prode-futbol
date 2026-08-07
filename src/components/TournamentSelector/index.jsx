@@ -38,6 +38,15 @@ export default function TournamentSelector({
     return null
   }
 
+  // El torneo en curso va primero, después el resto de los accesibles (finalizados) y
+  // al final los bloqueados. Dentro de cada grupo se respeta el orden de creación.
+  const getSortPriority = tournament => {
+    if (tournament.status === 'active') return 0
+    return isTournamentDisabled(tournament) ? 2 : 1
+  }
+
+  const sortedTournaments = [...tournaments].sort((a, b) => getSortPriority(a) - getSortPriority(b))
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -46,7 +55,7 @@ export default function TournamentSelector({
       </header>
 
       <div className={styles.grid}>
-        {tournaments.map(tournament => (
+        {sortedTournaments.map(tournament => (
           <TournamentCard
             key={tournament.id}
             tournament={tournament}

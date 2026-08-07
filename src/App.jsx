@@ -32,6 +32,8 @@ function AppContent() {
     tournament => {
       if (!tournament) return false
       if (tournament.status === 'active') return true
+      // Los torneos terminados quedan accesibles en modo consulta (ver isReadOnly en TournamentContext)
+      if (tournament.status === 'finished') return true
       if (ALLOW_UPCOMING_FOR_ADMINS && isUserAdmin && tournament.status === 'upcoming') return true
       return false
     },

@@ -10,12 +10,13 @@ export default function Sidebar({ onNavigate, onSignOut }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { isAdmin } = useAuth()
-  const { tournaments, setActiveTournament } = useTournament()
+  const { tournaments, setActiveTournament, isReadOnly } = useTournament()
 
-  // Filtrar items del menú según permisos
+  // Filtrar items del menú según permisos.
+  // En un torneo finalizado la administración se oculta para todos: el torneo es solo lectura.
   const visibleMenuItems = useMemo(
-    () => MENU_ITEMS.filter(item => !item.adminOnly || isAdmin()),
-    [isAdmin]
+    () => MENU_ITEMS.filter(item => !item.adminOnly || (isAdmin() && !isReadOnly)),
+    [isAdmin, isReadOnly]
   )
 
   const menuItems = useMemo(() => {

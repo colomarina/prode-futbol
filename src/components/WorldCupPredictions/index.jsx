@@ -59,7 +59,7 @@ const buildInitialValues = source => ({
 })
 
 export default function WorldCupPredictions() {
-  const { activeTournament } = useTournament()
+  const { activeTournament, isReadOnly } = useTournament()
   const { config, teams, prediction, bonusScore, loading, error, upsertPrediction, fetchData } =
     useWorldCupBonus(activeTournament?.id)
 
@@ -72,8 +72,10 @@ export default function WorldCupPredictions() {
   }, [prediction])
 
   const isWorldCupTournament = activeTournament?.type === 'world_cup'
+  // El lock del mundial es un flag manual en DB: si el admin nunca lo cerró, un torneo ya
+  // terminado quedaría con el formulario abierto. Por eso el modo consulta también bloquea.
   const isLocked = Boolean(
-    config?.is_locked || (config?.lock_at && new Date() >= new Date(config.lock_at))
+    isReadOnly || config?.is_locked || (config?.lock_at && new Date() >= new Date(config.lock_at))
   )
 
   const isQuestionAnswered = question => {

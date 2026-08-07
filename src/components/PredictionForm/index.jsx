@@ -12,7 +12,7 @@ import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/ro
 import { canPredictMatch } from '../../utils/matchTiming'
 
 export default function PredictionForm() {
-  const { activeTournament } = useTournament()
+  const { activeTournament, isReadOnly } = useTournament()
   const { rounds, activeRound, loading: roundsLoading } = useRounds(activeTournament?.id)
 
   const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
@@ -45,8 +45,8 @@ export default function PredictionForm() {
   )
 
   const hasEditableMatches = useMemo(
-    () => matches.some(match => canPredictMatch(match.match_date)),
-    [matches]
+    () => !isReadOnly && matches.some(match => canPredictMatch(match.match_date)),
+    [matches, isReadOnly]
   )
 
   const allMatchesLocked = useMemo(
@@ -65,6 +65,9 @@ export default function PredictionForm() {
   }, [])
 
   const handleSaveAll = useCallback(async () => {
+    // Guard duro: en un torneo finalizado no se escribe aunque se alcance el handler
+    if (isReadOnly) return
+
     setSaving(true)
 
     // Preparar datos para batch upsert
@@ -106,7 +109,7 @@ export default function PredictionForm() {
         type: 'error',
       })
     }
-  }, [matches, predictionValues, batchUpsertPredictions])
+  }, [matches, predictionValues, batchUpsertPredictions, isReadOnly])
 
   // Verificar si hay al menos un pronóstico para guardar
   const hasValidPredictions = useMemo(
@@ -263,15 +266,17 @@ export default function PredictionForm() {
             {currentRound ? getRoundDisplayName(currentRound) : 'Fecha seleccionada'}
           </span>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-            {allMatchesLocked
-              ? 'Todos los partidos de esta fecha ya superaron el límite de edición: podés cargar pronósticos hasta 10 minutos antes del horario de cada partido.'
-              : 'Todavía podés cargar y actualizar pronósticos en los partidos que sigan habilitados. El límite es 10 minutos antes del horario de cada partido.'}
+            {isReadOnly
+              ? 'Este torneo ya terminó. Estás viendo el histórico de pronósticos y resultados.'
+              : allMatchesLocked
+                ? 'Todos los partidos de esta fecha ya superaron el límite de edición: podés cargar pronósticos hasta 10 minutos antes del horario de cada partido.'
+                : 'Todavía podés cargar y actualizar pronósticos en los partidos que sigan habilitados. El límite es 10 minutos antes del horario de cada partido.'}
           </p>
         </div>
       </div>
 
-      {/* Atajo a fecha activa */}
-      {activeRound && selectedRound !== activeRound.round_number && (
+      {/* Atajo a fecha activa - en modo consulta no hay fecha abierta, se oculta */}
+      {!isReadOnly && activeRound && selectedRound !== activeRound.round_number && (
         <div
           style={{
             background: 'var(--color-surface-highlight)',
@@ -335,8 +340,9 @@ export default function PredictionForm() {
         </div>
       )}
 
-      {/* Mensaje cuando todos los partidos ya pasaron el cutoff */}
-      {allMatchesLocked && (
+      {/* Mensaje cuando todos los partidos ya pasaron el cutoff.
+          En modo consulta se omite: ya lo dice el resumen de arriba y quedaría duplicado. */}
+      {!isReadOnly && allMatchesLocked && (
         <div
           style={{
             marginTop: '24px',

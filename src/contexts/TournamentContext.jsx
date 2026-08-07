@@ -72,12 +72,18 @@ export const TournamentProvider = ({ children }) => {
     applyTournamentTheme(slug, isDark)
   }
 
+  // Modo consulta: el torneo se puede navegar pero no admite ninguna escritura.
+  // Se define por descarte (!== 'active') y no por igualdad contra 'finished' para que
+  // cualquier estado que se agregue a futuro sea de solo lectura por defecto.
+  const isReadOnly = Boolean(activeTournament) && activeTournament.status !== 'active'
+
   const value = {
     tournaments,
     activeTournament,
     setActiveTournament,
     applyTheme,
     loading,
+    isReadOnly,
   }
 
   return <TournamentContext.Provider value={value}>{children}</TournamentContext.Provider>

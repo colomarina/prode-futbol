@@ -26,15 +26,20 @@ const getTabFromPath = () =>
     : 'tournament'
 
 export default function Navigation() {
+  const { profile, isAdmin, signOut } = useAuth()
+  const { activeTournament, isReadOnly } = useTournament()
+
   const [activeTab, setActiveTab] = useState(getTabFromPath)
-  // Estado genérico para trackear secciones activas de cualquier vista
-  const [activeSections, setActiveSections] = useState({ tournament: 'predictions' })
+  // Estado genérico para trackear secciones activas de cualquier vista.
+  // En un torneo terminado se entra por la tabla de posiciones: el formulario de
+  // pronósticos no tiene nada que ofrecer y la tabla final es lo que se viene a ver.
+  const [activeSections, setActiveSections] = useState(() => ({
+    tournament: isReadOnly ? 'leaderboard' : 'predictions',
+  }))
   const [allPredictionsSelection, setAllPredictionsSelection] = useState({
     roundNumber: null,
     userId: '',
   })
-  const { profile, isAdmin, signOut } = useAuth()
-  const { activeTournament } = useTournament()
   const isMundial2026 = activeTournament?.slug === 'mundial-2026'
 
   useEffect(() => {
@@ -203,7 +208,8 @@ export default function Navigation() {
 
       // Admin sections
       if (activeTab === 'admin') {
-        if (!isAdmin()) return null
+        // Torneo finalizado: solo lectura para todos, ni siquiera el admin escribe
+        if (!isAdmin() || isReadOnly) return null
         return (
           <Suspense fallback={<LoadingSpinner />}>
             {currentSection === 'admin-matches' ? (

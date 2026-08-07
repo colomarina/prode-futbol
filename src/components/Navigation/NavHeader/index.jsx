@@ -7,7 +7,7 @@ import { useTournament } from '../../../contexts/TournamentContext'
 import { getTournamentConfig } from '../../../config/tournaments.config'
 
 function NavHeader({ profile, onNavigate, signOut }) {
-  const { activeTournament } = useTournament()
+  const { activeTournament, isReadOnly } = useTournament()
   const tournamentConfig = getTournamentConfig(activeTournament?.slug)
   const prodeName = tournamentConfig?.prodeName || 'Prode Chiqui Tapia'
 
@@ -17,7 +17,10 @@ function NavHeader({ profile, onNavigate, signOut }) {
         <div className={styles.logoContainer}>⚽</div>
         <div className={styles.brandInfo}>
           <h1>{prodeName}</h1>
-          <UserBadge username={profile?.username} />
+          <div className={styles.badges}>
+            <UserBadge username={profile?.username} />
+            {isReadOnly && <span className={styles.finishedBadge}>🏁 Finalizado</span>}
+          </div>
         </div>
       </div>
 

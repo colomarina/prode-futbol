@@ -29,7 +29,7 @@ const resolveTeamName = (teamId, match) => {
 }
 
 const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueChange }) => {
-  const { activeTournament } = useTournament()
+  const { activeTournament, isReadOnly } = useTournament()
   const awayInputRef = useRef(null)
 
   const isGameOfTheRound =
@@ -39,7 +39,7 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
   const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)
 
-  const canPredictMatch = canPredictMatchByTime(match.match_date)
+  const canPredictMatch = !isReadOnly && canPredictMatchByTime(match.match_date)
   const canLoadMatchResult = canLoadResultByTime(match.match_date)
   const matchDateMs = new Date(match.match_date).getTime()
   const nowMs = Date.now()
