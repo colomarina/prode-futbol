@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
-import { ALL_TABS } from './tabs.config'
 import { hasViewSections, getViewSections, getDefaultSection } from './pages-with-sections.config'
 import NavHeader from './NavHeader'
 import NavTabs from './NavTabs'
@@ -61,9 +60,6 @@ export default function Navigation() {
     }
   }, [activeTab])
 
-  // Filtrar tabs visibles según permisos
-  const visibleTabs = useMemo(() => ALL_TABS.filter(tab => !tab.adminOnly || isAdmin()), [isAdmin])
-
   // Handler para navegación desde menú hamburguesa
   const handleNavigationFromMenu = viewType => {
     setActiveTab(viewType)
@@ -79,7 +75,9 @@ export default function Navigation() {
   // Determinar qué tabs mostrar según la vista activa (tabs principales o secciones)
   const tabsToShow = useMemo(() => {
     const viewSections = getViewSections(activeTab)
-    if (!viewSections) return visibleTabs
+    // Sin secciones no hay nada que mostrar: la navegación de nivel superior
+    // vive en el menú hamburguesa, no en tabs.
+    if (!viewSections) return []
 
     if (!isMundial2026) {
       return viewSections.filter(
@@ -88,7 +86,7 @@ export default function Navigation() {
     }
 
     return viewSections
-  }, [activeTab, visibleTabs, isMundial2026])
+  }, [activeTab, isMundial2026])
 
   useEffect(() => {
     if (!hasViewSections(activeTab)) return
@@ -115,7 +113,7 @@ export default function Navigation() {
   const currentActiveTab = activeSections[activeTab] || activeTab
 
   // Verificar si debemos mostrar tabs
-  const shouldShowTabs = visibleTabs.some(tab => tab.id === activeTab) || hasViewSections(activeTab)
+  const shouldShowTabs = hasViewSections(activeTab)
 
   // Handler para cambiar tabs (genérico para tabs principales o secciones)
   const handleTabChange = tabId => {

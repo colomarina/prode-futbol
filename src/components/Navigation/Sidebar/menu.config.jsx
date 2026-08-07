@@ -55,27 +55,3 @@ export const MENU_ITEMS = [
     adminOnly: false,
   },
 ]
-
-// Configuración de la vista de Información
-export const INFO_SECTIONS = [
-  {
-    id: 'points',
-    label: 'Sistema de Puntos',
-    icon: '🎯',
-  },
-  {
-    id: 'tiebreaks',
-    label: 'Desempates',
-    icon: '⚖️',
-  },
-  {
-    id: 'special-rules',
-    label: 'Reglas Especiales',
-    icon: '⭐',
-  },
-  {
-    id: 'match-status',
-    label: 'Estado de Partidos',
-    icon: '📋',
-  },
-]

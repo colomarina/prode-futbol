@@ -1,26 +1,3 @@
-export const ROUND_STATUS_CONFIG = {
-  pending: {
-    icon: '⏳',
-    label: 'Pendiente',
-    color: '#9ca3af',
-  },
-  open: {
-    icon: '🟢',
-    label: 'En curso',
-    color: '#10b981',
-  },
-  locked: {
-    icon: '⚽',
-    label: 'En juego',
-    color: '#ef4444',
-  },
-  finished: {
-    icon: '✅',
-    label: 'Finalizada',
-    color: '#3b82f6',
-  },
-}
-
 export const POSITION_CONFIG = {
   1: { emoji: '🥇', bgColor: 'rgba(249, 168, 37, 0.1)' },
   2: { emoji: '🥈', bgColor: 'rgba(189, 189, 189, 0.1)' },
