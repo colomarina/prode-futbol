@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { TournamentProvider, useTournament } from './contexts/TournamentContext'
@@ -12,6 +13,7 @@ import ConfigError from './components/Common/ConfigError'
 import { missingSupabaseEnvVars } from './lib/supabase'
 import { createQueryClient } from './lib/queryClient'
 import { filterVisibleTournaments, isTestTournament } from './utils/tournamentAccess'
+import { PROFILE_PATH } from './components/Navigation/pages-with-sections.config'
 
 // Lazy + solo en dev: en produccion el chunk no se pide nunca.
 const ReactQueryDevtools = import.meta.env.DEV
@@ -35,8 +37,11 @@ function AppContent() {
     loading: tournamentLoading,
   } = useTournament()
   const tournamentConfig = getTournamentConfig(activeTournament?.slug)
-  const isProfileRoute =
-    typeof window !== 'undefined' && window.location.pathname.startsWith('/profile')
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Antes esto leia window.location fuera de React, asi que ante un popstate se
+  // re-renderizaba Navigation pero no App y el gating quedaba desactualizado.
+  const isProfileRoute = location.pathname.startsWith(PROFILE_PATH)
 
   const isUserAdmin = isAdmin()
 
@@ -90,14 +95,15 @@ function AppContent() {
     document.title = `${prodeName} | ${tournamentName}`
   }, [activeTournament, tournamentConfig?.label, tournamentConfig?.prodeName])
 
+  // Al cerrar sesion se vuelve a la raiz: quedarse en una URL interna haria que
+  // al volver a entrar se aterrice en una pantalla que quizas ya no corresponde.
   useEffect(() => {
     if (loading) return
-    if (typeof window === 'undefined') return
 
-    if (!user && window.location.pathname !== '/') {
-      window.history.replaceState({}, '', '/')
+    if (!user && location.pathname !== '/') {
+      navigate('/', { replace: true })
     }
-  }, [user, loading])
+  }, [user, loading, location.pathname, navigate])
 
   if (loading || tournamentLoading) {
     return (
@@ -192,13 +198,15 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TournamentProvider>
-            <AuthProvider>
-              <AppContent />
-            </AuthProvider>
-          </TournamentProvider>
-        </ThemeProvider>
+        <BrowserRouter>
+          <ThemeProvider>
+            <TournamentProvider>
+              <AuthProvider>
+                <AppContent />
+              </AuthProvider>
+            </TournamentProvider>
+          </ThemeProvider>
+        </BrowserRouter>
         {ReactQueryDevtools && (
           <Suspense fallback={null}>
             <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
