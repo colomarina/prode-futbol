@@ -1,6 +1,12 @@
-# Dependencias con scripts de build que pnpm ejecuta sin pedir confirmacion.
-# Las tres son toolchain de build (compilador SWC, bundler, resolver de imports).
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - unrs-resolver
+# Dependencias con scripts de build que pnpm puede ejecutar sin preguntar.
+# Las tres son toolchain de build: compilador SWC, bundler y resolver de imports.
+#
+# Esta config esta duplicada a proposito en package.json (campo "pnpm",
+# onlyBuiltDependencies): pnpm 11 la lee con este nombre y desde este archivo,
+# pero la pnpm 10.x que usa Vercel la lee desde package.json. Si falta en
+# alguno de los dos lados, el install correspondiente falla con
+# ERR_PNPM_IGNORED_BUILDS. Mantener ambas listas iguales.
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  unrs-resolver: true

@@ -18,7 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pinneado a 10 a proposito: es la version que usa Vercel para instalar.
+      # Si el CI usara otra, un install que rompe el deploy pasaria en verde.
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - uses: actions/setup-node@v4
         with:
