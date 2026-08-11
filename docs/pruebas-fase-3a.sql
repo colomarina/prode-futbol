@@ -247,7 +247,16 @@ cross join (values
        home_score, away_score, is_finished, status, is_playoff, playoff_stage, qualifier_n)
 join eq h on h.n = v.home_n
 join eq a on a.n = v.away_n
-left join eq q on q.n = v.qualifier_n;
+left join eq q on q.n = v.qualifier_n
+-- Mismo guard que en el bloque 4: sin unique sobre
+-- (tournament_id, round_number, match_number) no hay `on conflict` posible, y
+-- volver a correr este bloque duplicaria los 16 partidos.
+where not exists (
+  select 1 from matches ya
+  where ya.tournament_id = tid.id
+    and ya.round_number = v.round_number
+    and ya.match_number = v.match_number
+);
 
 
 -- ============================================================================
@@ -377,7 +386,17 @@ cross join (values
   (2, now() + interval '3 days' + interval '2 hours', 3, 4)
 ) as v(match_number, match_date, home_n, away_n)
 join eq h on h.n = v.home_n
-join eq a on a.n = v.away_n;
+join eq a on a.n = v.away_n
+-- Sin este guard el bloque no es idempotente: `matches` no tiene unique sobre
+-- (tournament_id, round_number, match_number), asi que no hay `on conflict` que
+-- lo frene y cada corrida duplica los partidos. Paso de verdad: correrlo tres
+-- veces dejo 6 partidos en la fecha 1 y volvio inservible el torneo vacio.
+where not exists (
+  select 1 from matches ya
+  where ya.tournament_id = tid.id
+    and ya.round_number = 1
+    and ya.match_number = v.match_number
+);
 
 
 -- ============================================================================
