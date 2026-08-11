@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { applyTournamentTheme } from '../config/tournaments.config.js'
 
@@ -30,7 +30,9 @@ export const TournamentProvider = ({ children }) => {
           if (tournament) {
             setActiveTournamentState(tournament)
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-            applyTheme(tournament.slug, isDark)
+            // Se llama a la función importada y no al wrapper del contexto para
+            // que este efecto siga corriendo una sola vez, al montar.
+            applyTournamentTheme(tournament.slug, isDark)
           }
         }
       } catch (err) {
@@ -48,7 +50,7 @@ export const TournamentProvider = ({ children }) => {
    * Set active tournament and apply its theme
    * @param {Object|null} tournament - Tournament object or null to clear
    */
-  const setActiveTournament = tournament => {
+  const setActiveTournament = useCallback(tournament => {
     if (!tournament) {
       setActiveTournamentState(null)
       localStorage.removeItem('active_tournament_slug')
@@ -60,31 +62,36 @@ export const TournamentProvider = ({ children }) => {
 
     // Apply theme based on current data-theme
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-    applyTheme(tournament.slug, isDark)
-  }
+    applyTournamentTheme(tournament.slug, isDark)
+  }, [])
 
   /**
    * Apply tournament theme to document root
    * @param {string} slug - Tournament slug
    * @param {boolean} isDark - Whether to apply dark theme
    */
-  const applyTheme = (slug, isDark) => {
+  const applyTheme = useCallback((slug, isDark) => {
     applyTournamentTheme(slug, isDark)
-  }
+  }, [])
 
   // Modo consulta: el torneo se puede navegar pero no admite ninguna escritura.
   // Se define por descarte (!== 'active') y no por igualdad contra 'finished' para que
   // cualquier estado que se agregue a futuro sea de solo lectura por defecto.
   const isReadOnly = Boolean(activeTournament) && activeTournament.status !== 'active'
 
-  const value = {
-    tournaments,
-    activeTournament,
-    setActiveTournament,
-    applyTheme,
-    loading,
-    isReadOnly,
-  }
+  // Sin useMemo esto es un objeto nuevo en cada render del provider, y como lo
+  // consumen ~15 componentes mas varios hooks, re-renderizaba el arbol entero.
+  const value = useMemo(
+    () => ({
+      tournaments,
+      activeTournament,
+      setActiveTournament,
+      applyTheme,
+      loading,
+      isReadOnly,
+    }),
+    [tournaments, activeTournament, setActiveTournament, applyTheme, loading, isReadOnly]
+  )
 
   return <TournamentContext.Provider value={value}>{children}</TournamentContext.Provider>
 }

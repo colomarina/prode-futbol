@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { applyTournamentTheme } from '../config/tournaments.config.js'
 
 const ThemeContext = createContext({})
@@ -26,11 +26,15 @@ export function ThemeProvider({ children }) {
     }
   }, [isDark])
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setIsDark(prev => !prev)
-  }
+  }, [])
 
-  return <ThemeContext.Provider value={{ isDark, toggleTheme }}>{children}</ThemeContext.Provider>
+  // Mismo motivo que en TournamentContext: el objeto literal inline creaba una
+  // referencia nueva por render y obligaba a re-renderizar a los consumidores.
+  const value = useMemo(() => ({ isDark, toggleTheme }), [isDark, toggleTheme])
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

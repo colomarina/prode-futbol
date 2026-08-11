@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 import { compareByPoints } from '../utils/ranking'
 
@@ -45,173 +47,156 @@ const fetchTournamentRoundNumbers = async tournamentId => {
 
   if (error) throw error
 
-  const uniqueRoundNumbers = [...new Set((data || []).map(round => round.round_number))]
-  return uniqueRoundNumbers
+  return [...new Set((data || []).map(round => round.round_number))]
 }
 
 const STANDALONE_TABLE_ROUNDS = new Set([4, 5])
+
+const PROFILE_FIELDS = `
+  profiles (
+    id,
+    username,
+    full_name,
+    avatar_url
+  )
+`
+
+/**
+ * Puntajes por fecha, siempre con scope de torneo.
+ *
+ * Los `round_number` se repiten entre torneos, así que una consulta sin
+ * `tournament_id` no falla: suma los puntos de todos. Nunca agregar un fallback
+ * que quite ese filtro.
+ */
+const fetchRoundScoresByRounds = async (tournamentId, roundNumbers, includeRoundInSelect) => {
+  if (!roundNumbers?.length) return []
+
+  const baseSelect = includeRoundInSelect
+    ? `user_id, total_points, round_number, ${PROFILE_FIELDS}`
+    : `user_id, total_points, ${PROFILE_FIELDS}`
+
+  let query = supabase.from('round_scores').select(baseSelect).in('round_number', roundNumbers)
+
+  if (tournamentId) {
+    query = query.eq('tournament_id', tournamentId)
+  }
+
+  const { data, error } = await query
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Arma la tabla de posiciones. Es una función suelta y no un hook para que la
+ * lógica de ramas quede testeable y `useQuery` solo se ocupe del cacheo.
+ */
+export const fetchLeaderboardData = async ({ roundNumber, tournamentId, includeWorldCupBonus }) => {
+  const tournamentRoundNumbers = await fetchTournamentRoundNumbers(tournamentId)
+
+  const normalizedRoundNumber =
+    roundNumber !== null && roundNumber !== undefined && roundNumber !== 'playoffs'
+      ? Number(roundNumber)
+      : roundNumber
+
+  if (tournamentId && (!tournamentRoundNumbers || tournamentRoundNumbers.length === 0)) {
+    return []
+  }
+
+  if (roundNumber === 'playoffs') {
+    let playoffRounds = [17, 18, 19, 20]
+
+    if (tournamentId) {
+      const { data: playoffMatches, error: playoffMatchesError } = await supabase
+        .from('matches')
+        .select('round_number')
+        .eq('is_playoff', true)
+        .eq('tournament_id', tournamentId)
+
+      if (playoffMatchesError) throw playoffMatchesError
+
+      playoffRounds = [...new Set((playoffMatches || []).map(match => match.round_number))]
+    }
+
+    playoffRounds = playoffRounds.filter(round => !STANDALONE_TABLE_ROUNDS.has(round))
+
+    if (!playoffRounds.length) return []
+
+    const roundScoresData = await fetchRoundScoresByRounds(tournamentId, playoffRounds, false)
+
+    return filterHiddenPlayers(
+      buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
+        ...item,
+        round_number: 'playoffs',
+      }))
+    )
+  }
+
+  if (normalizedRoundNumber) {
+    if (tournamentId && !tournamentRoundNumbers.includes(normalizedRoundNumber)) {
+      return []
+    }
+
+    const roundScoresData = await fetchRoundScoresByRounds(
+      tournamentId,
+      [normalizedRoundNumber],
+      false
+    )
+
+    return filterHiddenPlayers(
+      buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
+        ...item,
+        round_number: normalizedRoundNumber,
+      }))
+    )
+  }
+
+  // Tabla general
+  if (!tournamentId) {
+    const { data, error } = await supabase.from('general_leaderboard').select('*')
+
+    if (error) throw error
+    return filterHiddenPlayers(data || [])
+  }
+
+  if (includeWorldCupBonus) {
+    const { data, error } = await supabase.rpc('get_tournament_leaderboard_with_bonus', {
+      p_tournament_id: tournamentId,
+    })
+
+    if (error) throw error
+    return filterHiddenPlayers(data || [])
+  }
+
+  const roundScoresData = await fetchRoundScoresByRounds(tournamentId, tournamentRoundNumbers, true)
+
+  return filterHiddenPlayers(buildLeaderboardFromRoundScores(roundScoresData))
+}
 
 export const useLeaderboard = (
   roundNumber = null,
   tournamentId = null,
   includeWorldCupBonus = false
 ) => {
-  const [leaderboard, setLeaderboard] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  const fetchLeaderboard = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const { data, isPending, error } = useQuery({
+    queryKey: queryKeys.leaderboard(tournamentId, roundNumber, includeWorldCupBonus),
+    queryFn: () => fetchLeaderboardData({ roundNumber, tournamentId, includeWorldCupBonus }),
+  })
 
-      const tournamentRoundNumbers = await fetchTournamentRoundNumbers(tournamentId)
-      const normalizedRoundNumber =
-        roundNumber !== null && roundNumber !== undefined && roundNumber !== 'playoffs'
-          ? Number(roundNumber)
-          : roundNumber
-
-      if (tournamentId && (!tournamentRoundNumbers || tournamentRoundNumbers.length === 0)) {
-        setLeaderboard([])
-        return
-      }
-
-      const fetchRoundScoresByRounds = async (roundNumbers, includeRoundInSelect = false) => {
-        if (!roundNumbers?.length) return []
-
-        const baseSelect = includeRoundInSelect
-          ? `
-            user_id,
-            total_points,
-            round_number,
-            profiles (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          `
-          : `
-            user_id,
-            total_points,
-            profiles (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          `
-
-        // Nunca consultar round_scores sin filtrar por torneo: los round_number
-        // se repiten entre torneos, asi que una query sin scope suma los puntos
-        // de todos. Antes habia un fallback que hacia exactamente eso cuando la
-        // query con tournament_id fallaba, y mezclaba las tablas en silencio.
-        let query = supabase
-          .from('round_scores')
-          .select(baseSelect)
-          .in('round_number', roundNumbers)
-
-        if (tournamentId) {
-          query = query.eq('tournament_id', tournamentId)
-        }
-
-        const { data, error: roundScoresError } = await query
-
-        if (roundScoresError) throw roundScoresError
-        return data || []
-      }
-
-      if (roundNumber === 'playoffs') {
-        let playoffRounds = [17, 18, 19, 20]
-
-        if (tournamentId) {
-          const { data: playoffMatches, error: playoffMatchesError } = await supabase
-            .from('matches')
-            .select('round_number')
-            .eq('is_playoff', true)
-            .eq('tournament_id', tournamentId)
-
-          if (playoffMatchesError) throw playoffMatchesError
-
-          playoffRounds = [...new Set((playoffMatches || []).map(match => match.round_number))]
-        }
-
-        playoffRounds = playoffRounds.filter(r => !STANDALONE_TABLE_ROUNDS.has(r))
-
-        if (!playoffRounds.length) {
-          setLeaderboard([])
-          return
-        }
-
-        const roundScoresData = await fetchRoundScoresByRounds(playoffRounds)
-
-        const formattedData = buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
-          ...item,
-          round_number: 'playoffs',
-        }))
-
-        setLeaderboard(filterHiddenPlayers(formattedData))
-      } else if (normalizedRoundNumber) {
-        if (tournamentId && !tournamentRoundNumbers.includes(normalizedRoundNumber)) {
-          setLeaderboard([])
-          return
-        }
-
-        // Tabla de posiciones por fecha específica
-        const roundScoresData = await fetchRoundScoresByRounds([normalizedRoundNumber])
-
-        // Unificar con la general para evitar filas duplicadas por usuario
-        const formattedData = buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
-          ...item,
-          round_number: normalizedRoundNumber,
-        }))
-
-        setLeaderboard(filterHiddenPlayers(formattedData))
-      } else {
-        // Tabla de posiciones general
-        if (!tournamentId) {
-          // Sin torneo activo, usar vista optimizada original
-          const { data, error: viewError } = await supabase.from('general_leaderboard').select('*')
-
-          if (viewError) throw viewError
-
-          setLeaderboard(filterHiddenPlayers(data || []))
-          return
-        }
-
-        if (includeWorldCupBonus) {
-          const { data: bonusLeaderboard, error: bonusError } = await supabase.rpc(
-            'get_tournament_leaderboard_with_bonus',
-            {
-              p_tournament_id: tournamentId,
-            }
-          )
-
-          if (bonusError) throw bonusError
-
-          setLeaderboard(filterHiddenPlayers(bonusLeaderboard || []))
-          return
-        }
-
-        const roundScoresData = await fetchRoundScoresByRounds(tournamentRoundNumbers, true)
-
-        setLeaderboard(filterHiddenPlayers(buildLeaderboardFromRoundScores(roundScoresData)))
-      }
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [roundNumber, tournamentId, includeWorldCupBonus])
-
-  useEffect(() => {
-    fetchLeaderboard()
-  }, [fetchLeaderboard])
+  const fetchLeaderboard = useCallback(
+    () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leaderboard(tournamentId, roundNumber, includeWorldCupBonus),
+      }),
+    [queryClient, tournamentId, roundNumber, includeWorldCupBonus]
+  )
 
   return {
-    leaderboard,
-    loading,
-    error,
+    leaderboard: data ?? [],
+    loading: isPending,
+    error: error ? error.message : null,
     fetchLeaderboard,
   }
 }
