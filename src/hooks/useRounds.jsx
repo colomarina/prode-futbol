@@ -1,17 +1,31 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { queryKeys } from '../lib/queryKeys'
 import { getNextActiveRoundNumber } from '../utils/matchTiming'
+import { useMatchesMeta } from './useMatchesMeta'
 
+/**
+ * Fechas del torneo y cuál es la activa.
+ *
+ * Este hook se instancia en 9 lugares distintos. Antes cada instancia disparaba
+ * dos queries encadenadas (rondas y después partidos), o sea 18 consultas por
+ * pantalla; ahora las dos comparten cache y corren en paralelo, porque no
+ * dependen una de la otra.
+ *
+ * @param {string|null} tournamentId
+ */
 export const useRounds = (tournamentId = null) => {
-  const [rounds, setRounds] = useState([])
-  const [activeRound, setActiveRound] = useState(null)
-  const [matches, setMatches] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const queryClient = useQueryClient()
 
-  const fetchRounds = useCallback(async () => {
-    try {
-      setLoading(true)
+  const {
+    data: rounds,
+    isPending: roundsLoading,
+    error: roundsError,
+    refetch: refetchRounds,
+  } = useQuery({
+    queryKey: queryKeys.rounds(tournamentId),
+    queryFn: async () => {
       let query = supabase.from('rounds').select('*')
 
       if (tournamentId) {
@@ -21,37 +35,45 @@ export const useRounds = (tournamentId = null) => {
       const { data, error } = await query.order('round_number', { ascending: true })
 
       if (error) throw error
+      return data || []
+    },
+  })
 
-      setRounds(data || [])
+  const {
+    matchesMeta,
+    loading: matchesLoading,
+    error: matchesError,
+    refetch: refetchMatches,
+  } = useMatchesMeta(tournamentId)
 
-      let matchesQuery = supabase.from('matches').select('id, round_number, match_date')
+  const roundsList = useMemo(() => rounds ?? [], [rounds])
 
-      if (tournamentId) {
-        matchesQuery = matchesQuery.eq('tournament_id', tournamentId)
-      }
+  /**
+   * La fecha activa se deriva de los match_date, no de rounds.status.
+   *
+   * Mientras los partidos no llegaron hay que devolver null, no calcular con una
+   * lista vacia: sin partidos `getNextActiveRoundNumber` cae a su ultimo fallback
+   * y devuelve el round_number mas alto del torneo. Como ahora las dos consultas
+   * corren en paralelo, `rounds` puede resolver primero, y los consumidores
+   * tomaban esa fecha equivocada como definitiva: `PredictionForm` pedia los
+   * partidos y los pronosticos de la ultima fecha del torneo y recien despues
+   * saltaba a la correcta. La version encadenada no tenia el problema porque
+   * calculaba la fecha activa con las dos respuestas ya en la mano.
+   */
+  const activeRound = useMemo(() => {
+    if (matchesLoading) return null
 
-      const { data: matchesData, error: matchesError } = await matchesQuery
+    const activeRoundNumber = getNextActiveRoundNumber(roundsList, matchesMeta)
+    return roundsList.find(round => round.round_number === activeRoundNumber) || null
+  }, [roundsList, matchesMeta, matchesLoading])
 
-      if (matchesError) throw matchesError
+  const invalidateRounds = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: queryKeys.rounds(tournamentId) }),
+    [queryClient, tournamentId]
+  )
 
-      setMatches(matchesData || [])
-
-      const activeRoundNumber = getNextActiveRoundNumber(data || [], matchesData || [])
-      const active = (data || []).find(r => r.round_number === activeRoundNumber) || null
-      setActiveRound(active)
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [tournamentId])
-
-  useEffect(() => {
-    fetchRounds()
-  }, [fetchRounds])
-
-  const updateRoundStatus = async (roundNumber, status) => {
-    try {
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ roundNumber, status }) => {
       let query = supabase
         .from('rounds')
         .update({ status, updated_at: new Date().toISOString() })
@@ -62,133 +84,74 @@ export const useRounds = (tournamentId = null) => {
       }
 
       const { error } = await query
-
       if (error) throw error
+    },
+    onSuccess: invalidateRounds,
+  })
 
-      setRounds(prev => {
-        const updated = prev.map(r =>
-          r.round_number === roundNumber
-            ? { ...r, status, updated_at: new Date().toISOString() }
-            : r
-        )
-        const activeRoundNumber = getNextActiveRoundNumber(updated, matches)
-        const active = updated.find(r => r.round_number === activeRoundNumber) || null
-        setActiveRound(active)
-        return updated
-      })
-
-      return { error: null }
-    } catch (error) {
-      return { error }
-    }
-  }
-
-  const lockRound = async roundNumber => {
-    try {
-      let query = supabase
-        .from('rounds')
-        .update({ status: 'locked', updated_at: new Date().toISOString() })
-        .eq('round_number', roundNumber)
-
-      if (tournamentId) {
-        query = query.eq('tournament_id', tournamentId)
+  /**
+   * Se conserva el contrato `{ error }` en vez de propagar la excepción: los
+   * componentes que llaman a esto ya manejan la respuesta así y muestran su
+   * propio toast.
+   */
+  const runStatusMutation = useCallback(
+    async (roundNumber, status) => {
+      try {
+        await updateStatusMutation.mutateAsync({ roundNumber, status })
+        return { error: null }
+      } catch (error) {
+        return { error }
       }
+    },
+    [updateStatusMutation]
+  )
 
-      const { error } = await query
+  const updateRoundStatus = useCallback(
+    (roundNumber, status) => runStatusMutation(roundNumber, status),
+    [runStatusMutation]
+  )
 
-      if (error) throw error
+  const lockRound = useCallback(
+    roundNumber => runStatusMutation(roundNumber, 'locked'),
+    [runStatusMutation]
+  )
 
-      setRounds(prev => {
-        const updated = prev.map(r =>
-          r.round_number === roundNumber
-            ? { ...r, status: 'locked', updated_at: new Date().toISOString() }
-            : r
-        )
-        const activeRoundNumber = getNextActiveRoundNumber(updated, matches)
-        const active = updated.find(r => r.round_number === activeRoundNumber) || null
-        setActiveRound(active)
-        return updated
-      })
+  const finishRound = useCallback(
+    roundNumber => runStatusMutation(roundNumber, 'finished'),
+    [runStatusMutation]
+  )
 
-      return { error: null }
-    } catch (error) {
-      return { error }
+  const openNextRound = useCallback(async () => {
+    const pendingRound = roundsList.find(round => round.status === 'pending')
+
+    if (!pendingRound) {
+      return { error: new Error('No hay fechas pendientes para abrir') }
     }
-  }
 
-  const finishRound = async roundNumber => {
-    try {
-      let query = supabase
-        .from('rounds')
-        .update({ status: 'finished', updated_at: new Date().toISOString() })
-        .eq('round_number', roundNumber)
+    return runStatusMutation(pendingRound.round_number, 'open')
+  }, [roundsList, runStatusMutation])
 
-      if (tournamentId) {
-        query = query.eq('tournament_id', tournamentId)
-      }
+  const isRoundOpen = useCallback(
+    roundNumber => roundsList.find(round => round.round_number === roundNumber)?.status === 'open',
+    [roundsList]
+  )
 
-      const { error } = await query
-
-      if (error) throw error
-
-      setRounds(prev => {
-        const updated = prev.map(r =>
-          r.round_number === roundNumber
-            ? { ...r, status: 'finished', updated_at: new Date().toISOString() }
-            : r
-        )
-        const activeRoundNumber = getNextActiveRoundNumber(updated, matches)
-        const active = updated.find(r => r.round_number === activeRoundNumber) || null
-        setActiveRound(active)
-        return updated
-      })
-
-      return { error: null }
-    } catch (error) {
-      return { error }
-    }
-  }
-
-  const openNextRound = async () => {
-    try {
-      // Buscar la primera fecha en estado 'pending' usando el estado actual
-      let pendingRound = null
-      setRounds(prev => {
-        pendingRound = prev.find(r => r.status === 'pending')
-        return prev
-      })
-
-      if (!pendingRound) {
-        throw new Error('No hay fechas pendientes para abrir')
-      }
-
-      // Abrir la fecha pending
-      await updateRoundStatus(pendingRound.round_number, 'open')
-
-      return { error: null }
-    } catch (error) {
-      return { error }
-    }
-  }
-
-  const isRoundOpen = roundNumber => {
-    const round = rounds.find(r => r.round_number === roundNumber)
-    return round?.status === 'open'
-  }
-
-  const canPredictRound = roundNumber => isRoundOpen(roundNumber)
+  const fetchRounds = useCallback(() => {
+    refetchRounds()
+    refetchMatches()
+  }, [refetchRounds, refetchMatches])
 
   return {
-    rounds,
+    rounds: roundsList,
     activeRound,
-    loading,
-    error,
+    loading: roundsLoading || matchesLoading,
+    error: roundsError ? roundsError.message : matchesError,
     fetchRounds,
     updateRoundStatus,
     openNextRound,
     lockRound,
     finishRound,
     isRoundOpen,
-    canPredictRound,
+    canPredictRound: isRoundOpen,
   }
 }

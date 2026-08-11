@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { TournamentProvider, useTournament } from './contexts/TournamentContext'
@@ -9,7 +10,15 @@ import TournamentSelector from './components/TournamentSelector'
 import ErrorBoundary from './components/Common/ErrorBoundary'
 import ConfigError from './components/Common/ConfigError'
 import { missingSupabaseEnvVars } from './lib/supabase'
+import { createQueryClient } from './lib/queryClient'
 import { filterVisibleTournaments, isTestTournament } from './utils/tournamentAccess'
+
+// Lazy + solo en dev: en produccion el chunk no se pide nunca.
+const ReactQueryDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/react-query-devtools').then(m => ({ default: m.ReactQueryDevtools }))
+    )
+  : null
 
 // Optional switch:
 // - false (default): only active tournaments are accessible to everyone.
@@ -61,12 +70,20 @@ function AppContent() {
   )
 
   // Safety guard: if someone forces a blocked tournament (e.g. localStorage), clear it.
+  //
+  // Se espera a que termine de cargar la sesion: el efecto corre en cada render,
+  // tambien mientras la pantalla muestra el spinner. Si la lista de torneos
+  // resolvia antes que el perfil, `isAdmin()` todavia era false —`profile` es
+  // null— y un torneo de prueba se veia como inaccesible: el guard lo limpiaba y
+  // borraba `active_tournament_slug`, asi que al admin lo devolvia al selector en
+  // cada recarga y le perdia la preferencia.
   useEffect(() => {
+    if (loading) return
     if (!activeTournament) return
     if (!canAccessTournament(activeTournament)) {
       setActiveTournament(null)
     }
-  }, [activeTournament, canAccessTournament, setActiveTournament])
+  }, [activeTournament, canAccessTournament, setActiveTournament, loading])
 
   useEffect(() => {
     const defaultTitle = 'Prode Chiqui Tapia'
@@ -170,6 +187,10 @@ function AppContent() {
 }
 
 function App() {
+  // Se crea una sola vez por montaje de la app: si se instanciara en el cuerpo
+  // del componente, cada render tiraria el cache entero a la basura.
+  const [queryClient] = useState(createQueryClient)
+
   // Antes que los providers: sin credenciales de Supabase no hay nada que
   // renderizar, y todos ellos intentarian consultar apenas montan.
   if (missingSupabaseEnvVars.length > 0) {
@@ -178,13 +199,20 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <TournamentProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </TournamentProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TournamentProvider>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </TournamentProvider>
+        </ThemeProvider>
+        {ReactQueryDevtools && (
+          <Suspense fallback={null}>
+            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+          </Suspense>
+        )}
+      </QueryClientProvider>
     </ErrorBoundary>
   )
 }
