@@ -699,6 +699,7 @@ export default function RoundManager() {
             {rounds.map(round => {
               const statusConfig = getStatusConfig(round.status)
               const isActive = round.status === 'open'
+              const roundMatches = matchesByRound[round.round_number]
 
               return (
                 <div
@@ -748,6 +749,35 @@ export default function RoundManager() {
                       <span>{statusConfig.icon}</span>
                       <span>{statusConfig.label}</span>
                     </span>
+                    {/* El conteo de partidos vivia solo dentro del boton Finalizar, que
+                        aparece nada mas cuando la fecha esta bloqueada: en una fecha
+                        finalizada o pendiente no habia forma de ver cuantos partidos
+                        tiene ni cuantos se cargaron. */}
+                    {roundMatches && (
+                      <span
+                        title={`Partidos finalizados: ${roundMatches.finished}/${roundMatches.total}`}
+                        style={{
+                          backgroundColor: 'var(--color-surface-highlight)',
+                          border: '2px solid var(--color-border)',
+                          color:
+                            roundMatches.finished === roundMatches.total
+                              ? 'var(--color-primary)'
+                              : 'var(--color-text-secondary)',
+                          padding: '3px 10px',
+                          borderRadius: '8px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                        }}
+                      >
+                        <span aria-hidden="true">⚽</span>
+                        <span>
+                          {roundMatches.finished}/{roundMatches.total}
+                        </span>
+                      </span>
+                    )}
                   </div>
 
                   {/* Status Selector */}

@@ -48,11 +48,24 @@ export const useRounds = (tournamentId = null) => {
 
   const roundsList = useMemo(() => rounds ?? [], [rounds])
 
-  // La fecha activa se deriva de los match_date, no de rounds.status.
+  /**
+   * La fecha activa se deriva de los match_date, no de rounds.status.
+   *
+   * Mientras los partidos no llegaron hay que devolver null, no calcular con una
+   * lista vacia: sin partidos `getNextActiveRoundNumber` cae a su ultimo fallback
+   * y devuelve el round_number mas alto del torneo. Como ahora las dos consultas
+   * corren en paralelo, `rounds` puede resolver primero, y los consumidores
+   * tomaban esa fecha equivocada como definitiva: `PredictionForm` pedia los
+   * partidos y los pronosticos de la ultima fecha del torneo y recien despues
+   * saltaba a la correcta. La version encadenada no tenia el problema porque
+   * calculaba la fecha activa con las dos respuestas ya en la mano.
+   */
   const activeRound = useMemo(() => {
+    if (matchesLoading) return null
+
     const activeRoundNumber = getNextActiveRoundNumber(roundsList, matchesMeta)
     return roundsList.find(round => round.round_number === activeRoundNumber) || null
-  }, [roundsList, matchesMeta])
+  }, [roundsList, matchesMeta, matchesLoading])
 
   const invalidateRounds = useCallback(
     () => queryClient.invalidateQueries({ queryKey: queryKeys.rounds(tournamentId) }),

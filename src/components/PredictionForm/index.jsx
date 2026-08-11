@@ -130,6 +130,13 @@ export default function PredictionForm() {
   }, [activeTournament?.id])
 
   useEffect(() => {
+    // Hay que esperar a que `useRounds` termine: `availableRounds` esta ordenado
+    // descendente, asi que su primer elemento es la fecha mas alta del torneo. Si
+    // las fechas ya llegaron pero los partidos no, `activeRound` todavia es null y
+    // este fallback elegia esa ultima fecha, pedia sus partidos y sus pronosticos,
+    // y recien despues saltaba a la correcta. El fallback sigue existiendo para el
+    // torneo que ya se jugo entero, donde no hay ninguna fecha activa.
+    if (roundsLoading) return
     if (availableRounds.length === 0) return
 
     if (activeRound && !hasManualRoundSelection.current) {
@@ -142,7 +149,7 @@ export default function PredictionForm() {
     if (!selectedRound) {
       setSelectedRound(availableRounds[0].round_number)
     }
-  }, [activeRound, availableRounds, selectedRound])
+  }, [activeRound, availableRounds, selectedRound, roundsLoading])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {
