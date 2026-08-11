@@ -4,6 +4,28 @@ import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { useAuth } from '../contexts/AuthContext'
 
+/**
+ * TODO(mundial): la migración a react query de este hook NO se validó contra la
+ * app. Se decidió no probarla en la fase 3b porque el próximo mundial es en 2030
+ * y el único torneo `world_cup` de la base (`mundial-2026`) está `finished`, o sea
+ * que las escrituras de admin no se pueden ejercitar sin tocar datos reales.
+ *
+ * Lo que quedó sin probar, cuando haya que retomarlo (ver la sección 5 de
+ * `docs/pruebas-fase-3b.md`):
+ *   - que el formulario de bonus cargue con los valores ya guardados
+ *   - guardar una respuesta y que persista al recargar (`upsert_world_cup_prediction`)
+ *   - el bloqueo desde el panel admin (`admin_set_world_cup_lock`,
+ *     `admin_lock_world_cup_predictions`)
+ *   - cargar resultados oficiales
+ *   - `recalculate_world_cup_bonus` y, sobre todo, que la tabla de posiciones
+ *     refleje los puntos nuevos SIN recargar la página: es lo que depende de que
+ *     la invalidación alcance a la query del leaderboard con bonus
+ *   - el contador de pronósticos cargados del panel admin
+ *
+ * Para probarlo hace falta un torneo de prueba con `type = 'world_cup'`, `status
+ * = 'active'` y su fila en `world_cup_bonus_config`.
+ */
+
 /** Mapea los 14 campos del formulario a los parámetros de las RPC. */
 const toRpcParams = (tournamentId, values) => ({
   p_tournament_id: tournamentId,
