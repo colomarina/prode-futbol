@@ -82,6 +82,14 @@ export const ADMIN_SECTIONS = [
 /** Vista sin secciones: no muestra tabs, pero sí tiene ruta propia. */
 export const PROFILE_PATH = '/perfil'
 
+/**
+ * El path que tenía el perfil antes del router. Los mails de recuperación que
+ * Supabase ya envió apuntan acá, así que la ruta sigue existiendo solo para
+ * redirigir. Se puede borrar cuando no queden mails viejos circulando (el link
+ * de recuperación caduca, así que unos meses alcanzan).
+ */
+export const LEGACY_PROFILE_PATH = '/profile'
+
 export const PAGES_WITH_SECTIONS = {
   tournament: {
     sections: TOURNAMENT_SECTIONS,

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   PAGES_WITH_SECTIONS,
+  LEGACY_PROFILE_PATH,
   PROFILE_PATH,
   TOURNAMENT_SECTIONS,
   ADMIN_SECTIONS,
@@ -101,6 +102,20 @@ describe('resolveRoute', () => {
     expect(resolveRoute('/pronosticos').sectionId).toBe('predictions')
     expect(resolveRoute('/posiciones').sectionId).toBe('leaderboard')
     expect(resolveRoute('/playoffs').sectionId).toBe('playoffs')
+  })
+})
+
+describe('path viejo del perfil', () => {
+  it('no coincide con el path nuevo', () => {
+    // Si alguien igualara los dos, la ruta puente de /profile redirigiria a si
+    // misma y el navegador quedaria en un loop.
+    expect(LEGACY_PROFILE_PATH).not.toBe(PROFILE_PATH)
+  })
+
+  it('no le pisa el path a ninguna seccion real', () => {
+    // La ruta puente se declara antes del catch-all: si compartiera path con una
+    // pantalla, la taparia.
+    expect(allSections.map(section => section.path)).not.toContain(LEGACY_PROFILE_PATH)
   })
 })
 

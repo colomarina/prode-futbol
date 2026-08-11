@@ -1,5 +1,13 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import { useTournament } from './contexts/TournamentContext'
 import { useHomePath } from './hooks/useHomePath'
@@ -7,6 +15,7 @@ import ErrorBoundary from './components/Common/ErrorBoundary'
 import LoadingState from './components/Common/LoadingState'
 import {
   INFO_SECTIONS,
+  LEGACY_PROFILE_PATH,
   PROFILE_PATH,
   getSectionPath,
 } from './components/Navigation/pages-with-sections.config'
@@ -30,6 +39,25 @@ const Page = ({ children }) => (
     <Suspense fallback={<LoadingState />}>{children}</Suspense>
   </ErrorBoundary>
 )
+
+/**
+ * Puente desde el path viejo del perfil.
+ *
+ * Sin esta ruta, `/profile` caía en el catch-all y terminaba en la pantalla de
+ * inicio: quien abriera un mail de recuperación ya enviado quedaba con la sesión
+ * de recuperación abierta pero sin el formulario para definir la clave, que vive
+ * solo en `/perfil`.
+ *
+ * Se conservan `search` y `hash` porque ahí viene el `access_token` del mail. En
+ * la práctica supabase-js suele consumir el fragmento al inicializarse, antes de
+ * que el router redirija, pero reenviarlo no cuesta nada y cubre el caso en que
+ * todavía esté ahí.
+ */
+const LegacyProfileRedirect = () => {
+  const { search, hash } = useLocation()
+
+  return <Navigate to={{ pathname: PROFILE_PATH, search, hash }} replace />
+}
 
 /** Las secciones mundialistas solo existen en el torneo del Mundial. */
 const MundialRoute = ({ children }) => {
@@ -166,6 +194,7 @@ export default function AppRoutes() {
           </Page>
         }
       />
+      <Route path={LEGACY_PROFILE_PATH} element={<LegacyProfileRedirect />} />
 
       <Route path="/admin" element={<Navigate to={getSectionPath('admin-matches')} replace />} />
       <Route
