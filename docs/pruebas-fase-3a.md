@@ -24,7 +24,8 @@ corrida se corrieron además tres aserciones:
 - ninguna consulta a un torneo que no sea el activo
 - ningún error de JS en la consola
 
-**Total: 0 violaciones en ~145 requests.**
+**Total: 0 violaciones en ~200 requests**, sobre los dos torneos de prueba y
+también sobre `clausura-2026` y `mundial-2026`.
 
 ---
 
@@ -105,6 +106,29 @@ prueba. Funciona como UI, no como seguridad.
 `test-sandbox` ↔ `test-vacio` sin rastros del otro, y cada request con su propio
 `tournament_id`.
 
+### Las otras pantallas que consumen los hooks migrados
+
+`useRounds` / `useMatches` se instancian en 8 lugares. Además de los de arriba se
+abrieron **Ver Pronósticos**, **Estadísticas** y **Admin → Horarios de Partidos**:
+las tres cargan, con el selector completo y sin pedir la última fecha del torneo.
+En Horarios, entrar dispara **0** requests —todo del cache— y elegir otra fecha
+dispara exactamente uno.
+
+`Reglas` y `Mi Perfil` también se abrieron: 0 requests, sin errores.
+
+### Torneos reales (solo lectura)
+
+Para cubrir volumen y el tipo `world_cup`, que el sandbox no representa:
+
+- **`clausura-2026`** (16 fechas): al entrar pide la **fecha 4**, la activa real, no
+  la 16 que es la más alta. Es la confirmación de que BUG-2 está arreglado contra
+  el torneo en curso y no solo contra datos de prueba.
+- **`mundial-2026`** (8 fechas, **104 partidos**): carga bien y el selector de la
+  tabla muestra las ramas de `isWorldCupTournament` ("🥊 Cuartos a Final",
+  "📅 Octavos de final", "📅 16vos de final").
+
+Sin escrituras: en esa pasada los únicos POST fueron las RPC de lectura.
+
 ### Scoring de punta a punta
 
 Pronóstico 2-1 → resultado 2-1 → `predictions.points = 3` → fila en
@@ -145,10 +169,20 @@ que antes no mostraban nada.
 
 ## Qué no cubre esta prueba
 
-- **Volumen real de datos.** Con 5 fechas no se ve si algo se degrada con el
-  historial completo del torneo real.
+- **Escrituras sobre los torneos reales.** Se navegaron en modo lectura; cargar
+  resultados y cambiar estados de fecha solo se probó en el sandbox.
 - **RLS más allá de la lectura.** Se probó con una cuenta no admin, pero no se
   intentó forzar escrituras contra las policies.
+- **`useAllPredictions` sigue duplicando la consulta compartida.** Hace su propio
+  `matches?select=id,round_number,match_date` (líneas 59-72), que es un
+  subconjunto de `useMatchesMeta`. No es una regresión —ese hook todavía no está
+  migrado— pero es justo lo que `useMatchesMeta` vino a eliminar: candidato
+  directo para la fase 3b.
+- **En `clausura-2026` la tabla de posiciones no ofrece fechas sueltas**, solo
+  General y Playoffs. `LeadboardHeader` filtra por `status` en
+  `open`/`locked`/`finished`, y las 16 fechas de ese torneo están en `pending`
+  (la app deriva la fecha activa de los `match_date`, no del status, así que
+  nadie necesitó tocarlo). Es anterior a esta rama, pero vale mirarlo aparte.
 - **Los puntos de los partidos pre-sembrados.** `update_prediction_points` es
   `AFTER UPDATE` sobre `matches`: los partidos que el seed inserta ya terminados
   nunca disparan el cálculo, así que quedan en 0 pts (se ve en el cuarto de final
