@@ -133,6 +133,48 @@ describe('useRounds', () => {
     expect(result.current.rounds).toEqual([])
   })
 
+  it('no toma la ultima fecha como activa mientras los partidos no llegaron', async () => {
+    // Las dos consultas corren en paralelo, asi que `rounds` puede resolver
+    // primero. Con la lista de partidos vacia, getNextActiveRoundNumber cae a su
+    // ultimo fallback y devuelve el round_number mas alto: 17. Los consumidores
+    // tomaban esa fecha como definitiva y pedian sus partidos y pronosticos.
+    let resolverPartidos
+    const partidosPendientes = new Promise(resolve => {
+      resolverPartidos = resolve
+    })
+
+    mock = createSupabaseMock({
+      rounds: {
+        data: [...ROUNDS_T1, { round_number: 17, status: 'pending', tournament_id: 't1' }],
+        error: null,
+      },
+      matches: partidosPendientes,
+    })
+    const { wrapper } = createWrapper()
+    const { useRounds } = await import('./useRounds')
+
+    const { result } = renderHook(() => useRounds('t1'), { wrapper })
+
+    await waitFor(() => expect(result.current.rounds).toHaveLength(3))
+    expect(result.current.activeRound).toBeNull()
+
+    resolverPartidos({
+      data: [
+        ...MATCHES_T1,
+        {
+          id: 'm17',
+          round_number: 17,
+          match_date: new Date(NOW.getTime() + 240 * HOUR).toISOString(),
+        },
+      ],
+      error: null,
+    })
+
+    // Con los partidos en la mano, la activa es la 2: la mas proxima que todavia
+    // admite pronosticos, no la ultima del torneo.
+    await waitFor(() => expect(result.current.activeRound?.round_number).toBe(2))
+  })
+
   it('openNextRound avisa cuando no hay fechas pendientes', async () => {
     mock = createSupabaseMock({
       rounds: { data: ROUNDS_T1, error: null },

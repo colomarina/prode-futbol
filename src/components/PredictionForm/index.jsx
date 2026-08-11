@@ -88,8 +88,44 @@ export default function PredictionForm() {
         }
       })
 
+    /**
+     * Los partidos donde el usuario cambio algo y el plazo vencio antes de que
+     * apretara Guardar. El filtro de arriba los descarta, y antes eso pasaba en
+     * silencio: si era el unico que habia cargado, apretar Guardar no hacia nada
+     * —ni un toast— y quedaba creyendo que se guardo. No hay contador en vivo, asi
+     * que el input sigue habilitado hasta que algo dispare un re-render.
+     *
+     * Se compara contra el pronostico ya guardado y no alcanza con "tiene valores":
+     * `MatchPrediction` siembra `predictionValues` con lo que ya estaba guardado
+     * (su efecto de "inicializar valores desde prediccion existente"), asi que
+     * mirar solo si hay valores contaba partidos que el usuario nunca toco, incluido
+     * alguno ya jugado y con resultado cargado.
+     */
+    const vencidos = matches.filter(match => {
+      if (canPredictMatch(match.match_date)) return false
+
+      const values = predictionValues[match.id]
+      if (!values?.home || !values?.away) return false
+
+      const guardado = predictionsByMatchId.get(match.id)
+      if (!guardado) return true
+
+      return (
+        String(guardado.home_prediction) !== String(values.home) ||
+        String(guardado.away_prediction) !== String(values.away)
+      )
+    })
+
     if (predictionsData.length === 0) {
       setSaving(false)
+      setToast(
+        vencidos.length > 0
+          ? {
+              message: `El plazo venció mientras cargabas: ${vencidos.length === 1 ? 'ese pronóstico no se guardó' : `esos ${vencidos.length} pronósticos no se guardaron`}.`,
+              type: 'warning',
+            }
+          : { message: 'No hay pronósticos para guardar', type: 'warning' }
+      )
       return
     }
 
@@ -99,9 +135,14 @@ export default function PredictionForm() {
     setSaving(false)
 
     if (!error) {
+      const guardados = `${predictionsData.length} pronóstico${predictionsData.length > 1 ? 's' : ''} guardado${predictionsData.length > 1 ? 's' : ''} correctamente`
+
       setToast({
-        message: `${predictionsData.length} pronóstico${predictionsData.length > 1 ? 's' : ''} guardado${predictionsData.length > 1 ? 's' : ''} correctamente`,
-        type: 'success',
+        message:
+          vencidos.length > 0
+            ? `${guardados}. ${vencidos.length === 1 ? 'Otro quedó' : `Otros ${vencidos.length} quedaron`} afuera porque venció el plazo.`
+            : guardados,
+        type: vencidos.length > 0 ? 'warning' : 'success',
       })
     } else {
       setToast({
@@ -109,7 +150,7 @@ export default function PredictionForm() {
         type: 'error',
       })
     }
-  }, [matches, predictionValues, batchUpsertPredictions, isReadOnly])
+  }, [matches, predictionValues, predictionsByMatchId, batchUpsertPredictions, isReadOnly])
 
   // Verificar si hay al menos un pronóstico para guardar
   const hasValidPredictions = useMemo(
@@ -130,6 +171,13 @@ export default function PredictionForm() {
   }, [activeTournament?.id])
 
   useEffect(() => {
+    // Hay que esperar a que `useRounds` termine: `availableRounds` esta ordenado
+    // descendente, asi que su primer elemento es la fecha mas alta del torneo. Si
+    // las fechas ya llegaron pero los partidos no, `activeRound` todavia es null y
+    // este fallback elegia esa ultima fecha, pedia sus partidos y sus pronosticos,
+    // y recien despues saltaba a la correcta. El fallback sigue existiendo para el
+    // torneo que ya se jugo entero, donde no hay ninguna fecha activa.
+    if (roundsLoading) return
     if (availableRounds.length === 0) return
 
     if (activeRound && !hasManualRoundSelection.current) {
@@ -142,7 +190,7 @@ export default function PredictionForm() {
     if (!selectedRound) {
       setSelectedRound(availableRounds[0].round_number)
     }
-  }, [activeRound, availableRounds, selectedRound])
+  }, [activeRound, availableRounds, selectedRound, roundsLoading])
 
   // Mientras carga la información de fechas o se está auto-seleccionando
   if (roundsLoading) {

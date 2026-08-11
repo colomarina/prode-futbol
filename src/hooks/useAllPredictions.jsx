@@ -39,6 +39,20 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     },
   })
 
+  /**
+   * El 👀 de la tabla de posiciones entra con un `initialUser`, y esta pantalla
+   * arranca en la vista por partido. El efecto de abajo solo aplica `initialUser`
+   * cuando el modo YA es 'by-user', asi que sin este cambio de modo el jugador
+   * nunca se seleccionaba: se aterrizaba en la vista por partido y el deep link
+   * quedaba a medias (la fecha si llegaba, porque va por useState).
+   *
+   * No se pisa con el efecto de `viewMode`: ese limpia `selectedUser` solo al
+   * SALIR de la vista por usuario.
+   */
+  useEffect(() => {
+    if (initialUser) setViewMode('by-user')
+  }, [initialUser])
+
   useEffect(() => {
     if (initialUser && viewMode === 'by-user') setSelectedUser(initialUser)
   }, [initialUser, viewMode])

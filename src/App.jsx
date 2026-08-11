@@ -75,12 +75,20 @@ function AppContent() {
   )
 
   // Safety guard: if someone forces a blocked tournament (e.g. localStorage), clear it.
+  //
+  // Se espera a que termine de cargar la sesion: el efecto corre en cada render,
+  // tambien mientras la pantalla muestra el spinner. Si la lista de torneos
+  // resolvia antes que el perfil, `isAdmin()` todavia era false —`profile` es
+  // null— y un torneo de prueba se veia como inaccesible: el guard lo limpiaba y
+  // borraba `active_tournament_slug`, asi que al admin lo devolvia al selector en
+  // cada recarga y le perdia la preferencia.
   useEffect(() => {
+    if (loading) return
     if (!activeTournament) return
     if (!canAccessTournament(activeTournament)) {
       setActiveTournament(null)
     }
-  }, [activeTournament, canAccessTournament, setActiveTournament])
+  }, [activeTournament, canAccessTournament, setActiveTournament, loading])
 
   useEffect(() => {
     const defaultTitle = 'Prode Chiqui Tapia'

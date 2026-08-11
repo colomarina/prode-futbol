@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { useAuth } from '../contexts/AuthContext'
-import { canPredictMatch } from '../utils/matchTiming'
 
 const PREDICTION_WITH_MATCH = `
   *,
@@ -73,59 +72,19 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
     [queryClient, tournamentId, roundNumber, userId]
   )
 
-  const createMutation = useMutation({
-    mutationFn: async ({ matchId, homePrediction, awayPrediction, qualifierPredictionId }) => {
-      // Revalidación contra la fecha real del partido: el guard de la UI puede
-      // estar desactualizado si la pestaña quedó abierta un rato largo.
-      const { data: match } = await supabase
-        .from('matches')
-        .select('match_date')
-        .eq('id', matchId)
-        .single()
-
-      if (match && !canPredictMatch(match.match_date)) {
-        throw new Error('Ya no se pueden cargar predicciones para este partido')
-      }
-
-      const { data: created, error: createError } = await supabase
-        .from('predictions')
-        .insert([
-          {
-            user_id: userId,
-            match_id: matchId,
-            home_prediction: homePrediction,
-            away_prediction: awayPrediction,
-            qualifier_prediction_id: qualifierPredictionId,
-          },
-        ])
-        .select()
-
-      if (createError) throw createError
-      return created
-    },
-    onSuccess: invalidatePredictions,
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ predictionId, homePrediction, awayPrediction, qualifierPredictionId }) => {
-      const { data: updated, error: updateError } = await supabase
-        .from('predictions')
-        .update({
-          home_prediction: homePrediction,
-          away_prediction: awayPrediction,
-          qualifier_prediction_id: qualifierPredictionId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', predictionId)
-        .eq('user_id', userId)
-        .select()
-
-      if (updateError) throw updateError
-      return updated
-    },
-    onSuccess: invalidatePredictions,
-  })
-
+  /**
+   * Acá vivian `createMutation` y `updateMutation`, que no llamaba nadie: el unico
+   * camino de escritura es el upsert batch de `PredictionForm`. Se borraron porque
+   * `createMutation` era el unico lugar con una revalidacion del cutoff contra la
+   * fecha real del partido, y tenerla ahi daba a entender que la capa de datos
+   * protegia el cierre de pronosticos cuando en realidad no corria nunca.
+   *
+   * Quien protege el cutoff hoy es el filtro de `PredictionForm`
+   * (`matches.filter(canPredictMatch)`), evaluado al momento de guardar. La base no
+   * lo valida: las policies de `predictions` solo chequean `user_id = auth.uid()`.
+   * Si algun dia hace falta que sea una regla y no una convencion de la UI, el
+   * lugar es un trigger en `predictions`, no este hook.
+   */
   const batchUpsertMutation = useMutation({
     mutationFn: async predictionsData => {
       const now = new Date().toISOString()
@@ -166,28 +125,6 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
     [userId]
   )
 
-  const createPrediction = useCallback(
-    (matchId, homePrediction, awayPrediction, qualifierPredictionId = null) =>
-      runMutation(createMutation, {
-        matchId,
-        homePrediction,
-        awayPrediction,
-        qualifierPredictionId,
-      }),
-    [runMutation, createMutation]
-  )
-
-  const updatePrediction = useCallback(
-    (predictionId, homePrediction, awayPrediction, qualifierPredictionId = null) =>
-      runMutation(updateMutation, {
-        predictionId,
-        homePrediction,
-        awayPrediction,
-        qualifierPredictionId,
-      }),
-    [runMutation, updateMutation]
-  )
-
   const batchUpsertPredictions = useCallback(
     predictionsData => runMutation(batchUpsertMutation, predictionsData),
     [runMutation, batchUpsertMutation]
@@ -205,8 +142,6 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
     loading: Boolean(userId) && Boolean(roundNumber) && isPending,
     error: error ? error.message : null,
     fetchPredictions: invalidatePredictions,
-    createPrediction,
-    updatePrediction,
     batchUpsertPredictions,
     getUserPredictionForMatch,
   }
