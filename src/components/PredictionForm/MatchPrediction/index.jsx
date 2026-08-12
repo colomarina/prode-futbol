@@ -226,7 +226,7 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
             position: 'absolute',
             top: '12px',
             left: '55px',
-            zIndex: 2,
+            zIndex: 'var(--z-raised)',
           }}
         >
           <InfoButton message="Partido de la fecha" ariaLabel="Partido de la fecha" />

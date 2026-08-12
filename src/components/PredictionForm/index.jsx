@@ -363,7 +363,14 @@ export default function PredictionForm() {
 
       {/* Botón único para guardar todos */}
       {hasEditableMatches && (
-        <div style={{ marginTop: '24px', position: 'sticky', bottom: '20px', zIndex: 10 }}>
+        <div
+          style={{
+            marginTop: '24px',
+            position: 'sticky',
+            bottom: '20px',
+            zIndex: 'var(--z-sticky)',
+          }}
+        >
           <button
             onClick={handleSaveAll}
             disabled={saving || !hasValidPredictions}

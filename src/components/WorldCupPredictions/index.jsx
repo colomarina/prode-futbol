@@ -278,7 +278,14 @@ export default function WorldCupPredictions() {
       </div>
 
       {!isLocked && (
-        <div style={{ marginTop: '24px', position: 'sticky', bottom: '20px', zIndex: 10 }}>
+        <div
+          style={{
+            marginTop: '24px',
+            position: 'sticky',
+            bottom: '20px',
+            zIndex: 'var(--z-sticky)',
+          }}
+        >
           <button
             className="btn btn-primary"
             onClick={handleSave}
