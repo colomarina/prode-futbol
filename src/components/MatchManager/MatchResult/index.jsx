@@ -1,23 +1,16 @@
 import { useCallback, memo, useEffect, useMemo, useRef } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
+import ScoreInput, { ScoreSeparator } from '../../Common/ScoreInput'
 import { canLoadResult, getResultLoadTime } from '../../../utils/matchTiming'
-
-const parseScoreValue = value => {
-  if (value === '' || value === null || value === undefined) return null
-  const parsed = Number(value)
-  return Number.isNaN(parsed) ? null : parsed
-}
-
-const getWinnerTeamId = (homeScore, awayScore, match) => {
-  if (homeScore === null || awayScore === null) return null
-  if (homeScore > awayScore) return match.home_team_id
-  if (awayScore > homeScore) return match.away_team_id
-  return null
-}
+import { getWinnerTeamId, parseScoreValue } from '../../../utils/score'
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
   const awayInputRef = useRef(null)
   const canEditResult = canLoadResult(match.match_date)
+
+  // Verde cuando el resultado ya esta cargado, gris cuando todavia no se puede
+  // cargar (faltan las horas de delay), y el color de la app mientras se edita.
+  const scoreTone = match.is_finished ? 'success' : !canEditResult ? 'muted' : 'primary'
 
   const handleInputChange = useCallback(
     (field, value) => {
@@ -202,86 +195,22 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           </div>
 
           {/* Home Score Input */}
-          <input
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
+          <ScoreInput
             value={displayHomeValue}
             onChange={e => handleInputChange('home', e.target.value)}
-            onFocus={e => e.target.select()}
-            placeholder="-"
             disabled={match.is_finished || !canEditResult}
-            style={{
-              width: '50px',
-              padding: '10px 6px',
-              textAlign: 'center',
-              fontSize: '1.4rem',
-              fontWeight: '700',
-              borderRadius: '10px',
-              border: match.is_finished
-                ? '3px solid var(--color-success)'
-                : !canEditResult
-                  ? '3px solid var(--color-border)'
-                  : '3px solid var(--color-primary)',
-              backgroundColor: 'var(--color-surface)',
-              color: match.is_finished
-                ? 'var(--color-success)'
-                : !canEditResult
-                  ? 'var(--color-text-secondary)'
-                  : 'var(--color-primary)',
-              outline: 'none',
-              opacity: match.is_finished || !canEditResult ? 0.7 : 1,
-              transition: 'all 0.2s',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
+            tone={scoreTone}
           />
 
-          {/* Separator */}
-          <span
-            style={{
-              fontSize: '1.4rem',
-              fontWeight: '700',
-              color: 'var(--color-text-secondary)',
-              padding: '0 2px',
-            }}
-          >
-            -
-          </span>
+          <ScoreSeparator />
 
           {/* Away Score Input */}
-          <input
-            ref={awayInputRef}
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
+          <ScoreInput
+            inputRef={awayInputRef}
             value={displayAwayValue}
             onChange={e => handleInputChange('away', e.target.value)}
-            onFocus={e => e.target.select()}
-            placeholder="-"
             disabled={match.is_finished || !canEditResult}
-            style={{
-              width: '50px',
-              padding: '10px 6px',
-              textAlign: 'center',
-              fontSize: '1.4rem',
-              fontWeight: '700',
-              borderRadius: '10px',
-              border: match.is_finished
-                ? '3px solid var(--color-success)'
-                : !canEditResult
-                  ? '3px solid var(--color-border)'
-                  : '3px solid var(--color-primary)',
-              backgroundColor: 'var(--color-surface)',
-              color: match.is_finished
-                ? 'var(--color-success)'
-                : !canEditResult
-                  ? 'var(--color-text-secondary)'
-                  : 'var(--color-primary)',
-              outline: 'none',
-              opacity: match.is_finished || !canEditResult ? 0.7 : 1,
-              transition: 'all 0.2s',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
+            tone={scoreTone}
           />
 
           {/* Away Team */}

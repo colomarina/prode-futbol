@@ -1,5 +1,7 @@
 import { useEffect, useCallback, memo, useRef, useMemo } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
+import ScoreInput, { ScoreSeparator } from '../../Common/ScoreInput'
+import { getWinnerTeamId, parseScoreValue } from '../../../utils/score'
 import InfoButton from '../../Common/InfoButton'
 import {
   canLoadResult as canLoadResultByTime,
@@ -7,19 +9,6 @@ import {
 } from '../../../utils/matchTiming'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
-
-const parseScoreValue = value => {
-  if (value === '' || value === null || value === undefined) return null
-  const parsed = Number(value)
-  return Number.isNaN(parsed) ? null : parsed
-}
-
-const getWinnerTeamId = (homeScore, awayScore, match) => {
-  if (homeScore === null || awayScore === null) return null
-  if (homeScore > awayScore) return match.home_team_id
-  if (awayScore > homeScore) return match.away_team_id
-  return null
-}
 
 const resolveTeamName = (teamId, match) => {
   if (!teamId) return 'Sin definir'
@@ -325,103 +314,23 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
           </div>
 
           {/* Home Score Input */}
-          {canPredictMatch ? (
-            <input
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={homeScore}
-              onChange={e => handleInputChange('home', e.target.value)}
-              onFocus={e => e.target.select()}
-              placeholder="-"
-              style={{
-                width: '50px',
-                padding: '10px 6px',
-                textAlign: 'center',
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                borderRadius: '10px',
-                border: '3px solid var(--color-primary)',
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-primary)',
-                outline: 'none',
-                transition: 'all 0.2s',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: '50px',
-                padding: '10px 6px',
-                textAlign: 'center',
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                borderRadius: '10px',
-                border: '3px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface-variant)',
-                color: existingPrediction ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-              }}
-            >
-              {displayHomeValue}
-            </div>
-          )}
+          <ScoreInput
+            value={canPredictMatch ? homeScore : displayHomeValue}
+            onChange={e => handleInputChange('home', e.target.value)}
+            readOnly={!canPredictMatch}
+            tone={canPredictMatch || existingPrediction ? 'primary' : 'muted'}
+          />
 
-          {/* Separator */}
-          <span
-            style={{
-              fontSize: '1.4rem',
-              fontWeight: '700',
-              color: 'var(--color-text-secondary)',
-              padding: '0 2px',
-            }}
-          >
-            -
-          </span>
+          <ScoreSeparator />
 
           {/* Away Score Input */}
-          {canPredictMatch ? (
-            <input
-              ref={awayInputRef}
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={awayScore}
-              onChange={e => handleInputChange('away', e.target.value)}
-              onFocus={e => e.target.select()}
-              placeholder="-"
-              style={{
-                width: '50px',
-                padding: '10px 6px',
-                textAlign: 'center',
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                borderRadius: '10px',
-                border: '3px solid var(--color-primary)',
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-primary)',
-                outline: 'none',
-                transition: 'all 0.2s',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: '50px',
-                padding: '10px 6px',
-                textAlign: 'center',
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                borderRadius: '10px',
-                border: '3px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface-variant)',
-                color: existingPrediction ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-              }}
-            >
-              {displayAwayValue}
-            </div>
-          )}
+          <ScoreInput
+            inputRef={awayInputRef}
+            value={canPredictMatch ? awayScore : displayAwayValue}
+            onChange={e => handleInputChange('away', e.target.value)}
+            readOnly={!canPredictMatch}
+            tone={canPredictMatch || existingPrediction ? 'primary' : 'muted'}
+          />
 
           {/* Away Team */}
           <div style={{ justifySelf: 'start', textAlign: 'center' }}>
