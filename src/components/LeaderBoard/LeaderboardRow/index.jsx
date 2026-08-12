@@ -1,3 +1,4 @@
+import IconButton from '../../Common/IconButton'
 import { memo } from 'react'
 import { POSITION_CONFIG } from '../leaderboard.config'
 import InfoButton from '../../Common/InfoButton'
@@ -168,23 +169,15 @@ const ViewCell = memo(function ViewCell({ player, selectedRound, onViewPredictio
         textAlign: 'center',
       }}
     >
-      <button
-        type="button"
+      {/* Declaraba `btn-success` y despues la pisaba entera para volverse
+          transparente: nunca fue un boton verde, era un icono fantasma. */}
+      <IconButton
+        size="sm"
         onClick={handleClick}
-        className="btn-success"
-        style={{
-          backgroundColor: 'transparent',
-          padding: '4px 4px',
-          fontSize: '0.8rem',
-          borderRadius: '8px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
-        aria-label={`Ver pronosticos de ${player.username} en fecha ${selectedRound}`}
+        label={`Ver pronosticos de ${player.username} en fecha ${selectedRound}`}
       >
         <span aria-hidden="true">👀</span>
-      </button>
+      </IconButton>
     </td>
   )
 })

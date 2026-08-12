@@ -1,3 +1,4 @@
+import IconButton from '../IconButton'
 import { useEffect } from 'react'
 
 export default function Toast({ message, type = 'success', onClose, duration = 30000 }) {
@@ -65,29 +66,10 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
       <div style={getStyles()}>
         <span style={{ fontSize: '1.5rem' }}>{getIcon()}</span>
         <span style={{ flex: 1 }}>{message}</span>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            padding: '0',
-            lineHeight: 1,
-            opacity: 0.8,
-            transition: 'opacity 0.2s',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.opacity = '1'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.opacity = '0.8'
-          }}
-        >
+        {/* El color lo hereda del toast, que ya es blanco sobre fondo de color. */}
+        <IconButton label="Cerrar aviso" onClick={onClose} style={{ fontSize: '1.5rem' }}>
           ×
-        </button>
+        </IconButton>
       </div>
       <style>{`
         @keyframes slideInRight {

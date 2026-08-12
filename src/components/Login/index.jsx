@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
 import { getTournamentConfig } from '../../config/tournaments.config'
+import Button from '../Common/Button'
+import IconButton from '../Common/IconButton'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
 import { PROFILE_PATH } from '../Navigation/pages-with-sections.config'
@@ -394,27 +396,21 @@ export default function Login() {
                   minLength={6}
                   style={{ paddingRight: '56px' }}
                 />
-                <button
-                  type="button"
+                <IconButton
                   onClick={() => setShowPassword(prev => !prev)}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   aria-pressed={showPassword}
                   style={{
                     position: 'absolute',
                     right: '10px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    border: 'none',
-                    background: 'transparent',
                     minHeight: 'auto',
-                    padding: '6px',
                     color: 'var(--color-text-secondary)',
-                    fontSize: '1.1rem',
-                    cursor: 'pointer',
                   }}
                 >
                   {showPassword ? '🙈' : '👁️'}
-                </button>
+                </IconButton>
               </div>
               {fieldErrors.password && <div className="form-error">{fieldErrors.password}</div>}
             </div>
@@ -426,14 +422,9 @@ export default function Login() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={isMainActionDisabled}
-            className="btn-primary"
-            style={{ width: '100%' }}
-          >
+          <Button type="submit" disabled={isMainActionDisabled} fullWidth>
             {mainActionLabel}
-          </button>
+          </Button>
 
           {isResetView && (
             <p
@@ -455,14 +446,9 @@ export default function Login() {
         <div style={{ marginTop: '24px', textAlign: 'center', display: 'grid', gap: '10px' }}>
           {isLoginView && (
             <>
-              <button
-                type="button"
-                onClick={() => setAuthView('signup')}
-                className="btn-outline"
-                style={{ width: '100%' }}
-              >
+              <Button variant="outline" onClick={() => setAuthView('signup')} fullWidth>
                 ¿No tenés cuenta? Registrate
-              </button>
+              </Button>
               <button
                 type="button"
                 onClick={() => setAuthView('reset')}
@@ -481,25 +467,15 @@ export default function Login() {
           )}
 
           {isSignupView && (
-            <button
-              type="button"
-              onClick={() => setAuthView('login')}
-              className="btn-outline"
-              style={{ width: '100%' }}
-            >
+            <Button variant="outline" onClick={() => setAuthView('login')} fullWidth>
               ¿Ya tenés cuenta? Ingresá
-            </button>
+            </Button>
           )}
 
           {isResetView && (
-            <button
-              type="button"
-              onClick={() => setAuthView('login')}
-              className="btn-outline"
-              style={{ width: '100%' }}
-            >
+            <Button variant="outline" onClick={() => setAuthView('login')} fullWidth>
               Volver a ingresar
-            </button>
+            </Button>
           )}
         </div>
       </div>
