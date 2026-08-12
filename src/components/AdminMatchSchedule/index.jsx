@@ -70,12 +70,28 @@ export default function AdminMatchSchedule() {
     setSelectedRound(rounds[0]?.round_number ?? null)
   }, [rounds, selectedRound])
 
+  /**
+   * Los inputs se rellenan con el horario que está en la base.
+   *
+   * El estado se re-setea solo si de verdad cambió algo. Dos motivos: guardar
+   * invalida la query, y con la respuesta nueva este efecto pisaba lo que el
+   * admin estuviera tipeando; y si `matches` volviera a llegar con una
+   * referencia nueva en cada render, devolver `prev` corta el bucle en vez de
+   * encadenar renders (era el "Maximum update depth exceeded" del panel).
+   */
   useEffect(() => {
-    const nextValues = {}
-    matches.forEach(match => {
-      nextValues[match.id] = toDatetimeLocalValue(match.match_date)
+    setScheduleValues(prev => {
+      const next = {}
+      matches.forEach(match => {
+        next[match.id] = toDatetimeLocalValue(match.match_date)
+      })
+
+      const ids = Object.keys(next)
+      const igual =
+        ids.length === Object.keys(prev).length && ids.every(id => prev[id] === next[id])
+
+      return igual ? prev : next
     })
-    setScheduleValues(nextValues)
   }, [matches])
 
   const pendingChanges = useMemo(() => {
