@@ -210,7 +210,14 @@ export default function MatchManager() {
             </div>
 
             {/* Botón para guardar todos */}
-            <div style={{ marginTop: '24px', position: 'sticky', bottom: '20px', zIndex: 10 }}>
+            <div
+              style={{
+                marginTop: '24px',
+                position: 'sticky',
+                bottom: '20px',
+                zIndex: 'var(--z-sticky)',
+              }}
+            >
               <button
                 onClick={handleSaveAll}
                 disabled={saving || !hasValidResults}

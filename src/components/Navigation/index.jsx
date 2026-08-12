@@ -75,7 +75,7 @@ export default function Navigation() {
           backgroundColor: 'var(--color-surface)',
           position: 'sticky',
           top: 0,
-          zIndex: 1100,
+          zIndex: 'var(--z-modal)',
         }}
       >
         <div className="container">

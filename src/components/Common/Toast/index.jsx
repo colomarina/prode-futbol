@@ -22,7 +22,7 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
       gap: '12px',
       fontSize: '0.95rem',
       fontWeight: '600',
-      zIndex: 9999,
+      zIndex: 'var(--z-toast)',
       animation: 'slideInRight 0.3s ease-out',
       minWidth: '300px',
       maxWidth: '500px',

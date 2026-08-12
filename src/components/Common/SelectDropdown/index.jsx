@@ -111,7 +111,7 @@ const SelectDropdown = ({
             marginTop: '4px',
             maxHeight: '300px',
             overflowY: 'auto',
-            zIndex: 100,
+            zIndex: 'var(--z-dropdown)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           }}
         >

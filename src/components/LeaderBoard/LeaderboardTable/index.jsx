@@ -55,7 +55,7 @@ const TableHeader = memo(function TableHeader({ columns }) {
           borderBottom: '2px solid var(--color-border)',
           position: 'sticky',
           top: 0,
-          zIndex: 1,
+          zIndex: 'var(--z-base)',
         }}
       >
         {columns.map((column, index) => (
