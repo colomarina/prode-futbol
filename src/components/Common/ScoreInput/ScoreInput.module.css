@@ -1,0 +1,68 @@
+/**
+ * La cajita de un gol. Estaba duplicada casi verbatim entre `MatchResult` (el
+ * admin cargando el resultado) y `MatchPrediction` (el usuario pronosticando):
+ * mismo alto, mismo borde de 3px, misma sombra, escritos dos veces.
+ *
+ * El color y el borde salen de dos custom properties en vez de multiplicar
+ * clases: así el modo lectura puede pisar solo el borde sin tocar el color del
+ * número, que es justo lo que hace `MatchPrediction` con un pronóstico ya
+ * cargado.
+ */
+
+.box {
+  width: 50px;
+  padding: var(--space-sm) var(--space-xs);
+  border: 3px solid var(--score-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--score-bg);
+  color: var(--score-color);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.primary {
+  --score-border: var(--color-primary);
+  --score-color: var(--color-primary);
+}
+
+/* El resultado ya cargado: el admin lo ve en verde. */
+.success {
+  --score-border: var(--color-success);
+  --score-color: var(--color-success);
+}
+
+.muted {
+  --score-border: var(--color-border);
+  --score-color: var(--color-text-secondary);
+}
+
+.input {
+  --score-bg: var(--color-surface);
+}
+
+.input:disabled {
+  opacity: 0.7;
+}
+
+/**
+ * Modo lectura: no es un input deshabilitado sino un `div`, porque no hay nada
+ * que editar. El borde queda siempre neutro —va después de las clases de tono a
+ * propósito, para pisarlo— y el tono solo tiñe el número.
+ */
+.readOnly {
+  --score-bg: var(--color-surface-variant);
+  --score-border: var(--color-border);
+
+  box-shadow: none;
+}
+
+.separator {
+  padding: 0 var(--space-3xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
