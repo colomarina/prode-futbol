@@ -90,6 +90,10 @@ export function usePlayoffs(tournamentId = null) {
 
   const matchesByStage = useMemo(() => groupByStage(matchesQuery.data), [matchesQuery.data])
 
+  // Referencia estable: sin partidos de playoff la query de pronósticos queda
+  // deshabilitada, y un `?? []` a secas devolvería un array nuevo por render.
+  const predictions = useMemo(() => predictionsQuery.data ?? [], [predictionsQuery.data])
+
   const hasAnyPlayoffMatches = useMemo(
     () => Object.values(matchesByStage).some(matches => matches.length > 0),
     [matchesByStage]
@@ -109,7 +113,7 @@ export function usePlayoffs(tournamentId = null) {
 
   return {
     matchesByStage,
-    predictions: predictionsQuery.data ?? [],
+    predictions,
     loading: matchesQuery.isPending || predictionsPending,
     error: matchesQuery.error?.message || predictionsQuery.error?.message || null,
     hasAnyPlayoffMatches,

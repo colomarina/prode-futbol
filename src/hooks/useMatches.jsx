@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
@@ -124,8 +124,13 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
     [deleteMutation]
   )
 
+  // useMemo y no `data ?? []` a secas: el array literal seria una referencia
+  // nueva en cada render, y `AdminMatchSchedule` tiene un efecto con dependencia
+  // `[matches]` que setea estado. Eso entraba en bucle hasta que React cortaba.
+  const matches = useMemo(() => data ?? [], [data])
+
   return {
-    matches: data ?? [],
+    matches,
     // Sin roundNumber la query queda deshabilitada y React Query la reporta como
     // pendiente para siempre; para el consumidor eso no es "cargando".
     loading: Boolean(roundNumber) && isPending,

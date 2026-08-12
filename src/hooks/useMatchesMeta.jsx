@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
@@ -38,8 +39,12 @@ export const useMatchesMeta = (tournamentId = null) => {
     },
   })
 
+  // Referencia estable: sus consumidores la usan como dependencia de useMemo y
+  // de efectos. Ver el comentario de `useMatches`.
+  const matchesMeta = useMemo(() => data ?? [], [data])
+
   return {
-    matchesMeta: data ?? [],
+    matchesMeta,
     loading: isPending && enabled,
     error: error ? error.message : null,
     refetch,

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
@@ -198,8 +198,11 @@ export const useLeaderboard = (
     [queryClient, tournamentId, roundNumber, isWorldCupTournament]
   )
 
+  // Referencia estable, como en el resto de los hooks de datos.
+  const leaderboard = useMemo(() => data ?? [], [data])
+
   return {
-    leaderboard: data ?? [],
+    leaderboard,
     loading: isPending,
     error: error ? error.message : null,
     fetchLeaderboard,
