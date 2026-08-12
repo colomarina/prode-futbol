@@ -6,6 +6,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { getRoundDisplayName } from '../../utils/roundLabels'
 import { canLoadResult, RESULT_LOAD_DELAY_HOURS } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
+import Button from '../Common/Button'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
 import EmptyState from '../Common/EmptyState'
@@ -218,27 +219,16 @@ export default function MatchManager() {
                 zIndex: 'var(--z-sticky)',
               }}
             >
-              <button
+              <Button
+                variant="success"
+                size="lg"
+                fullWidth
                 onClick={handleSaveAll}
                 disabled={saving || !hasValidResults}
-                className="btn-success"
-                style={{
-                  width: '100%',
-                  padding: '18px',
-                  fontSize: '1.1rem',
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  opacity: saving || !hasValidResults ? 0.6 : 1,
-                  cursor: saving || !hasValidResults ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-                }}
               >
-                <span style={{ fontSize: '1.5rem' }}>{saving ? '⏳' : '💾'}</span>
+                <span style={{ fontSize: 'var(--font-size-2xl)' }}>{saving ? '⏳' : '💾'}</span>
                 <span>{saving ? 'Guardando...' : 'Guardar Todos los Resultados'}</span>
-              </button>
+              </Button>
             </div>
           </>
         )

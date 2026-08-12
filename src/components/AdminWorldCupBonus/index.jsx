@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTournament } from '../../contexts/TournamentContext'
 import { useWorldCupBonus } from '../../hooks/useWorldCupBonus'
+import Button from '../Common/Button'
 import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
@@ -230,12 +231,12 @@ export default function AdminWorldCupBonus() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={onSaveLock} disabled={saving}>
+          <Button onClick={onSaveLock} disabled={saving}>
             Guardar lock
-          </button>
-          <button className="btn btn-error" onClick={onForceLock} disabled={saving}>
+          </Button>
+          <Button variant="danger" onClick={onForceLock} disabled={saving}>
             Bloquear ahora
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -330,12 +331,12 @@ export default function AdminWorldCupBonus() {
         </div>
 
         <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={onSaveOfficialResults} disabled={saving}>
+          <Button onClick={onSaveOfficialResults} disabled={saving}>
             Guardar resultados oficiales
-          </button>
-          <button className="btn btn-secondary" onClick={onRecalculate} disabled={saving}>
+          </Button>
+          <Button variant="secondary" onClick={onRecalculate} disabled={saving}>
             Recalcular bonus
-          </button>
+          </Button>
         </div>
       </div>
 

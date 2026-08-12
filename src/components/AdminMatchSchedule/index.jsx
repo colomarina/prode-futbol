@@ -3,6 +3,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { getRoundDisplayName } from '../../utils/roundLabels'
+import Button from '../Common/Button'
 import LoadingState from '../Common/LoadingState'
 import SelectDropdown from '../Common/SelectDropdown'
 import TeamDisplay from '../Common/TeamDisplay'
@@ -276,14 +277,14 @@ export default function AdminMatchSchedule() {
           </div>
 
           <div style={{ marginTop: '16px' }}>
-            <button
-              className="btn btn-success"
+            <Button
+              variant="success"
               onClick={handleSaveAll}
               disabled={saving || pendingChanges.length === 0}
-              style={{ width: '100%' }}
+              fullWidth
             >
               {saving ? 'Guardando horarios...' : 'Guardar cambios'}
-            </button>
+            </Button>
           </div>
         </>
       )}
