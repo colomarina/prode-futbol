@@ -49,7 +49,7 @@ describe('fetchLeaderboardData', () => {
     const tabla = await fetchLeaderboardData({
       roundNumber: null,
       tournamentId: 't1',
-      includeWorldCupBonus: false,
+      isWorldCupTournament: false,
     })
 
     // Leo Sanchez esta en la lista de ocultos y no tiene que aparecer.
@@ -68,7 +68,7 @@ describe('fetchLeaderboardData', () => {
     await fetchLeaderboardData({
       roundNumber: null,
       tournamentId: 't1',
-      includeWorldCupBonus: false,
+      isWorldCupTournament: false,
     })
 
     expect(mock.everyQueryFilteredBy('round_scores', 'tournament_id')).toBe(true)
@@ -79,7 +79,7 @@ describe('fetchLeaderboardData', () => {
     const { fetchLeaderboardData } = await importFresh()
 
     await expect(
-      fetchLeaderboardData({ roundNumber: null, tournamentId: 't1', includeWorldCupBonus: false })
+      fetchLeaderboardData({ roundNumber: null, tournamentId: 't1', isWorldCupTournament: false })
     ).rejects.toMatchObject({ message: 'permission denied' })
 
     // Una sola consulta: no hubo segundo intento sin filtro.
@@ -93,7 +93,7 @@ describe('fetchLeaderboardData', () => {
     const tabla = await fetchLeaderboardData({
       roundNumber: 99,
       tournamentId: 't1',
-      includeWorldCupBonus: false,
+      isWorldCupTournament: false,
     })
 
     expect(tabla).toEqual([])
@@ -107,7 +107,7 @@ describe('fetchLeaderboardData', () => {
     const tabla = await fetchLeaderboardData({
       roundNumber: null,
       tournamentId: 't1',
-      includeWorldCupBonus: false,
+      isWorldCupTournament: false,
     })
 
     expect(tabla).toEqual([])
@@ -123,7 +123,7 @@ describe('fetchLeaderboardData', () => {
     const tabla = await fetchLeaderboardData({
       roundNumber: null,
       tournamentId: 't1',
-      includeWorldCupBonus: true,
+      isWorldCupTournament: true,
     })
 
     expect(mock.supabase.rpc).toHaveBeenCalledWith('get_tournament_leaderboard_with_bonus', {
@@ -132,9 +132,9 @@ describe('fetchLeaderboardData', () => {
     expect(tabla).toHaveLength(1)
   })
 
-  it('en playoffs excluye las fechas con tabla propia', async () => {
+  it('en el Mundial la tabla de playoffs excluye las fechas con tabla propia', async () => {
     setup({
-      // Las fechas 4 y 5 tienen tabla aparte (STANDALONE_TABLE_ROUNDS).
+      // En el Mundial 16avos (4) y octavos (5) tienen tabla aparte.
       matches: { data: [{ round_number: 4 }, { round_number: 5 }], error: null },
     })
     const { fetchLeaderboardData } = await importFresh()
@@ -142,10 +142,36 @@ describe('fetchLeaderboardData', () => {
     const tabla = await fetchLeaderboardData({
       roundNumber: 'playoffs',
       tournamentId: 't1',
-      includeWorldCupBonus: false,
+      isWorldCupTournament: true,
     })
 
     expect(tabla).toEqual([])
     expect(mock.callsTo('round_scores')).toBe(0)
+  })
+
+  it('en una liga ninguna fecha de playoff queda afuera de la tabla de playoffs', async () => {
+    // Regresión: la exclusión de las fechas 4 y 5 era incondicional, así que una
+    // liga con playoffs en esas fechas perdía esos puntos en silencio.
+    setup({
+      matches: { data: [{ round_number: 4 }, { round_number: 5 }], error: null },
+      rounds: { data: [{ round_number: 4 }, { round_number: 5 }], error: null },
+      round_scores: {
+        data: [
+          { user_id: 'u-ana', total_points: 7, profiles: perfil('u-ana', 'Ana Gomez') },
+          { user_id: 'u-zoe', total_points: 3, profiles: perfil('u-zoe', 'Zoe Diaz') },
+        ],
+        error: null,
+      },
+    })
+    const { fetchLeaderboardData } = await importFresh()
+
+    const tabla = await fetchLeaderboardData({
+      roundNumber: 'playoffs',
+      tournamentId: 't1',
+      isWorldCupTournament: false,
+    })
+
+    expect(tabla.map(entry => entry.id)).toEqual(['u-ana', 'u-zoe'])
+    expect(mock.callsTo('round_scores')).toBe(1)
   })
 })

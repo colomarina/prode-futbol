@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 import { compareByPoints } from '../utils/ranking'
+import { WORLD_CUP_STANDALONE_ROUNDS } from '../utils/leaderboardRounds'
 
 const buildLeaderboardFromRoundScores = roundScoresData => {
   const totalsByUser = new Map()
@@ -50,8 +51,6 @@ const fetchTournamentRoundNumbers = async tournamentId => {
   return [...new Set((data || []).map(round => round.round_number))]
 }
 
-const STANDALONE_TABLE_ROUNDS = new Set([4, 5])
-
 const PROFILE_FIELDS = `
   profiles (
     id,
@@ -90,8 +89,12 @@ const fetchRoundScoresByRounds = async (tournamentId, roundNumbers, includeRound
 /**
  * Arma la tabla de posiciones. Es una función suelta y no un hook para que la
  * lógica de ramas quede testeable y `useQuery` solo se ocupe del cacheo.
+ *
+ * `isWorldCupTournament` cambia dos cosas: la general sale de la RPC con bonus, y
+ * 16avos y octavos quedan afuera de la tabla agregada de playoffs porque tienen
+ * tabla propia.
  */
-export const fetchLeaderboardData = async ({ roundNumber, tournamentId, includeWorldCupBonus }) => {
+export const fetchLeaderboardData = async ({ roundNumber, tournamentId, isWorldCupTournament }) => {
   const tournamentRoundNumbers = await fetchTournamentRoundNumbers(tournamentId)
 
   const normalizedRoundNumber =
@@ -118,7 +121,9 @@ export const fetchLeaderboardData = async ({ roundNumber, tournamentId, includeW
       playoffRounds = [...new Set((playoffMatches || []).map(match => match.round_number))]
     }
 
-    playoffRounds = playoffRounds.filter(round => !STANDALONE_TABLE_ROUNDS.has(round))
+    if (isWorldCupTournament) {
+      playoffRounds = playoffRounds.filter(round => !WORLD_CUP_STANDALONE_ROUNDS.has(round))
+    }
 
     if (!playoffRounds.length) return []
 
@@ -159,7 +164,7 @@ export const fetchLeaderboardData = async ({ roundNumber, tournamentId, includeW
     return filterHiddenPlayers(data || [])
   }
 
-  if (includeWorldCupBonus) {
+  if (isWorldCupTournament) {
     const { data, error } = await supabase.rpc('get_tournament_leaderboard_with_bonus', {
       p_tournament_id: tournamentId,
     })
@@ -176,21 +181,21 @@ export const fetchLeaderboardData = async ({ roundNumber, tournamentId, includeW
 export const useLeaderboard = (
   roundNumber = null,
   tournamentId = null,
-  includeWorldCupBonus = false
+  isWorldCupTournament = false
 ) => {
   const queryClient = useQueryClient()
 
   const { data, isPending, error } = useQuery({
-    queryKey: queryKeys.leaderboard(tournamentId, roundNumber, includeWorldCupBonus),
-    queryFn: () => fetchLeaderboardData({ roundNumber, tournamentId, includeWorldCupBonus }),
+    queryKey: queryKeys.leaderboard(tournamentId, roundNumber, isWorldCupTournament),
+    queryFn: () => fetchLeaderboardData({ roundNumber, tournamentId, isWorldCupTournament }),
   })
 
   const fetchLeaderboard = useCallback(
     () =>
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leaderboard(tournamentId, roundNumber, includeWorldCupBonus),
+        queryKey: queryKeys.leaderboard(tournamentId, roundNumber, isWorldCupTournament),
       }),
-    [queryClient, tournamentId, roundNumber, includeWorldCupBonus]
+    [queryClient, tournamentId, roundNumber, isWorldCupTournament]
   )
 
   return {

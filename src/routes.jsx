@@ -120,13 +120,11 @@ const AllPredictionsRoute = () => {
 }
 
 const LeaderboardRoute = () => {
-  const { activeTournament } = useTournament()
   const navigate = useNavigate()
 
   return (
     <Page>
       <Leaderboard
-        includeWorldCupBonus={activeTournament?.type === 'world_cup'}
         onViewPredictions={({ userId, roundNumber }) => {
           const params = new URLSearchParams()
           if (roundNumber) params.set('fecha', String(roundNumber))
