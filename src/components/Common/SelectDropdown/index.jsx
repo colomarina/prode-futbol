@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useId } from 'react'
+import styles from './SelectDropdown.module.css'
 
 const SELECT_STYLE = {
   width: '100%',
@@ -9,10 +10,21 @@ const SELECT_STYLE = {
   cursor: 'pointer',
 }
 
+/**
+ * `label` no es decorativo: esto es un `div` con botones, no un `<select>`, así
+ * que un `<label>` externo no se le puede asociar —lo marcaba el linter en seis
+ * lugares— y el disparador quedaba sin nombre para un lector de pantalla. Al
+ * declararlo acá, el widget se nombra a sí mismo con `aria-labelledby`.
+ *
+ * `aria-expanded` y `aria-haspopup` van por lo mismo. Falta bastante para que sea
+ * un combobox de verdad (`role="listbox"`, navegación por flechas): eso es la
+ * fase 8, acá solo se cubre el nombre y el estado.
+ */
 const SelectDropdown = ({
   items = [],
   selectedId,
   onSelect,
+  label,
   disabled = false,
   isLoading = false,
   renderButton,
@@ -20,6 +32,7 @@ const SelectDropdown = ({
   placeholder = 'Seleccionar...',
   valueKey = 'id',
 }) => {
+  const labelId = useId()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
   const listRef = useRef(null)
@@ -63,10 +76,18 @@ const SelectDropdown = ({
 
   return (
     <div style={{ position: 'relative' }} ref={containerRef}>
+      {label && (
+        <span id={labelId} className={styles.label}>
+          {label}
+        </span>
+      )}
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
+        aria-labelledby={label ? labelId : undefined}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
         style={{
           ...SELECT_STYLE,
           display: 'flex',
