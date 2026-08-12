@@ -238,8 +238,8 @@ export default function PredictionForm() {
       <div className="container" style={{ maxWidth: '900px' }}>
         {/* Selector de fechas */}
         <div className="card" style={{ marginBottom: '24px' }}>
-          <label className="form-label">📅 Seleccioná una Fecha</label>
           <SelectDropdown
+            label="📅 Seleccioná una Fecha"
             items={availableRounds}
             selectedId={selectedRound}
             onSelect={roundNumber => {
@@ -269,13 +269,8 @@ export default function PredictionForm() {
     <div className="container" style={{ maxWidth: '900px' }}>
       {/* Selector de fechas */}
       <div className="card" style={{ marginBottom: '16px', padding: '0px' }}>
-        <label
-          className="form-label"
-          style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '12px', display: 'block' }}
-        >
-          📅 Seleccioná una Fecha
-        </label>
         <SelectDropdown
+          label="📅 Seleccioná una Fecha"
           items={availableRounds}
           selectedId={selectedRound}
           onSelect={roundNumber => {

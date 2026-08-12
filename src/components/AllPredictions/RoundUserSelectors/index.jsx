@@ -65,8 +65,8 @@ const RoundUserSelectors = ({
         className="responsive-selectors"
       >
         <div>
-          <label className="form-label">📅 Seleccioná una Fecha</label>
           <SelectDropdown
+            label="📅 Seleccioná una Fecha"
             items={availableRounds}
             selectedId={selectedRound}
             onSelect={onRoundChange}
@@ -83,8 +83,8 @@ const RoundUserSelectors = ({
 
         {viewMode === 'by-user' ? (
           <div>
-            <label className="form-label">👤 Seleccionar Usuario</label>
             <SelectDropdown
+              label="👤 Seleccionar Usuario"
               items={users}
               selectedId={selectedUser}
               onSelect={onUserChange}
@@ -104,7 +104,6 @@ const RoundUserSelectors = ({
           </div>
         ) : (
           <div>
-            <label className="form-label">⚽ Seleccionar Partido</label>
             <MatchSelector
               matches={matches}
               selectedMatchId={selectedMatchId}

@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useTournament } from '../../contexts/TournamentContext'
 import { getTournamentConfig } from '../../config/tournaments.config'
 import Button from '../Common/Button'
+import FormField from '../Common/FormField'
 import IconButton from '../Common/IconButton'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
@@ -298,16 +299,7 @@ export default function Login() {
         >
           {isSignupView && (
             <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label
-                  style={{
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    color: 'var(--color-text-primary)',
-                  }}
-                >
-                  Nombre del Equipo
-                </label>
+              <FormField label="Nombre del Equipo" error={fieldErrors.username}>
                 <TextInput
                   type="text"
                   value={username}
@@ -319,18 +311,8 @@ export default function Login() {
                   }}
                   required
                 />
-                {fieldErrors.username && <div className="form-error">{fieldErrors.username}</div>}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label
-                  style={{
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    color: 'var(--color-text-primary)',
-                  }}
-                >
-                  Nombre Completo
-                </label>
+              </FormField>
+              <FormField label="Nombre Completo" error={fieldErrors.fullName}>
                 <TextInput
                   type="text"
                   value={fullName}
@@ -342,21 +324,11 @@ export default function Login() {
                   }}
                   required
                 />
-                {fieldErrors.fullName && <div className="form-error">{fieldErrors.fullName}</div>}
-              </div>
+              </FormField>
             </>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label
-              style={{
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              Email
-            </label>
+          <FormField label="Email" error={fieldErrors.email}>
             <TextInput
               type="email"
               value={email}
@@ -368,52 +340,44 @@ export default function Login() {
               }}
               required
             />
-            {fieldErrors.email && <div className="form-error">{fieldErrors.email}</div>}
-          </div>
+          </FormField>
 
           {!isResetView && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label
-                style={{
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: 'var(--color-text-primary)',
-                }}
-              >
-                Contraseña
-              </label>
-              <div style={{ position: 'relative' }}>
-                <TextInput
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => {
-                    setPassword(e.target.value)
-                    if (fieldErrors.password) {
-                      setFieldErrors(prev => ({ ...prev, password: '' }))
-                    }
-                  }}
-                  required
-                  minLength={6}
-                  style={{ paddingRight: '56px' }}
-                />
-                <IconButton
-                  onClick={() => setShowPassword(prev => !prev)}
-                  label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  aria-pressed={showPassword}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    minHeight: 'auto',
-                    color: 'var(--color-text-secondary)',
-                  }}
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </IconButton>
-              </div>
-              {fieldErrors.password && <div className="form-error">{fieldErrors.password}</div>}
-            </div>
+            <FormField label="Contraseña" error={fieldErrors.password}>
+              {id => (
+                <div style={{ position: 'relative' }}>
+                  <TextInput
+                    id={id}
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => {
+                      setPassword(e.target.value)
+                      if (fieldErrors.password) {
+                        setFieldErrors(prev => ({ ...prev, password: '' }))
+                      }
+                    }}
+                    required
+                    minLength={6}
+                    style={{ paddingRight: '56px' }}
+                  />
+                  <IconButton
+                    onClick={() => setShowPassword(prev => !prev)}
+                    label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-pressed={showPassword}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      minHeight: 'auto',
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </IconButton>
+                </div>
+              )}
+            </FormField>
           )}
 
           {isResetView && (

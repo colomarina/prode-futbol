@@ -3,6 +3,7 @@ import SelectDropdown from '../../Common/SelectDropdown'
 const MatchSelector = ({ matches, selectedMatchId, onMatchChange, disabled, isLoading }) => {
   return (
     <SelectDropdown
+      label="⚽ Seleccionar Partido"
       items={matches}
       selectedId={selectedMatchId}
       onSelect={onMatchChange}

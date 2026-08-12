@@ -173,10 +173,8 @@ export default function AdminMatchSchedule() {
           de agenda.
         </p>
 
-        <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>
-          Fecha del torneo
-        </label>
         <SelectDropdown
+          label="Fecha del torneo"
           items={rounds.map(round => ({ ...round, id: round.round_number }))}
           selectedId={selectedRound ?? ''}
           onSelect={value => setSelectedRound(Number(value))}

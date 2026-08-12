@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTournament } from '../../contexts/TournamentContext'
 import { useWorldCupBonus } from '../../hooks/useWorldCupBonus'
 import Button from '../Common/Button'
+import FormField from '../Common/FormField'
 import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
@@ -202,8 +203,11 @@ export default function AdminWorldCupBonus() {
           Predicciones recibidas: {stats.totalPredictions}
         </p>
 
-        <div className="form-group">
-          <label className="form-label">Calendario de bloqueo</label>
+        {/* La etiqueta nombra a los dos controles a la vez, no a uno: por eso `group`.
+            El margen lo pone el contenedor —antes lo daba la clase `.form-group`—
+            porque `FormField` no define espaciado externo. Se va cuando esta
+            pantalla tenga su propio CSS Module. */}
+        <FormField label="Calendario de bloqueo" group style={{ marginBottom: '20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: '8px' }}>
             <input
               type="date"
@@ -228,7 +232,7 @@ export default function AdminWorldCupBonus() {
               }}
             />
           </div>
-        </div>
+        </FormField>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <Button onClick={onSaveLock} disabled={saving}>
@@ -253,79 +257,87 @@ export default function AdminWorldCupBonus() {
                 backgroundColor: 'var(--color-surface-variant)',
               }}
             >
-              <label className="form-label" style={{ marginBottom: '10px', display: 'block' }}>
-                {question.label}
-                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                  {' '}
-                  ({question.points} pts)
-                </span>
-              </label>
-              {question.type === 'team' && (
-                <SelectDropdown
-                  items={
-                    question.key === 'best_debutant_team_id'
-                      ? teams.filter(team => DEBUTANT_TEAM_SLUGS.includes(team.slug))
-                      : teams
-                  }
-                  selectedId={resultsForm[question.key]}
-                  onSelect={value => setField(question.key, value)}
-                  valueKey="id"
-                  placeholder={
-                    question.key === 'best_debutant_team_id'
-                      ? 'Seleccionar seleccion debutante'
-                      : 'Seleccionar equipo'
-                  }
-                  renderButton={team => <TeamOptionContent team={team} />}
-                  renderOption={team => <TeamOptionContent team={team} />}
-                />
-              )}
-              {question.type === 'text' && (
-                <TextInput
-                  value={resultsForm[question.key]}
-                  onChange={event => setField(question.key, event.target.value)}
-                />
-              )}
-              {question.type === 'number' && (
-                <SelectDropdown
-                  items={FINAL_GOALS_OPTIONS}
-                  selectedId={
-                    resultsForm[question.key] === '' || resultsForm[question.key] === null
-                      ? null
-                      : Number(resultsForm[question.key])
-                  }
-                  onSelect={value => setField(question.key, value)}
-                  valueKey="id"
-                  placeholder="Seleccionar goles (0 a 10)"
-                  renderButton={item => <span>{item.label}</span>}
-                  renderOption={item => <span>{item.label}</span>}
-                />
-              )}
-              {question.type === 'boolean' && (
-                <SelectDropdown
-                  items={HAT_TRICK_OPTIONS}
-                  selectedId={
-                    resultsForm[question.key] === null || resultsForm[question.key] === undefined
-                      ? null
-                      : resultsForm[question.key]
-                  }
-                  onSelect={value => setField(question.key, value)}
-                  valueKey="id"
-                  placeholder="Seleccionar opcion"
-                  renderButton={item => <span>{item.label}</span>}
-                  renderOption={item => <span>{item.label}</span>}
-                />
-              )}
-              {question.type === 'stage' && (
-                <SelectDropdown
-                  items={ARGENTINA_STAGE_OPTIONS}
-                  selectedId={resultsForm[question.key]}
-                  onSelect={value => setField(question.key, value)}
-                  valueKey="id"
-                  placeholder="Seleccionar instancia"
-                  renderButton={item => <span>{item.label}</span>}
-                  renderOption={item => <span>{item.label}</span>}
-                />
-              )}
+              {/* El control cambia segun `question.type` —dropdown, texto o radios—,
+                  asi que no hay un `for` unico posible: se nombra el grupo. */}
+              <FormField
+                group
+                label={
+                  <>
+                    {question.label}
+                    <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                      {' '}
+                      ({question.points} pts)
+                    </span>
+                  </>
+                }
+              >
+                {question.type === 'team' && (
+                  <SelectDropdown
+                    items={
+                      question.key === 'best_debutant_team_id'
+                        ? teams.filter(team => DEBUTANT_TEAM_SLUGS.includes(team.slug))
+                        : teams
+                    }
+                    selectedId={resultsForm[question.key]}
+                    onSelect={value => setField(question.key, value)}
+                    valueKey="id"
+                    placeholder={
+                      question.key === 'best_debutant_team_id'
+                        ? 'Seleccionar seleccion debutante'
+                        : 'Seleccionar equipo'
+                    }
+                    renderButton={team => <TeamOptionContent team={team} />}
+                    renderOption={team => <TeamOptionContent team={team} />}
+                  />
+                )}
+                {question.type === 'text' && (
+                  <TextInput
+                    value={resultsForm[question.key]}
+                    onChange={event => setField(question.key, event.target.value)}
+                  />
+                )}
+                {question.type === 'number' && (
+                  <SelectDropdown
+                    items={FINAL_GOALS_OPTIONS}
+                    selectedId={
+                      resultsForm[question.key] === '' || resultsForm[question.key] === null
+                        ? null
+                        : Number(resultsForm[question.key])
+                    }
+                    onSelect={value => setField(question.key, value)}
+                    valueKey="id"
+                    placeholder="Seleccionar goles (0 a 10)"
+                    renderButton={item => <span>{item.label}</span>}
+                    renderOption={item => <span>{item.label}</span>}
+                  />
+                )}
+                {question.type === 'boolean' && (
+                  <SelectDropdown
+                    items={HAT_TRICK_OPTIONS}
+                    selectedId={
+                      resultsForm[question.key] === null || resultsForm[question.key] === undefined
+                        ? null
+                        : resultsForm[question.key]
+                    }
+                    onSelect={value => setField(question.key, value)}
+                    valueKey="id"
+                    placeholder="Seleccionar opcion"
+                    renderButton={item => <span>{item.label}</span>}
+                    renderOption={item => <span>{item.label}</span>}
+                  />
+                )}
+                {question.type === 'stage' && (
+                  <SelectDropdown
+                    items={ARGENTINA_STAGE_OPTIONS}
+                    selectedId={resultsForm[question.key]}
+                    onSelect={value => setField(question.key, value)}
+                    valueKey="id"
+                    placeholder="Seleccionar instancia"
+                    renderButton={item => <span>{item.label}</span>}
+                    renderOption={item => <span>{item.label}</span>}
+                  />
+                )}
+              </FormField>
             </div>
           ))}
         </div>
