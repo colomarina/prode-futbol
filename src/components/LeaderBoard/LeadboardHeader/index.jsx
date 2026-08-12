@@ -2,34 +2,23 @@ import { memo } from 'react'
 import SelectDropdown from '../../Common/SelectDropdown'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
 
-const STANDALONE_TABLE_ROUNDS = [
-  { id: 5, round_number: 5, name: 'Octavos de final' },
-  { id: 4, round_number: 4, name: '16vos de final' },
-]
-
+/**
+ * `rounds` ya viene filtrado y ordenado por `getLeaderboardRounds`: acá no se
+ * decide qué fechas tienen tabla propia, solo cómo se etiquetan.
+ */
 const LeaderboardHeader = memo(function LeaderboardHeader({
   selectedRound,
   setSelectedRound,
-  rounds,
+  rounds = [],
   roundsLoading,
+  showPlayoffs = false,
   isWorldCupTournament = false,
 }) {
-  const playoffRounds = new Set([17, 18, 19, 20])
   const playoffLabel = isWorldCupTournament ? '🥊 Cuartos a Final' : '🥊 Playoffs'
-  const standaloneRoundNumbers = new Set(STANDALONE_TABLE_ROUNDS.map(round => round.round_number))
   const roundOptions = [
     { id: null, round_number: null, name: '🏆 General' },
-    { id: 'playoffs', round_number: 'playoffs', name: '🥊 Playoffs' },
-    ...(isWorldCupTournament ? STANDALONE_TABLE_ROUNDS : []),
-    ...rounds
-      .filter(r => ['open', 'locked', 'finished'].includes(r.status))
-      .filter(r => !playoffRounds.has(r.round_number))
-      .filter(r => !standaloneRoundNumbers.has(r.round_number))
-      .sort((a, b) => b.round_number - a.round_number)
-      .map(r => ({
-        ...r,
-        id: r.round_number,
-      })),
+    ...(showPlayoffs ? [{ id: 'playoffs', round_number: 'playoffs', name: playoffLabel }] : []),
+    ...rounds,
   ]
 
   const renderRoundLabel = round => {
@@ -56,7 +45,8 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
         <span>Tabla de Posiciones</span>
       </h2>
 
-      {rounds && rounds.length > 0 && (
+      {/* Con una sola opción no hay nada que elegir: la General ya está a la vista. */}
+      {roundOptions.length > 1 && (
         <SelectDropdown
           items={roundOptions}
           selectedId={selectedRound === null ? null : selectedRound}

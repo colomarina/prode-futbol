@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLeaderboard } from '../../hooks/useLeaderboard'
 import { useRounds } from '../../hooks/useRounds'
+import { useMatchesMeta } from '../../hooks/useMatchesMeta'
 import { useTournament } from '../../contexts/TournamentContext'
+import { getLeaderboardRounds } from '../../utils/leaderboardRounds'
 import LeaderboardHeader from './LeadboardHeader'
 import LeaderboardTable from './LeaderboardTable'
 import LoadingSpinner from './LoadingSpinner'
@@ -10,12 +12,19 @@ import ErrorMessage from './ErrorMessage'
 export default function Leaderboard({ onViewPredictions }) {
   const [selectedRound, setSelectedRound] = useState(null)
   const { activeTournament } = useTournament()
+  const isWorldCupTournament = activeTournament?.type === 'world_cup'
   const { leaderboard, loading, error, fetchLeaderboard } = useLeaderboard(
     selectedRound,
     activeTournament?.id,
-    activeTournament?.type === 'world_cup'
+    isWorldCupTournament
   )
   const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
+  const { matchesMeta } = useMatchesMeta(activeTournament?.id)
+
+  const { individualRounds, showPlayoffs } = useMemo(
+    () => getLeaderboardRounds({ rounds, matchesMeta, isWorldCupTournament }),
+    [rounds, matchesMeta, isWorldCupTournament]
+  )
 
   if (loading) {
     return (
@@ -38,9 +47,10 @@ export default function Leaderboard({ onViewPredictions }) {
       <LeaderboardHeader
         selectedRound={selectedRound}
         setSelectedRound={setSelectedRound}
-        rounds={rounds}
+        rounds={individualRounds}
         roundsLoading={roundsLoading}
-        isWorldCupTournament={activeTournament?.type === 'world_cup'}
+        showPlayoffs={showPlayoffs}
+        isWorldCupTournament={isWorldCupTournament}
       />
 
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
