@@ -4,6 +4,7 @@ import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
 import { useTournament } from '../../contexts/TournamentContext'
 import MatchPrediction from './MatchPrediction'
+import Button from '../Common/Button'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
 import LoadingState from '../Common/LoadingState'
@@ -338,13 +339,13 @@ export default function PredictionForm() {
           <p style={{ color: 'var(--color-success)', fontWeight: '600', marginBottom: '8px' }}>
             💡 {getRoundDisplayName(activeRound)} está abierta para pronósticos
           </p>
-          <button
+          <Button
+            variant="success"
+            size="sm"
             onClick={() => setSelectedRound(activeRound.round_number)}
-            className="btn-success"
-            style={{ padding: '8px 16px', fontSize: '0.9rem' }}
           >
             Ir a {getRoundDisplayNameByNumber(activeRound.round_number, rounds)} →
-          </button>
+          </Button>
         </div>
       )}
 
@@ -371,27 +372,15 @@ export default function PredictionForm() {
             zIndex: 'var(--z-sticky)',
           }}
         >
-          <button
+          <Button
+            size="lg"
+            fullWidth
             onClick={handleSaveAll}
             disabled={saving || !hasValidPredictions}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '18px',
-              fontSize: '1.1rem',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              opacity: saving || !hasValidPredictions ? 0.6 : 1,
-              cursor: saving || !hasValidPredictions ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-            }}
           >
-            <span style={{ fontSize: '1.5rem' }}>{saving ? '⏳' : '💾'}</span>
+            <span style={{ fontSize: 'var(--font-size-2xl)' }}>{saving ? '⏳' : '💾'}</span>
             <span>{saving ? 'Guardando...' : 'Guardar Todos los Pronósticos'}</span>
-          </button>
+          </Button>
         </div>
       )}
 

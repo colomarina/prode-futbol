@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTournament } from '../../contexts/TournamentContext'
 import { useWorldCupBonus } from '../../hooks/useWorldCupBonus'
+import Button from '../Common/Button'
 import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
@@ -286,27 +287,10 @@ export default function WorldCupPredictions() {
             zIndex: 'var(--z-sticky)',
           }}
         >
-          <button
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={saving || !hasAnyAnswer}
-            style={{
-              width: '100%',
-              padding: '16px',
-              fontSize: '1.05rem',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: saving || !hasAnyAnswer ? 0.65 : 1,
-              cursor: saving || !hasAnyAnswer ? 'not-allowed' : 'pointer',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.16)',
-            }}
-          >
-            <span style={{ fontSize: '1.2rem' }}>{saving ? '⏳' : '💾'}</span>
+          <Button size="lg" fullWidth onClick={handleSave} disabled={saving || !hasAnyAnswer}>
+            <span style={{ fontSize: 'var(--font-size-xl)' }}>{saving ? '⏳' : '💾'}</span>
             <span>{saving ? 'Guardando...' : 'Guardar y completar despues'}</span>
-          </button>
+          </Button>
         </div>
       )}
 
