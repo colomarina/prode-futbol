@@ -1,0 +1,120 @@
+/**
+ * La geometría es exactamente la del `button` global de `index.css` (radio 8,
+ * padding 12/20, alto mínimo 44, peso 600). Se replica en vez de mejorarse a
+ * propósito: mientras la migración avanza de a un feature por vez, la app no
+ * puede tener dos tamaños de botón conviviendo.
+ *
+ * El `20px` del padding horizontal es el único valor que no sale de la escala.
+ * Queda así hasta la 5c, cuando desaparezca el `button` global y la geometría se
+ * decida una sola vez para todos los botones al mismo tiempo.
+ *
+ * `:disabled` y `:focus-visible` no se declaran acá: los pone el `button` global
+ * con más especificidad, y así siguen siendo iguales en toda la app.
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-md) 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Compacto: reemplaza los `padding: 8px 16px` + `fontSize: 0.9rem` inline. */
+.sm {
+  min-height: 36px;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-md);
+}
+
+/**
+ * La acción principal de una pantalla: el botón de guardar de la barra fija.
+ *
+ * Estaba copiado en tres pantallas con valores distintos entre sí —padding 18/18/16,
+ * fuente 1.1/1.1/1.05rem, sombra con dos opacidades— y las tres repetían a mano el
+ * `opacity` y el `cursor` del estado deshabilitado, que el `button` global ya
+ * define. Acá quedan iguales las tres.
+ */
+.lg {
+  min-height: 56px;
+  padding: var(--space-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 15%);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.primary:hover:not(:disabled),
+.primary:active:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text-on-primary);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--color-secondary-light);
+}
+
+.success {
+  background-color: var(--color-success);
+  color: var(--color-text-on-primary);
+}
+
+.success:hover:not(:disabled) {
+  background-color: var(--color-success-light);
+}
+
+/* `danger` en la API, `--color-error` en el token: el color describe el estado,
+   la variante describe para qué sirve el botón. */
+.danger {
+  background-color: var(--color-error);
+  color: var(--color-text-on-primary);
+}
+
+.danger:hover:not(:disabled) {
+  background-color: var(--color-error-light);
+}
+
+.outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.outline:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.text {
+  background-color: transparent;
+  color: var(--color-primary);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+.text:hover:not(:disabled) {
+  background-color: var(--color-surface-highlight);
+}
