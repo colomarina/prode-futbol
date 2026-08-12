@@ -9,6 +9,9 @@ import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 import { hasMatchStarted } from '../utils/matchTiming'
 
+/** Mapa vacío compartido, para no devolver un `{}` nuevo en cada render. */
+const EMPTY_MAP = {}
+
 /** Convierte una lista de pronósticos en un mapa por la clave indicada. */
 const indexBy = (predictions, key) =>
   Object.fromEntries((predictions || []).map(prediction => [prediction[key], prediction]))
@@ -142,13 +145,27 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     },
   })
 
+  // Referencias estables: el ternario de abajo también devolvía un `{}` nuevo por
+  // render en la rama deshabilitada. Ver el comentario de `useMatches`.
+  const usersList = useMemo(() => users ?? [], [users])
+
+  const roundPredictions = useMemo(
+    () => (roundPredictionsEnabled ? (roundPredictionsQuery.data ?? EMPTY_MAP) : EMPTY_MAP),
+    [roundPredictionsEnabled, roundPredictionsQuery.data]
+  )
+
+  const matchPredictions = useMemo(
+    () => (matchPredictionsEnabled ? (matchPredictionsQuery.data ?? EMPTY_MAP) : EMPTY_MAP),
+    [matchPredictionsEnabled, matchPredictionsQuery.data]
+  )
+
   return {
     rounds,
     roundsLoading,
     availableRounds,
     matches,
     matchesLoading,
-    users: users ?? [],
+    users: usersList,
     selectedUser,
     setSelectedUser,
     selectedUserData,
@@ -160,8 +177,8 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
     viewMode,
     setViewMode,
     // Sin seleccion no hay nada que mostrar: el mapa vacio es el estado correcto.
-    roundPredictions: roundPredictionsEnabled ? (roundPredictionsQuery.data ?? {}) : {},
-    matchPredictions: matchPredictionsEnabled ? (matchPredictionsQuery.data ?? {}) : {},
+    roundPredictions,
+    matchPredictions,
     loading: roundPredictionsEnabled && roundPredictionsQuery.isPending,
     matchLoading: matchPredictionsEnabled && matchPredictionsQuery.isPending,
     hasMatchStarted,

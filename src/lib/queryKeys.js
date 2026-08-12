@@ -61,11 +61,11 @@ export const queryKeys = {
   profiles: () => ['profiles'],
 
   /** Tabla de posiciones: general, de una fecha, o de playoffs. */
-  leaderboard: (tournamentId, roundNumber, includeWorldCupBonus) => [
+  leaderboard: (tournamentId, roundNumber, isWorldCupTournament) => [
     tournamentId ?? null,
     'leaderboard',
     roundNumber ?? null,
-    Boolean(includeWorldCupBonus),
+    Boolean(isWorldCupTournament),
   ],
 
   /** Estadísticas personales del usuario en el torneo. */
