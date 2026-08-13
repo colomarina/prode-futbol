@@ -1,0 +1,63 @@
+/**
+ * La píldora con una palabra adentro: "#3", "Finalizado", "En juego", "Grupo A".
+ *
+ * Estaba escrita a mano una y otra vez, con el mismo `padding: 4px 10px` y el
+ * mismo peso 700 pero radios de 6, 8 y 999px y tamaños de 0.7, 0.72, 0.75 y
+ * 0.8rem según el archivo.
+ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Para etiquetas de categoría —los grupos del Mundial— en vez de estados. */
+.pill {
+  border-radius: var(--radius-pill);
+}
+
+.sm {
+  padding: var(--space-3xs) var(--space-sm);
+  font-size: var(--font-size-2xs);
+}
+
+/*
+ * Los tonos van con el token de relleno y texto sobre él. `--color-text-on-primary`
+ * es blanco en los dos temas, que es lo que necesitan estos fondos saturados.
+ */
+.primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.success {
+  background-color: var(--color-success);
+  color: var(--color-text-on-primary);
+}
+
+.error {
+  background-color: var(--color-error);
+  color: var(--color-text-on-primary);
+}
+
+.warning {
+  background-color: var(--color-warning);
+  color: var(--color-text-on-primary);
+}
+
+.info {
+  background-color: var(--color-info);
+  color: var(--color-text-on-primary);
+}
+
+/* Sin color propio: hereda el del contenedor. Lo usa el badge de grupo, que
+   recibe sus colores de `getGroupBadgeColors`. */
+.neutral {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
