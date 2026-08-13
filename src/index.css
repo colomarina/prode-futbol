@@ -198,19 +198,22 @@ a:hover {
 }
 
 /* Botones - Mobile First */
+/**
+ * Del `button` global queda solo lo que es reset del navegador y accesibilidad.
+ *
+ * El radio, el padding, la tipografía y el layout se fueron a `Common/Button`:
+ * estaban declarados en los dos lugares con los mismos valores, así que la
+ * geometría de un botón se decidía dos veces. Ahora la decide el componente, y
+ * esta regla se limita a lo que tiene que valer para *cualquier* `<button>`,
+ * tenga clase o no.
+ *
+ * `font-family: inherit` no es opcional: sin eso el navegador le pone su fuente
+ * por defecto. Y los 44px son el mínimo táctil, así que también son de todos.
+ */
 button {
-  border-radius: 8px;
   border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   min-height: 44px; /* Tamaño mínimo táctil */
 }
 

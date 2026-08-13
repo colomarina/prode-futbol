@@ -1,15 +1,15 @@
 /**
- * La geometría es exactamente la del `button` global de `index.css` (radio 8,
- * padding 12/20, alto mínimo 44, peso 600). Se replica en vez de mejorarse a
- * propósito: mientras la migración avanza de a un feature por vez, la app no
- * puede tener dos tamaños de botón conviviendo.
+ * Este archivo es ahora el único lugar donde se decide cómo se ve un botón.
  *
- * El `20px` del padding horizontal es el único valor que no sale de la escala.
- * Queda así hasta la 5c, cuando desaparezca el `button` global y la geometría se
- * decida una sola vez para todos los botones al mismo tiempo.
+ * Hasta acá la geometría estaba duplicada: la misma declaraba el `button {}`
+ * global de `index.css` y la repetía este módulo. De esa regla global quedó solo
+ * el reset (`font-family`, `cursor`, `min-height` táctil) más `:disabled` y
+ * `:focus-visible`, que siguen siendo de todos los `<button>` de la app tengan
+ * clase o no.
  *
- * `:disabled` y `:focus-visible` no se declaran acá: los pone el `button` global
- * con más especificidad, y así siguen siendo iguales en toda la app.
+ * El padding horizontal era `20px`, el único valor del componente que no salía de
+ * la escala de espaciado. Ahora es `--space-xl` (24px): 4px más ancho, que es el
+ * costo de que el valor exista en la escala.
  */
 
 .button {
@@ -18,13 +18,10 @@
   justify-content: center;
   gap: var(--space-sm);
   min-height: 44px;
-  padding: var(--space-md) 20px;
-  border: none;
+  padding: var(--space-md) var(--space-xl);
   border-radius: var(--radius-md);
-  font-family: inherit;
   font-size: var(--font-size-base);
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
