@@ -1,0 +1,78 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface);
+  border: 3px solid var(--color-success);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+/* La barra vertical del borde izquierdo, que marca la tarjeta como la activa. */
+.stripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: linear-gradient(180deg, var(--color-success-light) 0%, var(--color-success) 100%);
+}
+
+/* Deja libre el ancho de la barra para que no se le monte el contenido. */
+.body {
+  padding-left: var(--space-lg);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.tagText {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-success-text);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.round {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.roundIcon {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-3xl);
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 2px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.roundName {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.roundHint {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}

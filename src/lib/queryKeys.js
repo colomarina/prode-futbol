@@ -71,6 +71,13 @@ export const queryKeys = {
   /** Estadísticas personales del usuario en el torneo. */
   personalStats: (tournamentId, userId) => [tournamentId ?? null, 'personal-stats', userId ?? null],
 
+  /** Cuánto pronosticó cada jugador en una fecha (panel de fechas del admin). */
+  roundProgress: (tournamentId, roundNumber) => [
+    tournamentId ?? null,
+    'round-progress',
+    roundNumber ?? null,
+  ],
+
   /** Bonus del Mundial: configuración, equipos, resultados y pronósticos. */
   worldCupBonus: (tournamentId, userId) => [
     tournamentId ?? null,
