@@ -97,7 +97,7 @@
 
 .outline {
   background-color: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border: 2px solid var(--color-primary);
 }
 
@@ -119,7 +119,7 @@
 
 .text {
   background-color: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   padding: var(--space-sm) var(--space-lg);
 }
 
@@ -139,7 +139,7 @@
  */
 .link {
   background-color: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   text-decoration: underline;
   min-height: auto;
   padding: var(--space-2xs) 0;

@@ -43,15 +43,15 @@
 }
 
 .etiquetaChica {
-  font-size: 0.65rem;
+  font-size: var(--font-size-2xs);
   color: var(--color-text-secondary);
   margin-bottom: var(--space-3xs);
 }
 
 .marcador {
-  font-size: 1.4rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .resultado {
@@ -66,7 +66,7 @@
 
 .puntos {
   margin-top: var(--space-2xs);
-  font-size: 0.85rem;
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 
@@ -79,7 +79,7 @@
 }
 
 .sinPronostico {
-  font-size: 0.85rem;
+  font-size: var(--font-size-md);
   color: var(--color-text-secondary);
   font-style: italic;
 }
@@ -113,7 +113,7 @@
 /* En móvil no entra el texto: el chip se vuelve un círculo con solo el escudo. */
 @media (max-width: 767px) {
   .chip {
-    padding: 5px;
+    padding: var(--space-xs);
     border-radius: var(--radius-pill);
   }
 

@@ -27,7 +27,7 @@
 
 .title {
   margin: 0 0 0.75rem;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--color-text-secondary);
   display: flex;
@@ -37,7 +37,7 @@
 
 .name {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -48,21 +48,21 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(14, 165, 233, 0.12);
-  color: var(--color-primary);
-  font-size: 1rem;
+  color: var(--color-primary-text);
+  font-size: var(--font-size-base);
 }
 
 .value {
   margin: 0.5rem 0 0;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
 }
 
 .empty {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
 }
 

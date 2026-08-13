@@ -136,7 +136,7 @@ export default function MatchManager() {
           style={{
             fontSize: '1.5rem',
             fontWeight: '700',
-            color: 'var(--color-primary)',
+            color: 'var(--color-primary-text)',
             marginBottom: '8px',
           }}
         >

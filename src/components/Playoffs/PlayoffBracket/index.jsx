@@ -107,7 +107,7 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
               <h3
                 style={{
                   margin: '0 0 var(--space-sm) 0',
-                  color: 'var(--color-primary)',
+                  color: 'var(--color-primary-text)',
                   fontSize: 'var(--font-size-base)',
                   borderBottom: '1px solid var(--color-border)',
                   paddingBottom: 'var(--space-xs)',
@@ -169,7 +169,7 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
                   style={{
                     margin: '0 0 var(--space-md) 0',
                     fontSize: 'var(--font-size-base)',
-                    color: 'var(--color-primary)',
+                    color: 'var(--color-primary-text)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     borderBottom: '1px solid var(--color-border)',

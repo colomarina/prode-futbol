@@ -32,7 +32,7 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
       <h2
         style={{
           fontWeight: '700',
-          color: 'var(--color-primary)',
+          color: 'var(--color-primary-text)',
           margin: '0 0 var(--space-md) 0',
           display: 'flex',
           alignItems: 'center',

@@ -3,16 +3,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: var(--space-xl) var(--space-lg);
 }
 
 .card {
   width: 100%;
   max-width: 460px;
-  padding: 32px 24px;
+  padding: var(--space-2xl) var(--space-xl);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   text-align: center;
 }
@@ -21,19 +21,19 @@
   display: block;
   font-size: 2.5rem;
   line-height: 1;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg);
 }
 
 .title {
-  margin: 0 0 8px;
-  font-size: 1.25rem;
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .message {
-  margin: 0 0 24px;
-  font-size: 0.95rem;
+  margin: 0 0 var(--space-xl);
+  font-size: var(--font-size-base);
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
@@ -41,18 +41,18 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-md);
   justify-content: center;
 }
 
 .primaryButton,
 .secondaryButton {
   flex: 1 1 140px;
-  padding: 12px 20px;
-  font-size: 0.95rem;
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-base);
   font-weight: 600;
   font-family: inherit;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition:
     filter 0.15s ease,
@@ -86,16 +86,16 @@
 }
 
 .details {
-  margin: 24px 0 0;
-  padding: 12px;
+  margin: var(--space-xl) 0 0;
+  padding: var(--space-md);
   max-height: 200px;
   overflow: auto;
   text-align: left;
-  font-size: 0.72rem;
+  font-size: var(--font-size-2xs);
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--color-text-secondary);
   background-color: var(--color-surface-variant);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }

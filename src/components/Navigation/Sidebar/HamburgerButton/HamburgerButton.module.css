@@ -10,7 +10,7 @@
   background-color: var(--color-primary);
   color: var(--color-text-on-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   width: 44px;
   height: 44px;
   display: flex;

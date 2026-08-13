@@ -4,7 +4,7 @@ import '../../../styles/tippy-theme.css'
 
 const INFO_BUTTON_TYPES = {
   info: {
-    color: 'var(--color-primary)',
+    color: 'var(--color-primary-text)',
     icon: 'i',
   },
   error: {

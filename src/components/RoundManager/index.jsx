@@ -279,7 +279,7 @@ export default function RoundManager() {
           style={{
             fontSize: '1.75rem',
             fontWeight: '700',
-            color: 'var(--color-primary)',
+            color: 'var(--color-primary-text)',
             marginBottom: '8px',
             display: 'flex',
             alignItems: 'center',

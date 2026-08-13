@@ -422,7 +422,7 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
                   {isSelected && (
                     <span
                       style={{
-                        color: 'var(--color-primary)',
+                        color: 'var(--color-primary-text)',
                         fontWeight: '800',
                         fontSize: '0.82rem',
                         letterSpacing: '0.3px',

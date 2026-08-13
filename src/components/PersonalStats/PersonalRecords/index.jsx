@@ -11,7 +11,7 @@ const iconStyles = {
   },
   'Fecha Más Precisa': {
     emoji: '📌',
-    color: 'var(--color-primary)',
+    color: 'var(--color-primary-text)',
   },
 }
 

@@ -6,7 +6,7 @@
   gap: 1rem;
   padding: 2rem;
   border: 2px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background-color: var(--color-surface);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -41,12 +41,12 @@
 }
 
 .emoji {
-  font-size: 3rem;
+  font-size: var(--font-size-4xl);
   line-height: 1;
 }
 
 .name {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
@@ -62,7 +62,7 @@
   display: inline-block;
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text-on-primary);
   text-transform: uppercase;
@@ -71,6 +71,6 @@
 
 .disabledHint {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }

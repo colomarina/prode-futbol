@@ -1,6 +1,6 @@
 .container {
   background: var(--color-surface);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-border);
@@ -20,12 +20,12 @@
   gap: 1rem;
   padding: 1rem;
   background: var(--color-surface-variant);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border-left: 4px solid var(--color-primary);
 }
 
 .icon {
-  font-size: 1.75rem;
+  font-size: var(--font-size-3xl);
   min-width: 2.5rem;
   text-align: center;
 }
@@ -45,7 +45,7 @@
 
 .value {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -61,10 +61,10 @@
   }
 
   .icon {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
   }
 
   .value {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl);
   }
 }

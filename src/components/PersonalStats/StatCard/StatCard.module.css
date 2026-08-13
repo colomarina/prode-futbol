@@ -28,13 +28,13 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 999px;
-  font-size: 1.1rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-lg);
 }
 
 .title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--color-text-secondary);
 }
@@ -48,7 +48,7 @@
 
 .value {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: var(--font-size-3xl);
   font-weight: 700;
   color: var(--color-text-primary);
   display: flex;
@@ -57,13 +57,13 @@
 }
 
 .unit {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .subtext {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
 }

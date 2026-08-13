@@ -14,7 +14,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   position: relative;
   isolation: isolate;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
 }
 
@@ -36,7 +36,7 @@
   transition: opacity 300ms ease-in-out 150ms;
   padding: var(--_label-padding);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
 }
 
 .viewModeToggle::before,
@@ -100,11 +100,11 @@
 
 .modeButton {
   border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
   cursor: pointer;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: var(--font-size-md);
   transition: all 0.2s ease;
 }
 

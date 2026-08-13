@@ -123,7 +123,7 @@ const PointsCell = memo(function PointsCell({ points }) {
         style={{
           fontSize: 'var(--font-size-xl)',
           fontWeight: '700',
-          color: 'var(--color-primary)',
+          color: 'var(--color-primary-text)',
           display: 'inline-flex',
           alignItems: 'center',
           gap: 'var(--space-2xs)',

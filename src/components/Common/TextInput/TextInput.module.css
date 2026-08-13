@@ -1,12 +1,12 @@
 .input {
   width: 100%;
   min-height: 40px;
-  padding: 10px 12px;
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
   color: var(--color-text-primary);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   outline: none;
   transition:
     border-color 0.2s ease,

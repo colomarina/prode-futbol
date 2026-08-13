@@ -89,7 +89,7 @@
 .marcador {
   font-size: var(--font-size-xl);
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   line-height: 1.1;
 }
 
@@ -112,13 +112,13 @@
 }
 
 .vacio {
-  font-size: 0.78rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .puntos {
-  font-size: 0.85rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   white-space: nowrap;
 }

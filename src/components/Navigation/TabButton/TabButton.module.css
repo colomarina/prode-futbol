@@ -41,7 +41,7 @@
   background-color: var(--color-surface-highlight);
   border-color: var(--color-border);
   border-bottom-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .button:hover {
@@ -54,7 +54,7 @@
 }
 
 .icon {
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   display: block;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -102,7 +102,7 @@
   }
 
   .compact .icon {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
   }
 }
 

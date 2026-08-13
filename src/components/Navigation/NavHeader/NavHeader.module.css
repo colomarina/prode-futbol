@@ -1,7 +1,7 @@
 .prodeHeader {
   background-color: var(--color-surface);
-  padding-top: 12px;
-  padding-bottom: 4px;
+  padding-top: var(--space-md);
+  padding-bottom: var(--space-2xs);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -26,41 +26,41 @@
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .logoContainer {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
 }
 
 .brandInfo h1 {
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   line-height: 1;
   margin-bottom: 0.25rem;
 }
 
 .brandInfo p {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   font-weight: 500;
-  margin: 4px 0 0 0;
+  margin: var(--space-2xs) 0 0 0;
 }
 
 .badges {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-xs);
   flex-wrap: wrap;
 }
 
@@ -69,13 +69,18 @@
 .finishedBadge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
+  gap: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-sm);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--color-info);
+  /*
+   * El borde va con el color de relleno y la letra con el de texto: en el Mundial
+   * `--color-info` es el celeste claro `#6CB4EE`, que como letra sobre este fondo
+   * daba 2.09:1.
+   */
   background-color: var(--color-surface-variant);
-  color: var(--color-info);
-  font-size: 0.7rem;
+  color: var(--color-info-text);
+  font-size: var(--font-size-2xs);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -83,5 +88,5 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md);
 }

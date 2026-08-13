@@ -1,6 +1,6 @@
 .container {
   background: var(--color-surface);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-border);
@@ -31,25 +31,25 @@
 }
 
 .icon {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   line-height: 1;
 }
 
 .label {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .description {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   line-height: 1.35;
 }
 
 .count {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text-primary);
   background: var(--color-surface-variant);
@@ -69,14 +69,14 @@
   flex: 1;
   height: 28px;
   background: var(--color-surface-variant);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
 }
 
 .barFill {
   height: 100%;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   transition: width 0.3s ease;
 }
 
@@ -106,7 +106,7 @@
 
 .totalValue {
   margin: 0.5rem 0 0 0;
-  font-size: 2rem;
+  font-size: var(--font-size-3xl);
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -125,7 +125,7 @@
   }
 
   .label {
-    font-size: 0.9rem;
+    font-size: var(--font-size-md);
   }
 
   .barContainer {
@@ -133,6 +133,6 @@
   }
 
   .totalValue {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
   }
 }

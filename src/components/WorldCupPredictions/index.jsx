@@ -160,7 +160,11 @@ export default function WorldCupPredictions() {
         </div>
         {bonusScore && (
           <div
-            style={{ marginTop: 'var(--space-sm)', color: 'var(--color-primary)', fontWeight: 700 }}
+            style={{
+              marginTop: 'var(--space-sm)',
+              color: 'var(--color-primary-text)',
+              fontWeight: 700,
+            }}
           >
             Tu bonus actual calculado: {bonusScore.total_points} pts
           </div>

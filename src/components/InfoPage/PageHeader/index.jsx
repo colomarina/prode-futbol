@@ -4,7 +4,7 @@ export default function PageHeader({ icon, title, subtitle }) {
       <h2
         style={{
           fontWeight: '700',
-          color: 'var(--color-primary)',
+          color: 'var(--color-primary-text)',
           marginBottom: 'var(--space-sm)',
           display: 'flex',
           alignItems: 'center',

@@ -1,8 +1,8 @@
 .themeToggle {
   background-color: transparent;
   border: 2px solid var(--color-border);
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -22,7 +22,7 @@
 }
 
 .icon {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   display: inline-flex;
   align-items: center;
   justify-content: center;

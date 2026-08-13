@@ -5,7 +5,7 @@
 }
 
 .bandera {
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   object-fit: cover;
   /*
    * El borde es un negro translúcido a propósito y no un token: separa la

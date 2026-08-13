@@ -207,7 +207,9 @@ export default function AdminMatchSchedule() {
                         }}
                       >
                         <TeamDisplay team={match.home_team} size="md" />
-                        <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>vs</span>
+                        <span style={{ fontWeight: '700', color: 'var(--color-primary-text)' }}>
+                          vs
+                        </span>
                         <TeamDisplay team={match.away_team} size="md" />
                       </div>
 

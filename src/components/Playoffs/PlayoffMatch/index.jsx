@@ -78,7 +78,7 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
             minWidth: '64px',
             textAlign: 'center',
             fontWeight: '800',
-            color: 'var(--color-primary)',
+            color: 'var(--color-primary-text)',
             fontSize: 'var(--font-size-lg)',
           }}
         >
@@ -133,7 +133,7 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
               {match.is_finished && match.is_playoff && isTie ? (hitQualifier ? '✅' : '❌') : ''}
             </p>
           )}
-          <p style={{ margin: 0, fontWeight: '700', color: 'var(--color-primary)' }}>
+          <p style={{ margin: 0, fontWeight: '700', color: 'var(--color-primary-text)' }}>
             {prediction.points || 0} pts
           </p>
         </div>

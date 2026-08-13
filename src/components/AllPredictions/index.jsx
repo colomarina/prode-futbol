@@ -67,7 +67,7 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
           style={{
             fontSize: 'var(--font-size-lg)',
             fontWeight: '700',
-            color: 'var(--color-primary)',
+            color: 'var(--color-primary-text)',
             marginBottom: 'var(--space-sm)',
           }}
         >

@@ -52,7 +52,7 @@ export default function DateTimeInput({
         <span
           style={{
             fontSize: 'var(--font-size-base)',
-            color: 'var(--color-primary)',
+            color: 'var(--color-primary-text)',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
