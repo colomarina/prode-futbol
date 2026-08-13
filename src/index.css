@@ -7,6 +7,19 @@
   --color-secondary: #4caf50;
   --color-secondary-light: #66bb6a;
 
+  /*
+   * El primario como color de LETRA, igual que los `-text` de los estados.
+   *
+   * Hace falta porque `--color-primary` es un color de relleno y cada torneo
+   * elige el suyo: el del Mundial es `#6CB4EE`, un celeste claro, y usado como
+   * texto sobre fondo claro da 1.92:1 contra el mínimo de 4.5. Se midieron 62 de
+   * 271 textos por debajo del mínimo en esa paleta, todos por esta causa.
+   *
+   * Se deriva y no se escribe a mano por lo mismo que los de estado: los ~30
+   * tokens que pisa cada torneo en `tournaments.config.js` no incluyen este.
+   */
+  --color-primary-text: color-mix(in srgb, var(--color-primary) 60%, black);
+
   /* Fondos */
   --color-background: #f5f5f5;
   --color-surface: #ffffff;
@@ -16,7 +29,16 @@
 
   /* Textos */
   --color-text-primary: #212121;
-  --color-text-secondary: #757575;
+  /*
+   * Era `#757575`, que sobre el fondo `#f5f5f5` da 4.07:1 — apenas debajo del
+   * 4.5:1 que pide WCAG AA para texto normal. Se midieron 36 textos secundarios
+   * por debajo del mínimo por esta única causa. `#666666` da 5.2:1 y se sigue
+   * leyendo como secundario.
+   *
+   * Se notó comparando paletas: el Mundial define su secundario en `#555555` y
+   * por eso pasaba, mientras el tema base no.
+   */
+  --color-text-secondary: #666666;
   --color-text-disabled: #bdbdbd;
   --color-text-on-primary: #ffffff; /* Texto sobre botones/fondos verdes */
 
@@ -89,6 +111,12 @@
   --color-primary-light: #2a9e56;
   --color-secondary: #4caf50;
   --color-secondary-light: #66bb6a;
+
+  /*
+   * Acá se mezcla con blanco: el verde `#1e7f43` sobre el fondo oscuro da 3.8:1,
+   * así que el problema existe en las dos paletas, solo que al revés.
+   */
+  --color-primary-text: color-mix(in srgb, var(--color-primary) 55%, white);
 
   /* Fondos - Oscuros */
   --color-background: #0f0f0f;
@@ -195,7 +223,7 @@ p {
 
 /* Enlaces */
 a {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   text-decoration: none;
   transition: color 0.2s;
 }
