@@ -6,38 +6,16 @@ import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
 import LoadingState from '../Common/LoadingState'
+import TeamOption from '../Common/TeamOption'
 import EmptyState from '../Common/EmptyState'
 import {
   ARGENTINA_STAGE_OPTIONS,
   DEBUTANT_TEAM_SLUGS,
   FINAL_GOALS_OPTIONS,
   HAT_TRICK_OPTIONS,
-  getTeamFlagImageUrl,
   WORLD_CUP_BONUS_MAX_POINTS,
   WORLD_CUP_BONUS_QUESTIONS,
 } from '../../constants/worldCupBonus'
-
-const TeamOptionContent = ({ team }) => {
-  const flagUrl = team.logo_url || getTeamFlagImageUrl(team.slug)
-
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-      {flagUrl ? (
-        <img
-          src={flagUrl}
-          alt=""
-          width="20"
-          height="14"
-          loading="lazy"
-          style={{ borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.12)' }}
-        />
-      ) : (
-        <span>🏳️</span>
-      )}
-      <span>{team.name}</span>
-    </span>
-  )
-}
 
 const buildInitialValues = source => ({
   champion_team_id: source?.champion_team_id || '',
@@ -167,7 +145,7 @@ export default function WorldCupPredictions() {
           style={{
             marginTop: '12px',
             fontWeight: 600,
-            color: isLocked ? 'var(--color-error)' : '#10b981',
+            color: isLocked ? 'var(--color-error)' : 'var(--color-success)',
           }}
         >
           {isLocked
@@ -213,8 +191,8 @@ export default function WorldCupPredictions() {
                       : 'Seleccionar equipo'
                   }
                   disabled={isLocked}
-                  renderButton={team => <TeamOptionContent team={team} />}
-                  renderOption={team => <TeamOptionContent team={team} />}
+                  renderButton={team => <TeamOption team={team} />}
+                  renderOption={team => <TeamOption team={team} />}
                 />
               )}
 

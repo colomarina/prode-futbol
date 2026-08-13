@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useId } from 'react'
+import LoadingState from '../LoadingState'
 import styles from './SelectDropdown.module.css'
 
 const SELECT_STYLE = {
@@ -149,7 +150,10 @@ const SelectDropdown = ({
                 gap: '10px',
                 border: 'none',
                 background: selectedId === item[valueKey] ? 'var(--color-primary)' : 'transparent',
-                color: selectedId === item[valueKey] ? 'white' : 'var(--color-text-primary)',
+                color:
+                  selectedId === item[valueKey]
+                    ? 'var(--color-text-on-primary)'
+                    : 'var(--color-text-primary)',
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'background 200ms',
@@ -174,15 +178,7 @@ const SelectDropdown = ({
       )}
 
       {isLoading && (
-        <div style={{ marginTop: '8px', textAlign: 'center' }}>
-          <div
-            className="spinner"
-            style={{ margin: '0 auto 8px', width: '16px', height: '16px' }}
-          />
-          <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', margin: 0 }}>
-            Cargando...
-          </p>
-        </div>
+        <LoadingState message="Cargando..." size="xs" style={{ marginTop: '8px', padding: 0 }} />
       )}
     </div>
   )

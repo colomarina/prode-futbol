@@ -5,7 +5,6 @@ const items = [
   {
     title: 'Equipo Favorito',
     icon: '⭐',
-    iconBg: 'rgba(245, 158, 11, 0.12)',
     iconColor: 'var(--color-warning)',
     valueLabel: team => team?.name,
     valueText: team => (team ? `${team.count ?? ''}` : ''),
@@ -17,7 +16,6 @@ const items = [
   {
     title: 'Equipo Mejor Leído',
     icon: '🎯',
-    iconBg: 'rgba(16, 185, 129, 0.12)',
     iconColor: 'var(--color-success)',
     formatValue: team =>
       team?.count !== undefined ? `${team.count} veces` : `${team?.percentage}% de acierto`,
@@ -26,7 +24,6 @@ const items = [
   {
     title: 'Equipo Peor Leído',
     icon: '📉',
-    iconBg: 'rgba(239, 68, 68, 0.12)',
     iconColor: 'var(--color-error)',
     formatValue: team =>
       team?.count !== undefined ? `${team.count} veces` : `${team?.percentage}% de acierto`,
@@ -44,7 +41,6 @@ export const TeamStats = ({ teamStats }) => {
             <StatCard
               key={item.title}
               icon={item.icon}
-              iconBg={item.iconBg}
               iconColor={item.iconColor}
               title={item.title}
             >

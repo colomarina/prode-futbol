@@ -3,6 +3,7 @@ import TeamDisplay from '../../Common/TeamDisplay'
 import ScoreInput, { ScoreSeparator } from '../../Common/ScoreInput'
 import { canLoadResult, getResultLoadTime } from '../../../utils/matchTiming'
 import { getWinnerTeamId, parseScoreValue } from '../../../utils/score'
+import { formatMatchDateShort, formatMatchTime } from '../../../utils/matchDate'
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
   const awayInputRef = useRef(null)
@@ -94,20 +95,8 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
     [match.id, match.is_playoff, onValueChange, qualifierIsLocked]
   )
 
-  // Formatear fecha
-  const matchDate = new Date(match.match_date)
-  const formattedDate = matchDate.toLocaleDateString('es-AR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
-  const formattedTime = matchDate.toLocaleTimeString('es-AR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
+  const formattedDate = formatMatchDateShort(match.match_date)
+  const formattedTime = formatMatchTime(match.match_date)
 
   return (
     <div
@@ -117,7 +106,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         overflow: 'hidden',
         background:
           'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--color-border)',
         borderRadius: '16px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -131,7 +120,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           top: '12px',
           left: '12px',
           backgroundColor: 'var(--color-primary)',
-          color: 'white',
+          color: 'var(--color-text-on-primary)',
           padding: '6px 12px',
           borderRadius: '12px',
           fontSize: '0.8rem',
@@ -149,7 +138,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
             top: '12px',
             right: '12px',
             backgroundColor: 'var(--color-success)',
-            color: 'white',
+            color: 'var(--color-text-on-primary)',
             padding: '4px 12px',
             borderRadius: '12px',
             fontSize: '0.75rem',
@@ -289,13 +278,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
             fontWeight: '600',
           }}
         >
-          Disponible a las{' '}
-          {getResultLoadTime(match.match_date).toLocaleTimeString('es-AR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'America/Argentina/Buenos_Aires',
-          })}
+          Disponible a las {formatMatchTime(getResultLoadTime(match.match_date))}
         </p>
       )}
 

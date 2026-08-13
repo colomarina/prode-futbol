@@ -3,9 +3,7 @@ import LoadingState from '../../Common/LoadingState'
 
 const MatchPredictionsByUser = ({ matches, roundPredictions, hasMatchStarted, loading }) => {
   if (loading)
-    return (
-      <LoadingState message="Cargando pronósticos..." style={{ padding: '40px' }} spacing="16px" />
-    )
+    return <LoadingState message="Cargando pronósticos..." size="md" style={{ padding: '40px' }} />
 
   return (
     <div>

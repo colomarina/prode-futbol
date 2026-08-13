@@ -1,4 +1,5 @@
 import logOut from '../../../../../assets/logout.svg'
+import Spinner from '../../../../Common/Spinner'
 import styles from './MainMenuView.module.css'
 
 export default function MainMenuView({ menuItems, onSelectItem, isLoggingOut = false }) {
@@ -25,7 +26,7 @@ export default function MainMenuView({ menuItems, onSelectItem, isLoggingOut = f
               >
                 <span className={styles.menuIcon}>
                   {isLoggingOut ? (
-                    <div className={styles.spinner} />
+                    <Spinner size={20} borderWidth={2.5} color="var(--color-error)" />
                   ) : (
                     <img src={logOut} alt="Cerrar sesión" className={styles.logoutIcon} />
                   )}

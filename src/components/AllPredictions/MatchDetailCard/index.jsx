@@ -35,7 +35,7 @@ const MatchDetailCard = ({ match }) => {
           <span
             style={{
               backgroundColor: 'var(--color-primary)',
-              color: 'white',
+              color: 'var(--color-text-on-primary)',
               padding: '4px 10px',
               borderRadius: '8px',
               fontSize: '0.75rem',

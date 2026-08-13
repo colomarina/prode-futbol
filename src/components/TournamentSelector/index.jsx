@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import styles from './TournamentSelector.module.css'
 import TournamentCard from './TournamentCard'
+import LoadingState from '../Common/LoadingState'
 
 export default function TournamentSelector({
   tournaments,
@@ -24,10 +25,7 @@ export default function TournamentSelector({
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingSpinner}>
-          <div className={styles.spinner}></div>
-          <p>Cargando torneos...</p>
-        </div>
+        <LoadingState message="Cargando torneos..." size="md" />
       </div>
     )
   }

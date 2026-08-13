@@ -23,7 +23,10 @@ const ViewModeToggle = ({ viewMode, onChange }) => {
           onClick={() => onChange('by-match')}
           style={{
             background: viewMode === 'by-match' ? 'var(--color-primary)' : 'transparent',
-            color: viewMode === 'by-match' ? '#fff' : 'var(--color-text-primary)',
+            color:
+              viewMode === 'by-match'
+                ? 'var(--color-text-on-primary)'
+                : 'var(--color-text-primary)',
           }}
         >
           ⚽ Por partido
@@ -36,7 +39,8 @@ const ViewModeToggle = ({ viewMode, onChange }) => {
           onClick={() => onChange('by-user')}
           style={{
             background: viewMode === 'by-user' ? 'var(--color-primary)' : 'transparent',
-            color: viewMode === 'by-user' ? '#fff' : 'var(--color-text-primary)',
+            color:
+              viewMode === 'by-user' ? 'var(--color-text-on-primary)' : 'var(--color-text-primary)',
           }}
         >
           👤 Por usuario

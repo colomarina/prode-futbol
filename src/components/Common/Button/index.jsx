@@ -11,7 +11,7 @@ import styles from './Button.module.css'
  * eso hace que cualquier botón adentro de un `<form>` lo envíe sin querer. Los
  * que sí tienen que enviar el formulario lo declaran.
  *
- * @param {'primary'|'secondary'|'success'|'danger'|'outline'|'text'} variant
+ * @param {'primary'|'secondary'|'success'|'danger'|'info'|'outline'|'text'|'link'} variant
  * @param {'md'|'sm'|'lg'} size
  * @param {boolean} fullWidth
  */

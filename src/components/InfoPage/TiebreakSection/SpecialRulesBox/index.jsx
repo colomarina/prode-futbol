@@ -1,11 +1,13 @@
+import { tint } from '../../../../utils/tint'
+
 const SpecialRulesBox = ({ icon, title, description, note }) => {
   return (
     <div
       style={{
         padding: '12px',
-        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+        backgroundColor: tint('var(--color-error)', 8),
         borderRadius: '8px',
-        border: '2px solid rgba(239, 68, 68, 0.2)',
+        border: `2px solid ${tint('var(--color-error)', 20)}`,
         marginBottom: '16px',
       }}
     >

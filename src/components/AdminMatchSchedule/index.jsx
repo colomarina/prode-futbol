@@ -3,6 +3,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { getRoundDisplayName } from '../../utils/roundLabels'
+import { formatMatchDateTimeLong } from '../../utils/matchDate'
 import Button from '../Common/Button'
 import LoadingState from '../Common/LoadingState'
 import SelectDropdown from '../Common/SelectDropdown'
@@ -33,23 +34,6 @@ const toUtcIso = value => {
   if (Number.isNaN(date.getTime())) return null
 
   return date.toISOString()
-}
-
-const formatMatchDate = value => {
-  if (!value) return 'Sin horario asignado'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Horario inválido'
-
-  return date.toLocaleString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
 }
 
 export default function AdminMatchSchedule() {
@@ -196,7 +180,7 @@ export default function AdminMatchSchedule() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {matches.map(match => {
               const matchDateValue = scheduleValues[match.id] ?? ''
-              const currentDateLabel = formatMatchDate(match.match_date)
+              const currentDateLabel = formatMatchDateTimeLong(match.match_date)
               const hasChanges =
                 scheduleValues[match.id] !== undefined &&
                 scheduleValues[match.id] !== toDatetimeLocalValue(match.match_date)

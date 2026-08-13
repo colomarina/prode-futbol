@@ -4,7 +4,7 @@ import styles from './MatchStatusSection.module.css'
 
 export default function MatchStatusSection() {
   return (
-    <Card backgroundColor="rgba(249, 168, 37, 0.05)" borderColor="var(--color-warning)">
+    <Card color="var(--color-warning)">
       <SectionHeader
         icon="📌"
         title="Partidos Aplazados o Suspendidos"

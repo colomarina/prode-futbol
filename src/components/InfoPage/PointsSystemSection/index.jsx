@@ -5,7 +5,7 @@ import { pointsSystemData } from '../info.config'
 
 export default function PointsSystemSection() {
   return (
-    <Card backgroundColor="rgba(30, 127, 67, 0.05)" borderColor="var(--color-primary)">
+    <Card color="var(--color-primary)">
       <SectionHeader icon="📊" title="Sistema de Puntos" color="var(--color-primary)" />
       <div
         style={{

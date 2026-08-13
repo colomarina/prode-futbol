@@ -8,11 +8,7 @@ const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, match
       {selectedMatch && <MatchDetailCard match={selectedMatch} />}
 
       {matchLoading ? (
-        <LoadingState
-          message="Cargando pronósticos..."
-          style={{ padding: '40px' }}
-          spacing="16px"
-        />
+        <LoadingState message="Cargando pronósticos..." size="md" style={{ padding: '40px' }} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {users
@@ -28,12 +24,6 @@ const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, match
             ))}
         </div>
       )}
-
-      <style>{`
-        @media (max-width: 767px) {
-          .match-prediction-score { min-width: 80px; }
-        }
-      `}</style>
     </div>
   )
 }

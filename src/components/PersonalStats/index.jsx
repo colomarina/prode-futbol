@@ -12,6 +12,7 @@ import { PersonalRecords } from './PersonalRecords'
 import { HistoryStats } from './HistoryStats'
 import { AdditionalStats } from './AdditionalStats'
 import StatSection from './StatSection'
+import LoadingState from '../Common/LoadingState'
 import styles from './PersonalStats.module.css'
 
 export default function PersonalStats() {
@@ -23,9 +24,7 @@ export default function PersonalStats() {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.centered}>
-          <p>Cargando estadísticas...</p>
-        </div>
+        <LoadingState message="Cargando estadísticas..." />
       </div>
     )
   }

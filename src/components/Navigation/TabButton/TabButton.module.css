@@ -1,0 +1,123 @@
+/**
+ * El tab de una sección.
+ *
+ * Estos estilos venían de dos lados a la vez: los inline del componente y un
+ * bloque `<style>` de 70 líneas que `Navigation` inyectaba con CSS global en
+ * cada render (`.tab-button`, `.tab-label-desktop`, `.tab-label-mobile`). De ese
+ * bloque, 7 de las 12 clases ya no las usaba nadie.
+ *
+ * `.compact` era `.tabs-compact .tab-button`, o sea un selector que cruzaba de
+ * un componente a otro. Ahora `NavTabs` pasa `isCompact` como prop, así que cada
+ * componente es dueño de sus propias clases.
+ */
+.button {
+  flex: 1;
+  padding: var(--space-md) var(--space-sm);
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-bottom: 4px solid transparent;
+  color: var(--color-text-secondary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  cursor: pointer;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xs);
+  position: relative;
+  outline: none;
+  outline-offset: 0;
+}
+
+/*
+ * El orden importa: `border-color` pisa los cuatro lados y después
+ * `border-bottom-color` deja el de abajo con el color de acento.
+ */
+.active {
+  background-color: var(--color-surface-highlight);
+  border-color: var(--color-border);
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.button:hover {
+  background-color: var(--color-surface-highlight);
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.icon {
+  font-size: 1.15rem;
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.active .icon {
+  transform: scale(1.1);
+}
+
+.labelDesktop {
+  font-size: var(--font-size-sm);
+}
+
+.labelMobile {
+  display: none;
+  font-size: var(--font-size-2xs);
+}
+
+.active .labelDesktop,
+.active .labelMobile {
+  font-weight: 700;
+}
+
+/* Móvil y tablet: se muestra la etiqueta corta. */
+@media (max-width: 1199px) {
+  .button {
+    min-width: 90px;
+  }
+
+  .labelDesktop {
+    display: none;
+  }
+
+  .labelMobile {
+    display: inline;
+  }
+
+  /* Con más de 3 tabs no entran las etiquetas: quedan solo los iconos. */
+  .compact {
+    min-width: 60px;
+    padding: var(--space-sm) var(--space-2xs);
+  }
+
+  .compact .labelMobile {
+    display: none;
+  }
+
+  .compact .icon {
+    font-size: 1.5rem;
+  }
+}
+
+/* Escritorio: icono y etiqueta larga en la misma línea. */
+@media (min-width: 1200px) {
+  .button {
+    flex-direction: row;
+    gap: var(--space-sm);
+  }
+
+  .labelDesktop {
+    display: inline;
+  }
+
+  .labelMobile {
+    display: none;
+  }
+}

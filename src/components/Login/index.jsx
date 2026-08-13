@@ -413,20 +413,9 @@ export default function Login() {
               <Button variant="outline" onClick={() => setAuthView('signup')} fullWidth>
                 ¿No tenés cuenta? Registrate
               </Button>
-              <button
-                type="button"
-                onClick={() => setAuthView('reset')}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  color: 'var(--color-primary)',
-                  textDecoration: 'underline',
-                  minHeight: 'auto',
-                  padding: '4px 0',
-                }}
-              >
+              <Button variant="link" onClick={() => setAuthView('reset')}>
                 ¿Olvidaste tu contraseña?
-              </button>
+              </Button>
             </>
           )}
 

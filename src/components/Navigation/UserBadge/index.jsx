@@ -1,9 +1,13 @@
+import { tint } from '../../../utils/tint'
+
 export default function UserBadge({ username }) {
   return (
     <div
       style={{
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        border: '1px solid rgba(16, 185, 129, 0.3)',
+        // Eran tintes del emerald de Tailwind con el texto en `--color-primary`:
+        // el fondo no seguía al torneo y el nombre del equipo sí.
+        backgroundColor: tint('var(--color-primary)', 10),
+        border: `1px solid ${tint('var(--color-primary)', 30)}`,
         borderRadius: '6px',
         padding: '3px 8px',
         display: 'inline-flex',

@@ -1,0 +1,30 @@
+/**
+ * La fila de tabs. Salió del bloque `<style>` global de `Navigation`.
+ */
+.container {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Con más de 3 tabs los botones se comprimen en vez de desbordar, así que no
+ * hace falta scroll horizontal.
+ */
+.compact {
+  overflow-x: visible;
+}
+
+.container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: var(--color-text-disabled);
+  border-radius: var(--radius-pill);
+}

@@ -1,12 +1,7 @@
 import { memo } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
-
-function resolveTeamName(teamId, match) {
-  if (!teamId) return 'Sin definir'
-  if (teamId === match.home_team_id) return match.home_team?.name || 'Local'
-  if (teamId === match.away_team_id) return match.away_team?.name || 'Visitante'
-  return 'Sin definir'
-}
+import { resolveTeamName } from '../../../utils/teams'
+import { formatMatchDateNumeric, formatMatchTime } from '../../../utils/matchDate'
 
 const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
   const isTie = match.home_score === match.away_score
@@ -18,19 +13,8 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
     match.qualifier_team_id &&
     prediction.qualifier_prediction_id === match.qualifier_team_id
 
-  const matchDate = new Date(match.match_date)
-  const formattedDate = matchDate.toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    weekday: 'short',
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
-  const formattedTime = matchDate.toLocaleTimeString('es-AR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
+  const formattedDate = formatMatchDateNumeric(match.match_date)
+  const formattedTime = formatMatchTime(match.match_date)
 
   return (
     <article

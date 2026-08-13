@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react'
 import TabButton from '../TabButton'
+import styles from './NavTabs.module.css'
 
 function NavTabs({ tabs, activeTab, setActiveTab }) {
   const tabsRef = useRef([])
@@ -42,13 +43,7 @@ function NavTabs({ tabs, activeTab, setActiveTab }) {
     <div
       role="tablist"
       aria-label="Navegación principal"
-      className={`tabs-container ${isCompact ? 'tabs-compact' : ''}`}
-      style={{
-        display: 'flex',
-        gap: '0px',
-        overflowX: tabs.length > 3 ? 'visible' : 'auto',
-        WebkitOverflowScrolling: 'touch',
-      }}
+      className={`${styles.container} ${isCompact ? styles.compact : ''}`}
       onKeyDown={handleKeyDown}
     >
       {tabs.map((tab, index) => (
@@ -59,6 +54,7 @@ function NavTabs({ tabs, activeTab, setActiveTab }) {
             }}
             tab={tab}
             isActive={activeTab === tab.id}
+            isCompact={isCompact}
             onClick={setActiveTab}
           />
         </div>

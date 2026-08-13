@@ -2,6 +2,8 @@ import TeamDisplay from '../../Common/TeamDisplay'
 import MatchStatusBadge from '../MatchStatusBadge'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
+import { resolveTeamById } from '../../../utils/teams'
+import styles from './MatchCard.module.css'
 
 const CARD_STYLE = {
   padding: '12px',
@@ -9,13 +11,6 @@ const CARD_STYLE = {
   border: '1px solid var(--color-border)',
   borderRadius: '16px',
   boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-}
-
-const resolveTeamById = (teamId, match) => {
-  if (!teamId || !match) return null
-  if (teamId === match.home_team_id) return match.home_team
-  if (teamId === match.away_team_id) return match.away_team
-  return null
 }
 
 const MatchCard = ({ match, prediction, started }) => {
@@ -43,7 +38,7 @@ const MatchCard = ({ match, prediction, started }) => {
           <span
             style={{
               backgroundColor: 'var(--color-primary)',
-              color: 'white',
+              color: 'var(--color-text-on-primary)',
               padding: '4px 10px',
               borderRadius: '8px',
               fontSize: '0.75rem',
@@ -109,7 +104,13 @@ const MatchCard = ({ match, prediction, started }) => {
                   >
                     Resultado Real
                   </div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#64748b' }}>
+                  <div
+                    style={{
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
                     {match.home_score} - {match.away_score}
                   </div>
                   <div
@@ -117,36 +118,25 @@ const MatchCard = ({ match, prediction, started }) => {
                       marginTop: '4px',
                       fontSize: '0.85rem',
                       fontWeight: '600',
-                      color: prediction.points > 0 ? '#10b981' : '#ef4444',
+                      color:
+                        prediction.points > 0
+                          ? 'var(--color-success-text)'
+                          : 'var(--color-error-text)',
                     }}
                   >
                     {prediction.points > 0 ? '✅' : '❌'} {prediction.points} pts
                   </div>
                   {match.is_playoff && isTiePrediction && qualifierPredictionTeam && (
-                    <div
-                      className="match-qualifier-chip"
-                      style={{
-                        marginTop: '6px',
-                        padding: '6px',
-                        backgroundColor: 'var(--color-primary-light)',
-                        borderRadius: '8px',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        color: 'var(--color-text)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      <span className="match-qualifier-label">🥊 Pasa:</span>
+                    <div className={styles.chip}>
+                      <span className={styles.chipLabel}>🥊 Pasa:</span>
                       {qualifierPredictionTeam.logo_url && (
                         <img
                           src={qualifierPredictionTeam.logo_url}
                           alt={qualifierPredictionTeam.name}
-                          style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                          className={styles.chipLogo}
                         />
                       )}
-                      <span className="match-qualifier-name">{qualifierPredictionTeam.name}</span>
+                      <span className={styles.chipNombre}>{qualifierPredictionTeam.name}</span>
                     </div>
                   )}
                 </div>
@@ -169,19 +159,6 @@ const MatchCard = ({ match, prediction, started }) => {
           <TeamDisplay team={match.away_team} size="sm" showNameBelow />
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 767px) {
-          .match-qualifier-chip {
-            padding: 5px;
-            border-radius: 999px;
-          }
-          .match-qualifier-label,
-          .match-qualifier-name {
-            display: none;
-          }
-        }
-      `}</style>
     </div>
   )
 }

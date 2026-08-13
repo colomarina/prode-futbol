@@ -1,0 +1,25 @@
+/**
+ * Las dos vistas de la llave: tarjetas en móvil, cuadro compacto en escritorio.
+ *
+ * Antes cada `div` traía su `display` inline y un bloque `<style>` los daba
+ * vuelta con `!important` arriba de 1024px — el `!important` no era una decisión
+ * de estilo sino la única forma de ganarle al inline. Sin inline, alcanza con
+ * declarar cada `display` en su media query.
+ */
+.mobile {
+  display: block;
+}
+
+.desktop {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .mobile {
+    display: none;
+  }
+
+  .desktop {
+    display: block;
+  }
+}

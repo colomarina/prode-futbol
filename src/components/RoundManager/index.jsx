@@ -4,8 +4,32 @@ import { useMatchesMeta } from '../../hooks/useMatchesMeta'
 import { useTournament } from '../../contexts/TournamentContext'
 import { supabase } from '../../lib/supabase'
 import Toast from '../Common/Toast'
+import LoadingState from '../Common/LoadingState'
+import Button from '../Common/Button'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
 import { filterHiddenPlayers } from '../../constants/hiddenPlayers'
+import { tint } from '../../utils/tint'
+
+/**
+ * Los colores de la tarjeta de la fecha activa.
+ *
+ * Este panel tenía una paleta propia: el emerald de Tailwind (#10b981, #059669,
+ * #047857) con seis alfas distintas de tinte —0.05, 0.1, 0.12, 0.15, 0.2, 0.3—
+ * todas escritas a mano. O sea que en un torneo con otra paleta el panel seguía
+ * siendo verde igual, y en tema oscuro los fondos claritos quedaban raros.
+ *
+ * Ahora todo sale de `--color-success`. Los tintes bajaron de seis pasos a
+ * cuatro: 0.1 y 0.12 eran indistinguibles, igual que 0.15 y 0.2 en el borde.
+ */
+const ACTIVA = {
+  linea: 'var(--color-success)',
+  texto: 'var(--color-success-text)',
+  fondoSuave: tint('var(--color-success)', 5),
+  fondo: tint('var(--color-success)', 10),
+  fondoFuerte: tint('var(--color-success)', 15),
+  borde: tint('var(--color-success)', 20),
+  bordeFuerte: tint('var(--color-success)', 30),
+}
 
 export default function RoundManager() {
   const { activeTournament } = useTournament()
@@ -115,30 +139,32 @@ export default function RoundManager() {
   const getStatusConfig = useCallback(status => {
     const configs = {
       pending: {
-        bg: 'rgba(156, 163, 175, 0.1)',
+        bg: tint('var(--color-text-secondary)', 10),
         border: 'var(--color-text-secondary)',
         color: 'var(--color-text-secondary)',
         icon: '⏳',
         label: 'Pendiente',
       },
       open: {
-        bg: 'rgba(16, 185, 129, 0.1)',
-        border: '#10b981',
-        color: '#047857',
+        bg: ACTIVA.fondo,
+        border: ACTIVA.linea,
+        color: ACTIVA.texto,
         icon: '🟢',
         label: 'Abierta',
       },
+      // `border` va con el token de relleno y `color` con el de texto: sobre el
+      // fondo tinteado, `--color-error` como letra da 2.9:1 en tema oscuro.
       locked: {
-        bg: 'rgba(239, 68, 68, 0.1)',
+        bg: tint('var(--color-error)', 10),
         border: 'var(--color-error)',
-        color: 'var(--color-error)',
+        color: 'var(--color-error-text)',
         icon: '🔒',
         label: 'Bloqueada',
       },
       finished: {
-        bg: 'rgba(59, 130, 246, 0.1)',
+        bg: tint('var(--color-info)', 10),
         border: 'var(--color-info)',
-        color: 'var(--color-info)',
+        color: 'var(--color-info-text)',
         icon: '✅',
         label: 'Finalizada',
       },
@@ -239,30 +265,8 @@ export default function RoundManager() {
 
   if (loading) {
     return (
-      <div
-        className="container"
-        style={{ maxWidth: '1000px', textAlign: 'center', padding: '48px 16px' }}
-      >
-        <div
-          style={{
-            width: '56px',
-            height: '56px',
-            margin: '0 auto 20px',
-            border: '4px solid rgba(30, 127, 67, 0.1)',
-            borderTop: '4px solid var(--color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }}
-        />
-        <p
-          style={{
-            color: 'var(--color-text-secondary)',
-            fontSize: '1rem',
-            fontWeight: '500',
-          }}
-        >
-          Cargando fechas...
-        </p>
+      <div className="container" style={{ maxWidth: '1000px' }}>
+        <LoadingState message="Cargando fechas..." />
       </div>
     )
   }
@@ -299,9 +303,9 @@ export default function RoundManager() {
           style={{
             marginBottom: '32px',
             backgroundColor: 'var(--color-surface)',
-            border: '3px solid #10b981',
+            border: `3px solid ${ACTIVA.linea}`,
             borderRadius: '16px',
-            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.2)',
+            boxShadow: `0 8px 24px ${ACTIVA.borde}`,
             position: 'relative',
             overflow: 'hidden',
             padding: '28px',
@@ -315,7 +319,8 @@ export default function RoundManager() {
               top: 0,
               bottom: 0,
               width: '8px',
-              background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+              background:
+                'linear-gradient(180deg, var(--color-success-light) 0%, var(--color-success) 100%)',
             }}
           />
 
@@ -326,11 +331,11 @@ export default function RoundManager() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '10px',
-                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                backgroundColor: ACTIVA.fondo,
                 padding: '8px 18px',
                 borderRadius: '12px',
                 marginBottom: '16px',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
+                border: `1px solid ${ACTIVA.borde}`,
               }}
             >
               <span style={{ fontSize: '1.1rem' }}>🟢</span>
@@ -338,7 +343,7 @@ export default function RoundManager() {
                 style={{
                   fontSize: '0.85rem',
                   fontWeight: '700',
-                  color: '#047857',
+                  color: ACTIVA.texto,
                   textTransform: 'uppercase',
                   letterSpacing: '0.8px',
                 }}
@@ -360,13 +365,13 @@ export default function RoundManager() {
                 style={{
                   width: '64px',
                   height: '64px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  backgroundColor: ACTIVA.fondo,
                   borderRadius: '16px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '2rem',
-                  border: '2px solid rgba(16, 185, 129, 0.2)',
+                  border: `2px solid ${ACTIVA.borde}`,
                 }}
               >
                 📅
@@ -400,8 +405,8 @@ export default function RoundManager() {
             {usersPredictions.length > 0 && (
               <div
                 style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                  border: '2px solid rgba(16, 185, 129, 0.2)',
+                  backgroundColor: ACTIVA.fondoSuave,
+                  border: `2px solid ${ACTIVA.borde}`,
                   borderRadius: '12px',
                   padding: '20px',
                   marginBottom: '16px',
@@ -443,28 +448,15 @@ export default function RoundManager() {
                       </p>
                     </div>
                   </div>
-                  <button
+                  <Button
+                    size="sm"
+                    variant="success"
                     onClick={() => setShowDetails(!showDetails)}
-                    style={{
-                      background: showDetails
-                        ? 'rgba(16, 185, 129, 0.15)'
-                        : 'rgba(16, 185, 129, 0.1)',
-                      color: '#047857',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      border: '2px solid rgba(16, 185, 129, 0.3)',
-                      fontWeight: '600',
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
+                    aria-expanded={showDetails}
                   >
-                    <span>{showDetails ? '▼' : '▶'}</span>
+                    <span aria-hidden="true">{showDetails ? '▼' : '▶'}</span>
                     <span>{showDetails ? 'Ocultar detalles' : 'Ver detalles'}</span>
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Summary Stats */}
@@ -482,14 +474,14 @@ export default function RoundManager() {
                       padding: '12px',
                       borderRadius: '10px',
                       textAlign: 'center',
-                      border: '2px solid #10b981',
+                      border: '2px solid var(--color-success)',
                     }}
                   >
                     <div
                       style={{
                         fontSize: '1.8rem',
                         fontWeight: '700',
-                        color: '#10b981',
+                        color: 'var(--color-success-text)',
                         marginBottom: '4px',
                       }}
                     >
@@ -505,14 +497,14 @@ export default function RoundManager() {
                       padding: '12px',
                       borderRadius: '10px',
                       textAlign: 'center',
-                      border: '2px solid #f59e0b',
+                      border: '2px solid var(--color-warning)',
                     }}
                   >
                     <div
                       style={{
                         fontSize: '1.8rem',
                         fontWeight: '700',
-                        color: '#f59e0b',
+                        color: 'var(--color-warning-text)',
                         marginBottom: '4px',
                       }}
                     >
@@ -528,14 +520,14 @@ export default function RoundManager() {
                       padding: '12px',
                       borderRadius: '10px',
                       textAlign: 'center',
-                      border: '2px solid #ef4444',
+                      border: '2px solid var(--color-error)',
                     }}
                   >
                     <div
                       style={{
                         fontSize: '1.8rem',
                         fontWeight: '700',
-                        color: '#ef4444',
+                        color: 'var(--color-error-text)',
                         marginBottom: '4px',
                       }}
                     >
@@ -553,7 +545,7 @@ export default function RoundManager() {
                     style={{
                       maxHeight: '400px',
                       overflowY: 'auto',
-                      borderTop: '2px solid rgba(16, 185, 129, 0.15)',
+                      borderTop: `2px solid ${ACTIVA.fondoFuerte}`,
                       paddingTop: '16px',
                     }}
                   >
@@ -569,10 +561,10 @@ export default function RoundManager() {
                               borderRadius: '10px',
                               border: `2px solid ${
                                 user.progress === 100
-                                  ? '#10b981'
+                                  ? 'var(--color-success)'
                                   : user.progress > 0
-                                    ? '#f59e0b'
-                                    : '#ef4444'
+                                    ? 'var(--color-warning)'
+                                    : 'var(--color-error)'
                               }`,
                               display: 'flex',
                               alignItems: 'center',
@@ -646,13 +638,13 @@ export default function RoundManager() {
                                       <span
                                         key={matchNum}
                                         style={{
-                                          backgroundColor: '#fef3c7',
-                                          color: '#92400e',
+                                          backgroundColor: tint('var(--color-warning)', 15),
+                                          color: 'var(--color-warning-text)',
                                           padding: '2px 8px',
                                           borderRadius: '6px',
                                           fontSize: '0.75rem',
                                           fontWeight: '700',
-                                          border: '1px solid #fcd34d',
+                                          border: `1px solid ${tint('var(--color-warning)', 40)}`,
                                           whiteSpace: 'nowrap',
                                         }}
                                       >
@@ -664,8 +656,8 @@ export default function RoundManager() {
                               ) : (
                                 <span
                                   style={{
-                                    backgroundColor: '#d1fae5',
-                                    color: '#065f46',
+                                    backgroundColor: ACTIVA.fondoFuerte,
+                                    color: ACTIVA.texto,
                                     padding: '6px 12px',
                                     borderRadius: '8px',
                                     fontSize: '0.8rem',
@@ -701,6 +693,19 @@ export default function RoundManager() {
               const isActive = round.status === 'open'
               const roundMatches = matchesByRound[round.round_number]
 
+              // Una fecha se puede finalizar solo si todos sus partidos están
+              // cargados. La condición estaba escrita cinco veces inline en el
+              // mismo botón: en el fondo, en el cursor, en el opacity, en el
+              // hover y en el title.
+              const puedeFinalizar = Boolean(
+                roundMatches && roundMatches.finished >= roundMatches.total
+              )
+              const motivoFinalizar = !roundMatches
+                ? 'No hay partidos en esta fecha'
+                : puedeFinalizar
+                  ? 'Todos los partidos están finalizados'
+                  : `Partidos finalizados: ${roundMatches.finished}/${roundMatches.total}`
+
               return (
                 <div
                   key={round.id}
@@ -710,7 +715,7 @@ export default function RoundManager() {
                     padding: '12px',
                     backgroundColor: isActive ? statusConfig.bg : 'var(--color-surface)',
                     transition: 'all 0.2s',
-                    boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
+                    boxShadow: isActive ? 'var(--shadow-md)' : 'none',
                   }}
                 >
                   {/* Round Info - Optimizada */}
@@ -817,73 +822,20 @@ export default function RoundManager() {
 
                   {/* Botón Finalizar */}
                   {round.status === 'locked' && (
-                    <button
+                    <Button
+                      variant="info"
+                      size="sm"
+                      fullWidth
                       onClick={() => handleFinishRound(round.round_number)}
-                      disabled={
-                        !matchesByRound[round.round_number] ||
-                        matchesByRound[round.round_number]?.finished <
-                          matchesByRound[round.round_number]?.total
-                      }
-                      style={{
-                        width: '100%',
-                        background:
-                          !matchesByRound[round.round_number] ||
-                          matchesByRound[round.round_number]?.finished <
-                            matchesByRound[round.round_number]?.total
-                            ? 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
-                            : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                        color: 'white',
-                        padding: '10px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        fontWeight: '600',
-                        fontSize: '0.85rem',
-                        cursor:
-                          !matchesByRound[round.round_number] ||
-                          matchesByRound[round.round_number]?.finished <
-                            matchesByRound[round.round_number]?.total
-                            ? 'not-allowed'
-                            : 'pointer',
-                        transition: 'all 0.2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        opacity:
-                          !matchesByRound[round.round_number] ||
-                          matchesByRound[round.round_number]?.finished <
-                            matchesByRound[round.round_number]?.total
-                            ? 0.6
-                            : 1,
-                      }}
-                      onMouseEnter={e => {
-                        if (
-                          matchesByRound[round.round_number] &&
-                          matchesByRound[round.round_number]?.finished ===
-                            matchesByRound[round.round_number]?.total
-                        ) {
-                          e.currentTarget.style.transform = 'translateY(-2px)'
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                      }}
-                      title={
-                        !matchesByRound[round.round_number]
-                          ? 'No hay partidos en esta fecha'
-                          : matchesByRound[round.round_number]?.finished <
-                              matchesByRound[round.round_number]?.total
-                            ? `Partidos finalizados: ${matchesByRound[round.round_number]?.finished}/${matchesByRound[round.round_number]?.total}`
-                            : 'Todos los partidos están finalizados'
-                      }
+                      disabled={!puedeFinalizar}
+                      title={motivoFinalizar}
                     >
                       <span>✅</span>
                       <span>
                         Finalizar
-                        {matchesByRound[round.round_number] &&
-                          ` (${matchesByRound[round.round_number]?.finished}/${matchesByRound[round.round_number]?.total})`}
+                        {roundMatches && ` (${roundMatches.finished}/${roundMatches.total})`}
                       </span>
-                    </button>
+                    </Button>
                   )}
                 </div>
               )

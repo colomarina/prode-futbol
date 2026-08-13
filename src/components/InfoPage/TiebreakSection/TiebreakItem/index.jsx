@@ -1,3 +1,5 @@
+import { tint } from '../../../../utils/tint'
+
 const TiebreakItem = ({ order, title, description }) => {
   return (
     <div
@@ -6,7 +8,7 @@ const TiebreakItem = ({ order, title, description }) => {
         alignItems: 'flex-start',
         gap: '10px',
         padding: '8px',
-        backgroundColor: 'rgba(59, 130, 246, 0.08)',
+        backgroundColor: tint('var(--color-info)', 8),
         borderRadius: '8px',
       }}
     >

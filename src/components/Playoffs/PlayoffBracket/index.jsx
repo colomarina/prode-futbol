@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import PlayoffMatch from '../PlayoffMatch'
+import styles from './PlayoffBracket.module.css'
 
 const STAGE_ORDER = ['32avos', '16avos', 'octavos', 'cuartos', 'semifinal', 'final']
 
@@ -99,7 +100,7 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
 
   return (
     <div>
-      <div className="playoff-mobile-view" style={{ display: 'block' }}>
+      <div className={styles.mobile}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {mobileStageDescriptors.map(stage => (
             <section key={stage.id} className="card" style={{ padding: '12px' }}>
@@ -143,7 +144,7 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
         </div>
       </div>
 
-      <div className="playoff-desktop-view" style={{ display: 'none' }}>
+      <div className={styles.desktop}>
         <div
           style={{
             overflowX: 'auto',
@@ -240,19 +241,6 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
           </div>
         </div>
       </div>
-
-      <style>
-        {`
-          @media (min-width: 1024px) {
-            .playoff-mobile-view {
-              display: none !important;
-            }
-            .playoff-desktop-view {
-              display: block !important;
-            }
-          }
-        `}
-      </style>
     </div>
   )
 })

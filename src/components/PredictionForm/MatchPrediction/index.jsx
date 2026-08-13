@@ -9,13 +9,8 @@ import {
 } from '../../../utils/matchTiming'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
-
-const resolveTeamName = (teamId, match) => {
-  if (!teamId) return 'Sin definir'
-  if (teamId === match.home_team_id) return match.home_team?.name || 'Local'
-  if (teamId === match.away_team_id) return match.away_team?.name || 'Visitante'
-  return 'Sin definir'
-}
+import { resolveTeamName } from '../../../utils/teams'
+import { formatMatchDateShort, formatMatchTime } from '../../../utils/matchDate'
 
 const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueChange }) => {
   const { activeTournament, isReadOnly } = useTournament()
@@ -160,20 +155,8 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
     [canPredictMatch, match.id, match.is_playoff, onValueChange, qualifierIsLocked]
   )
 
-  // Formatear fecha
-  const matchDate = new Date(match.match_date)
-  const formattedDate = matchDate.toLocaleDateString('es-AR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
-  const formattedTime = matchDate.toLocaleTimeString('es-AR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
+  const formattedDate = formatMatchDateShort(match.match_date)
+  const formattedTime = formatMatchTime(match.match_date)
 
   return (
     <div
@@ -199,7 +182,7 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
           top: '12px',
           left: '12px',
           backgroundColor: 'var(--color-primary)',
-          color: 'white',
+          color: 'var(--color-text-on-primary)',
           padding: '6px 12px',
           borderRadius: '12px',
           fontSize: '0.8rem',
@@ -230,7 +213,7 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
             top: '12px',
             right: '12px',
             backgroundColor: 'var(--color-success)',
-            color: 'white',
+            color: 'var(--color-text-on-primary)',
             padding: '4px 12px',
             borderRadius: '12px',
             fontSize: '0.75rem',
@@ -245,8 +228,8 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
             position: 'absolute',
             top: '12px',
             right: '12px',
-            backgroundColor: '#f59e0b',
-            color: 'white',
+            backgroundColor: 'var(--color-warning)',
+            color: 'var(--color-text-on-primary)',
             padding: '4px 12px',
             borderRadius: '12px',
             fontSize: '0.75rem',
@@ -485,8 +468,10 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
         <div
           style={{
             backgroundColor:
-              existingPrediction?.points > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            border: `2px solid ${existingPrediction?.points > 0 ? '#10b981' : '#ef4444'}`,
+              existingPrediction?.points > 0
+                ? 'color-mix(in srgb, var(--color-success) 10%, transparent)'
+                : 'color-mix(in srgb, var(--color-error) 10%, transparent)',
+            border: `2px solid ${existingPrediction?.points > 0 ? 'var(--color-success)' : 'var(--color-error)'}`,
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '16px',
@@ -551,8 +536,9 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: existingPrediction.points > 0 ? '#10b981' : '#ef4444',
-                  color: 'white',
+                  backgroundColor:
+                    existingPrediction.points > 0 ? 'var(--color-success)' : 'var(--color-error)',
+                  color: 'var(--color-text-on-primary)',
                   padding: '8px 16px',
                   borderRadius: '12px',
                   fontWeight: '700',
@@ -573,12 +559,12 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
       {showMissedPredictionWarning ? (
         <div
           style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '2px solid #ef4444',
+            backgroundColor: 'color-mix(in srgb, var(--color-error) 10%, transparent)',
+            border: '2px solid var(--color-error)',
             borderRadius: '12px',
             padding: '12px 16px',
             textAlign: 'center',
-            color: '#dc2626',
+            color: 'var(--color-error-text)',
             fontWeight: '600',
             fontSize: '0.9rem',
           }}
@@ -588,12 +574,12 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
       ) : showLockedPredictionWarning ? (
         <div
           style={{
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            border: '2px solid #f59e0b',
+            backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+            border: '2px solid var(--color-warning)',
             borderRadius: '12px',
             padding: '12px 16px',
             textAlign: 'center',
-            color: '#d97706',
+            color: 'var(--color-warning-text)',
             fontWeight: '600',
             fontSize: '0.9rem',
           }}

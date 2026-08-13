@@ -8,15 +8,15 @@ const INFO_BUTTON_TYPES = {
     icon: 'i',
   },
   error: {
-    color: '#ef4444',
+    color: 'var(--color-error)',
     icon: 'X',
   },
   warning: {
-    color: '#f59e0b',
+    color: 'var(--color-warning)',
     icon: '⚠️',
   },
   success: {
-    color: '#10b981',
+    color: 'var(--color-success)',
     icon: '✓',
   },
 }

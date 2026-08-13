@@ -10,7 +10,7 @@ export default function TiebreakSection() {
   const { tiebreakCriteria, specialRule } = getTiebreakRules(activeTournament?.slug)
 
   return (
-    <Card backgroundColor="rgba(59, 130, 246, 0.05)" borderColor="var(--color-info)">
+    <Card color="var(--color-info)">
       <SectionHeader
         icon="⚽"
         title="REGLAMENTO DE DESEMPATE Y PREMIOS"

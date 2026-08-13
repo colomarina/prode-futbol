@@ -10,6 +10,7 @@ import Button from '../Common/Button'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
 import EmptyState from '../Common/EmptyState'
+import LoadingState from '../Common/LoadingState'
 
 export default function MatchManager() {
   const { activeTournament } = useTournament()
@@ -182,10 +183,7 @@ export default function MatchManager() {
       {/* Lista de partidos */}
       {selectedRound ? (
         matchesLoading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div className="spinner" style={{ margin: '0 auto 16px' }} />
-            <p style={{ color: 'var(--color-text-secondary)' }}>Cargando partidos...</p>
-          </div>
+          <LoadingState message="Cargando partidos..." size="md" style={{ padding: '40px' }} />
         ) : !matches || matches.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 16px' }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚽</div>

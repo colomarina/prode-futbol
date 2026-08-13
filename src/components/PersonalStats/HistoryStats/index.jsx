@@ -9,7 +9,6 @@ export const HistoryStats = ({ history }) => {
         icon="🏆"
         title="Fechas Ganadas"
         value={history.roundsWon}
-        iconBg="rgba(245, 158, 11, 0.12)"
         iconColor="var(--color-warning)"
       />
       <StatCard
@@ -17,14 +16,12 @@ export const HistoryStats = ({ history }) => {
         title="Podios"
         value={history.podiums}
         subtext="Rondas en las que quedaste top 3"
-        iconBg="rgba(168, 85, 247, 0.12)"
         iconColor="var(--color-secondary)"
       />
       <StatCard
         icon="🚀"
         title="Mejor Posición Alcanzada"
         value={history.bestPosition ? `${history.bestPosition}°` : '—'}
-        iconBg="rgba(16, 185, 129, 0.12)"
         iconColor="var(--color-success)"
       >
         {history.bestPositionRound && (
@@ -38,7 +35,6 @@ export const HistoryStats = ({ history }) => {
         title="Fechas en Ascenso"
         value={history.roundsImproved}
         subtext="Cantidad de rondas que mejoraste tu posición"
-        iconBg="rgba(59, 130, 246, 0.12)"
         iconColor="var(--color-info)"
       />
     </div>

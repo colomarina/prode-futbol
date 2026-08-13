@@ -1,0 +1,41 @@
+/**
+ * El chip de "quién pasa" en un partido de playoff.
+ *
+ * Reemplaza un bloque `<style>` que se inyectaba una vez por tarjeta, con
+ * selectores globales (`.match-qualifier-chip`, `.match-qualifier-label`,
+ * `.match-qualifier-name`) y con `border-radius` en la media query peleando
+ * contra el `border-radius` inline del mismo elemento.
+ */
+.chip {
+  margin-top: var(--space-xs);
+  padding: var(--space-xs);
+  background-color: var(--color-primary-light);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.chipLogo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/*
+ * En móvil no entra el texto: el chip se vuelve un círculo con solo el escudo.
+ */
+@media (max-width: 767px) {
+  .chip {
+    padding: 5px;
+    border-radius: var(--radius-pill);
+  }
+
+  .chipLabel,
+  .chipNombre {
+    display: none;
+  }
+}

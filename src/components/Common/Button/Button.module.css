@@ -109,6 +109,17 @@
   color: var(--color-text-on-primary);
 }
 
+/* `info` para acciones que no son ni la principal ni destructivas: "Finalizar
+   fecha" en el panel del admin, que antes era un gradiente azul a mano. */
+.info {
+  background-color: var(--color-info);
+  color: var(--color-text-on-primary);
+}
+
+.info:hover:not(:disabled) {
+  background-color: var(--color-info-light);
+}
+
 .text {
   background-color: transparent;
   color: var(--color-primary);
@@ -117,4 +128,26 @@
 
 .text:hover:not(:disabled) {
   background-color: var(--color-surface-highlight);
+}
+
+/**
+ * Un botón que se lee como un link: subrayado, sin caja y sin alto mínimo.
+ *
+ * Es para una acción secundaria metida dentro de un texto —"¿Olvidaste tu
+ * contraseña?"— que no tiene que competir visualmente con el botón principal.
+ * Sigue siendo un `<button>` y no un `<a>` porque no navega a ninguna parte.
+ *
+ * Va último a propósito: `min-height` y `padding` le tienen que ganar a los de
+ * `.button`, y con la misma especificidad decide el orden del archivo.
+ */
+.link {
+  background-color: transparent;
+  color: var(--color-primary);
+  text-decoration: underline;
+  min-height: auto;
+  padding: var(--space-2xs) 0;
+}
+
+.link:hover:not(:disabled) {
+  color: var(--color-primary-dark);
 }
