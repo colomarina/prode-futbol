@@ -74,28 +74,6 @@
   gap: var(--space-sm);
 }
 
-.passwordField {
-  position: relative;
-}
-
-.passwordToggle {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: transparent;
-  min-height: auto;
-  padding: var(--space-xs);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-lg);
-  cursor: pointer;
-}
-
-.passwordToggle:hover:not(:disabled) {
-  color: var(--color-text-primary);
-}
-
 .label {
   font-size: var(--font-size-md);
   font-weight: 700;

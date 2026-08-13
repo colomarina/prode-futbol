@@ -1,0 +1,68 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background-color: var(--color-background);
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  margin-bottom: var(--space-2xl);
+  text-align: center;
+}
+
+.logo {
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-4xl);
+}
+
+.title {
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.subtitle {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+/*
+ * La aclaración de abajo del botón se pega a él: el `gap` del formulario la
+ * separaría como si fuera otro campo, y es texto sobre ese botón.
+ */
+.actionHint {
+  margin: calc(-1 * var(--space-md)) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.switcher {
+  display: grid;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  text-align: center;
+}
