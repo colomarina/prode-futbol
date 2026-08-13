@@ -1,4 +1,5 @@
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { useDialogBehavior } from '../../../../hooks/useDialogBehavior'
 import styles from './TournamentDrawer.module.css'
 
 export default function TournamentDrawer({
@@ -9,25 +10,10 @@ export default function TournamentDrawer({
   onBack,
   children,
 }) {
-  // Cerrar con tecla Escape
-  useEffect(() => {
-    const handleEscape = e => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      // Prevenir scroll del body cuando el drawer está abierto
-      document.body.style.overflow = 'hidden'
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, onClose])
+  // Escape, bloqueo de scroll, trampa de foco y devolución del foco al cerrar.
+  // Antes acá solo estaban las dos primeras, y el scroll se restauraba con un
+  // `'unset'` a ciegas.
+  const { contenedorRef } = useDialogBehavior(isOpen, onClose)
 
   const handleBackdropClick = useCallback(
     e => {
@@ -46,7 +32,13 @@ export default function TournamentDrawer({
       <div className={styles.backdrop} onClick={handleBackdropClick} role="presentation" />
 
       {/* Drawer */}
-      <div className={styles.drawer} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div
+        ref={contenedorRef}
+        className={styles.drawer}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawer-title"
+      >
         {/* Header */}
         <div className={styles.drawerHeader}>
           {showBackButton && (
