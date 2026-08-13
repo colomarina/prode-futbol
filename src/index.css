@@ -36,11 +36,17 @@
    * claro no llegan al contraste mínimo (`--color-warning` sobre blanco da
    * 1.9:1). Cada aviso tinteado usaba su propio hex oscuro para esquivar eso
    * (#dc2626, #d97706, #047857, #92400e, #065f46); estos tokens los reemplazan.
+   *
+   * Se DERIVAN del color de relleno en vez de escribirse a mano. La razón salió
+   * de probar en el Mundial: cada torneo pisa ~30 tokens de color en
+   * `tournaments.config.js` y ninguno conoce estos cuatro, así que un valor fijo
+   * acá se queda clavado al tema base. Con la mezcla, un torneo que cambie
+   * `--color-warning` obtiene su color de texto gratis.
    */
-  --color-success-text: #1b5e20;
-  --color-error-text: #b71c1c;
-  --color-warning-text: #7a5b00;
-  --color-info-text: #0d47a1;
+  --color-success-text: color-mix(in srgb, var(--color-success) 60%, black);
+  --color-error-text: color-mix(in srgb, var(--color-error) 70%, black);
+  --color-warning-text: color-mix(in srgb, var(--color-warning) 55%, black);
+  --color-info-text: color-mix(in srgb, var(--color-info) 65%, black);
 
   /* Bordes y divisores */
   --color-border: #e0e0e0;
@@ -109,13 +115,14 @@
 
   /*
    * Estados para texto: acá van al revés que en el tema claro. El fondo es
-   * oscuro, así que el texto tiene que ser MÁS claro que el color de relleno,
-   * no más oscuro. Por eso los tokens se llaman `-text` y no `-dark`.
+   * oscuro, así que el texto se mezcla con BLANCO en vez de con negro. Por eso
+   * los tokens se llaman `-text` y no `-dark`: el nombre dice para qué sirven,
+   * no hacia dónde van.
    */
-  --color-success-text: #81c784;
-  --color-error-text: #ef9a9a;
-  --color-warning-text: #ffd54f;
-  --color-info-text: #90caf9;
+  --color-success-text: color-mix(in srgb, var(--color-success) 55%, white);
+  --color-error-text: color-mix(in srgb, var(--color-error) 45%, white);
+  --color-warning-text: color-mix(in srgb, var(--color-warning) 75%, white);
+  --color-info-text: color-mix(in srgb, var(--color-info) 55%, white);
 
   /* Bordes y divisores - Oscuros */
   --color-border: #333333;
