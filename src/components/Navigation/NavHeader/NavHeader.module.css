@@ -7,9 +7,21 @@
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 20;
-  font-family: sans-serif;
+  /*
+   * El z-index era 20, un valor que no estaba en ninguna escala. `--z-sticky` es
+   * 10 y es exactamente para esto: un header que se pega arriba.
+   */
+  z-index: var(--z-sticky);
 }
+
+/*
+ * Acá había un `font-family: sans-serif`, o sea la sans genérica del navegador
+ * pisando el stack de fuentes de la app para todo el header: el título, el badge
+ * del equipo y los dos botones (que heredan por el `font-family: inherit` del
+ * `button` global). No parece una decisión de diseño sino un valor que quedó,
+ * porque `:root` ya define el stack completo. Sacándolo, el header usa la misma
+ * fuente que el resto.
+ */
 
 .headerLeft {
   display: flex;

@@ -66,6 +66,8 @@
   --z-raised: 2;
   --z-sticky: 10;
   --z-dropdown: 100;
+  /* El velo que tapa la página detrás de un diálogo, siempre justo abajo de él. */
+  --z-backdrop: 1000;
   --z-modal: 1100;
   --z-toast: 9999;
 }
