@@ -1,10 +1,95 @@
+/*
+ * No lleva la clase global `card`: los estilos inline que se sacaron ya pisaban
+ * todo lo que aportaba, incluido el padding.
+ */
+.card {
+  padding: var(--space-md);
+  background: linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.noEmpezado {
+  opacity: 0.6;
+}
+
+.cuerpo {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.equipoLocal {
+  justify-self: end;
+  text-align: center;
+}
+
+.equipoVisitante {
+  justify-self: start;
+  text-align: center;
+}
+
+.centro {
+  text-align: center;
+  min-width: 80px;
+}
+
+.etiqueta {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3xs);
+}
+
+.etiquetaChica {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3xs);
+}
+
+.marcador {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.resultado {
+  margin-top: var(--space-sm);
+}
+
+.resultadoReal {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.puntos {
+  margin-top: var(--space-2xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.acerto {
+  color: var(--color-success-text);
+}
+
+.fallo {
+  color: var(--color-error-text);
+}
+
+.sinPronostico {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
 /**
  * El chip de "quién pasa" en un partido de playoff.
  *
  * Reemplaza un bloque `<style>` que se inyectaba una vez por tarjeta, con
- * selectores globales (`.match-qualifier-chip`, `.match-qualifier-label`,
- * `.match-qualifier-name`) y con `border-radius` en la media query peleando
- * contra el `border-radius` inline del mismo elemento.
+ * selectores globales y con `border-radius` en la media query peleando contra el
+ * `border-radius` inline del mismo elemento.
  */
 .chip {
   margin-top: var(--space-xs);
@@ -25,9 +110,7 @@
   object-fit: contain;
 }
 
-/*
- * En móvil no entra el texto: el chip se vuelve un círculo con solo el escudo.
- */
+/* En móvil no entra el texto: el chip se vuelve un círculo con solo el escudo. */
 @media (max-width: 767px) {
   .chip {
     padding: 5px;

@@ -1,112 +1,36 @@
 import TeamDisplay from '../../Common/TeamDisplay'
-import MatchStatusBadge from '../MatchStatusBadge'
-import { useTournament } from '../../../contexts/TournamentContext'
-import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
+import MatchCardHeader from '../MatchCardHeader'
+import styles from './MatchDetailCard.module.css'
 
+/**
+ * La tarjeta del partido elegido, arriba de la lista de pronósticos.
+ *
+ * El encabezado —número, grupo y estado— se fue a `MatchCardHeader`, que era 38
+ * de 41 líneas idénticas a las de `MatchCard`.
+ */
 const MatchDetailCard = ({ match }) => {
-  const { activeTournament } = useTournament()
-  const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
-  const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)
-
   return (
-    <div
-      className="card"
-      style={{
-        padding: '16px',
-        marginBottom: '16px',
-        background:
-          'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
-        border: '1px solid var(--color-border)',
-        borderRadius: '16px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px',
-          paddingBottom: '8px',
-          borderBottom: '1px solid var(--color-border)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span
-            style={{
-              backgroundColor: 'var(--color-primary)',
-              color: 'var(--color-text-on-primary)',
-              padding: '4px 10px',
-              borderRadius: '8px',
-              fontSize: '0.75rem',
-              fontWeight: '700',
-            }}
-          >
-            Partido #{match.match_number}
-          </span>
-          {groupLabel && (
-            <span
-              style={{
-                backgroundColor: groupBadgeColors?.backgroundColor || 'var(--color-primary-light)',
-                color: groupBadgeColors?.color || 'var(--color-primary-dark)',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                fontSize: '0.72rem',
-                fontWeight: '700',
-              }}
-            >
-              {groupLabel}
-            </span>
-          )}
-        </div>
-        <MatchStatusBadge match={match} />
-      </div>
+    <div className={styles.card}>
+      <MatchCardHeader match={match} />
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          gap: '12px',
-          alignItems: 'center',
-        }}
-      >
-        <div style={{ justifySelf: 'end', textAlign: 'center' }}>
+      <div className={styles.cuerpo}>
+        <div className={styles.equipoLocal}>
           <TeamDisplay team={match.home_team} size="sm" showNameBelow />
         </div>
 
-        <div style={{ textAlign: 'center', minWidth: '80px' }}>
-          <div
-            style={{
-              fontSize: '0.7rem',
-              color: 'var(--color-text-secondary)',
-              marginBottom: '2px',
-            }}
-          >
-            Resultado Real
-          </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--color-primary)' }}>
+        <div className={styles.marcador}>
+          <div className={styles.etiqueta}>Resultado Real</div>
+          <div className={styles.numeros}>
             {match.is_finished
               ? `${match.home_score ?? '-'} - ${match.away_score ?? '-'}`
               : 'En juego'}
           </div>
           {match.is_finished && match.qualifier_team && (
-            <div
-              style={{
-                marginTop: '8px',
-                padding: '8px',
-                backgroundColor: 'var(--color-primary-light)',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                fontWeight: '800',
-                color: 'var(--color-text)',
-              }}
-            >
-              🏆 Clasificó: {match.qualifier_team.name}
-            </div>
+            <div className={styles.clasificado}>🏆 Clasificó: {match.qualifier_team.name}</div>
           )}
         </div>
 
-        <div style={{ justifySelf: 'start', textAlign: 'center' }}>
+        <div className={styles.equipoVisitante}>
           <TeamDisplay team={match.away_team} size="sm" showNameBelow />
         </div>
       </div>
