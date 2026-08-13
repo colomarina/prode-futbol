@@ -10,6 +10,7 @@ import Navigation from './components/Navigation'
 import TournamentSelector from './components/TournamentSelector'
 import ErrorBoundary from './components/Common/ErrorBoundary'
 import ConfigError from './components/Common/ConfigError'
+import LoadingState from './components/Common/LoadingState'
 import { missingSupabaseEnvVars } from './lib/supabase'
 import { createQueryClient } from './lib/queryClient'
 import { filterVisibleTournaments, isTestTournament } from './utils/tournamentAccess'
@@ -124,28 +125,7 @@ function AppContent() {
           justifyContent: 'center',
         }}
       >
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              width: '56px',
-              height: '56px',
-              margin: '0 auto 20px',
-              border: '4px solid rgba(30, 127, 67, 0.1)',
-              borderTop: '4px solid var(--color-primary)',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }}
-          />
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: '1rem',
-              fontWeight: '500',
-            }}
-          >
-            Cargando...
-          </p>
-        </div>
+        <LoadingState style={{ padding: 0 }} />
       </div>
     )
   }

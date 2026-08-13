@@ -30,6 +30,18 @@
   --color-info: #1976d2;
   --color-info-light: #42a5f5;
 
+  /*
+   * Estados, versión para TEXTO. Los de arriba son colores de relleno: sirven de
+   * fondo con letras blancas encima, pero como color de letra sobre un fondo
+   * claro no llegan al contraste mínimo (`--color-warning` sobre blanco da
+   * 1.9:1). Cada aviso tinteado usaba su propio hex oscuro para esquivar eso
+   * (#dc2626, #d97706, #047857, #92400e, #065f46); estos tokens los reemplazan.
+   */
+  --color-success-text: #1b5e20;
+  --color-error-text: #b71c1c;
+  --color-warning-text: #7a5b00;
+  --color-info-text: #0d47a1;
+
   /* Bordes y divisores */
   --color-border: #e0e0e0;
   --color-border-light: #eeeeee;
@@ -94,6 +106,16 @@
   --color-warning-light: #fbc02d;
   --color-info: #1976d2;
   --color-info-light: #42a5f5;
+
+  /*
+   * Estados para texto: acá van al revés que en el tema claro. El fondo es
+   * oscuro, así que el texto tiene que ser MÁS claro que el color de relleno,
+   * no más oscuro. Por eso los tokens se llaman `-text` y no `-dark`.
+   */
+  --color-success-text: #81c784;
+  --color-error-text: #ef9a9a;
+  --color-warning-text: #ffd54f;
+  --color-info-text: #90caf9;
 
   /* Bordes y divisores - Oscuros */
   --color-border: #333333;
@@ -267,15 +289,4 @@ textarea:disabled {
   }
 }
 
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* `@keyframes spin` se fue a `Common/Spinner`: es el único que gira algo. */

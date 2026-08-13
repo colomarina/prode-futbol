@@ -6,7 +6,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { getLeaderboardRounds } from '../../utils/leaderboardRounds'
 import LeaderboardHeader from './LeadboardHeader'
 import LeaderboardTable from './LeaderboardTable'
-import LoadingSpinner from './LoadingSpinner'
+import LoadingState from '../Common/LoadingState'
 import ErrorMessage from './ErrorMessage'
 
 export default function Leaderboard({ onViewPredictions }) {
@@ -29,7 +29,7 @@ export default function Leaderboard({ onViewPredictions }) {
   if (loading) {
     return (
       <div className="container" style={{ maxWidth: '1000px', textAlign: 'center' }}>
-        <LoadingSpinner size="md" label="Cargando tabla de posiciones..." />
+        <LoadingState message="Cargando tabla de posiciones..." />
       </div>
     )
   }

@@ -1,3 +1,8 @@
+/**
+ * El podio. Estos tres colores se dejan literales a propósito: oro, plata y
+ * bronce son lo que la medalla significa, así que no tienen que seguir la paleta
+ * del torneo. Están acá, con nombre, y no repartidos por los componentes.
+ */
 export const POSITION_CONFIG = {
   1: { emoji: '🥇', bgColor: 'rgba(249, 168, 37, 0.1)' },
   2: { emoji: '🥈', bgColor: 'rgba(189, 189, 189, 0.1)' },

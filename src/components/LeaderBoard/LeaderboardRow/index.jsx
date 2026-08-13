@@ -81,7 +81,7 @@ const PlayerCell = memo(function PlayerCell({ player }) {
             style={{
               fontSize: '0.9rem',
               fontWeight: '600',
-              color: isSuspended ? '#ef4444' : 'var(--color-text-primary)',
+              color: isSuspended ? 'var(--color-error)' : 'var(--color-text-primary)',
               marginBottom: '2px',
               textTransform: 'capitalize',
             }}
@@ -91,7 +91,7 @@ const PlayerCell = memo(function PlayerCell({ player }) {
           <div
             style={{
               fontSize: '0.8rem',
-              color: isSuspended ? '#ef4444' : 'var(--color-text-secondary)',
+              color: isSuspended ? 'var(--color-error)' : 'var(--color-text-secondary)',
               textTransform: 'capitalize',
             }}
           >
