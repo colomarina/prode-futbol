@@ -360,8 +360,16 @@ export default function PredictionForm() {
         </div>
       )}
 
-      {/* Lista de partidos */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+      {/*
+        Lista de partidos.
+
+        El gap es el único mecanismo de separación entre tarjetas. Antes eran dos
+        sumándose: este `gap` de 16px más el `margin-bottom` de 24px que traía la
+        clase global `.card`, o sea 40px reales que no estaban escritos en ningún
+        lado. Ahora `MatchPrediction` no lleva margen propio y la separación la
+        decide la lista, que es de quien es.
+      */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)' }}>
         {matches.map(match => (
           <MatchPrediction
             key={`${match.round_number}-${match.match_number}-${match.id}`}

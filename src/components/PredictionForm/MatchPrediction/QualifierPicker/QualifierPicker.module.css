@@ -1,0 +1,99 @@
+.panel {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-variant);
+}
+
+.question {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.option[aria-checked='true'] {
+  border: 2px solid var(--color-primary);
+  background: linear-gradient(120deg, var(--color-surface-highlight), var(--color-surface));
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+}
+
+/*
+ * Deshabilitado no es lo mismo que "no elegido": cuando el marcador ya define un
+ * ganador los dos botones se deshabilitan, pero el elegido tiene que seguir
+ * legible. Por eso se atenúa solo el no elegido, y el `button:disabled` global
+ * (que baja la opacidad de los dos) se anula acá.
+ */
+.option:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.option:disabled[aria-checked='false'] {
+  opacity: 0.75;
+}
+
+.team {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.radio {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-text-secondary);
+  background-color: var(--color-surface);
+}
+
+.option[aria-checked='true'] .radio {
+  border: 5px solid var(--color-primary);
+}
+
+.teamName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectedTag {
+  flex-shrink: 0;
+  color: var(--color-primary-text);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.hint {
+  margin: var(--space-sm) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
