@@ -133,17 +133,23 @@ export default function WorldCupPredictions() {
 
   return (
     <div className="container" style={{ maxWidth: '980px' }}>
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <h2 style={{ marginBottom: '8px' }}>Predicciones Mundialistas</h2>
+      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <h2 style={{ marginBottom: 'var(--space-sm)' }}>Predicciones Mundialistas</h2>
         <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
           Bonus maximo: {WORLD_CUP_BONUS_MAX_POINTS} puntos para la tabla general.
         </p>
-        <p style={{ margin: '8px 0 0', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+        <p
+          style={{
+            margin: 'var(--space-sm) 0 0',
+            color: 'var(--color-text-secondary)',
+            fontWeight: 600,
+          }}
+        >
           Progreso: {completedCount}/{totalQuestions} respuestas completas
         </p>
         <div
           style={{
-            marginTop: '12px',
+            marginTop: 'var(--space-md)',
             fontWeight: 600,
             color: isLocked ? 'var(--color-error)' : 'var(--color-success)',
           }}
@@ -153,25 +159,30 @@ export default function WorldCupPredictions() {
             : `Estado: Abierto${config?.lock_at ? ` hasta ${new Date(config.lock_at).toLocaleString('es-AR')}` : ''}`}
         </div>
         {bonusScore && (
-          <div style={{ marginTop: '8px', color: 'var(--color-primary)', fontWeight: 700 }}>
+          <div
+            style={{ marginTop: 'var(--space-sm)', color: 'var(--color-primary)', fontWeight: 700 }}
+          >
             Tu bonus actual calculado: {bonusScore.total_points} pts
           </div>
         )}
       </div>
 
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {WORLD_CUP_BONUS_QUESTIONS.map(question => (
             <div
               key={question.key}
               style={{
                 border: '1px solid var(--color-border)',
-                borderRadius: '12px',
-                padding: '12px',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-md)',
                 backgroundColor: 'var(--color-surface-variant)',
               }}
             >
-              <label className="form-label" style={{ marginBottom: '10px', display: 'block' }}>
+              <label
+                className="form-label"
+                style={{ marginBottom: 'var(--space-sm)', display: 'block' }}
+              >
                 {question.label}
                 <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
                   {' '}
@@ -259,7 +270,7 @@ export default function WorldCupPredictions() {
       {!isLocked && (
         <div
           style={{
-            marginTop: '24px',
+            marginTop: 'var(--space-xl)',
             position: 'sticky',
             bottom: '20px',
             zIndex: 'var(--z-sticky)',

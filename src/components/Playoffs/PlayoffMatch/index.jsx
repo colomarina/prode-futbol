@@ -21,25 +21,35 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
       className="card"
       style={{
         margin: 0,
-        padding: '12px',
+        padding: 'var(--space-md)',
         border: '1px solid var(--color-border)',
         background:
           'linear-gradient(145deg, var(--color-surface) 0%, var(--color-surface-variant) 100%)',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 'var(--space-sm)',
+        }}
+      >
         <span
-          style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: '700' }}
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-secondary)',
+            fontWeight: '700',
+          }}
         >
           #{match.match_number || '?'}
         </span>
         <span
           style={{
-            fontSize: '0.78rem',
+            fontSize: 'var(--font-size-sm)',
             color: 'var(--color-text-secondary)',
             background: 'var(--color-surface-highlight)',
-            borderRadius: '8px',
-            padding: '2px 8px',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-3xs) var(--space-sm)',
           }}
         >
           {match.is_finished
@@ -54,9 +64,9 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr auto 1fr',
-          gap: '10px',
+          gap: 'var(--space-sm)',
           alignItems: 'center',
-          marginBottom: '10px',
+          marginBottom: 'var(--space-sm)',
         }}
       >
         <div style={{ textAlign: 'center' }}>
@@ -69,7 +79,7 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
             textAlign: 'center',
             fontWeight: '800',
             color: 'var(--color-primary)',
-            fontSize: '1.1rem',
+            fontSize: 'var(--font-size-lg)',
           }}
         >
           {match.is_finished ? `${match.home_score} - ${match.away_score}` : 'vs'}
@@ -83,8 +93,8 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
       {match.is_finished && match.is_playoff && isTie && match.qualifier_team_id && (
         <p
           style={{
-            margin: '0 0 6px 0',
-            fontSize: '0.82rem',
+            margin: '0 0 var(--space-xs) 0',
+            fontSize: 'var(--font-size-sm)',
             color: 'var(--color-text-primary)',
             fontWeight: '700',
           }}
@@ -95,7 +105,11 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
 
       {match.is_finished && match.qualifier_team_id && (
         <p
-          style={{ margin: '0 0 6px 0', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}
+          style={{
+            margin: '0 0 var(--space-xs) 0',
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-secondary)',
+          }}
         >
           Clasificó: {qualifierName}
         </p>
@@ -104,17 +118,17 @@ const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
       {prediction && (
         <div
           style={{
-            marginTop: '8px',
+            marginTop: 'var(--space-sm)',
             borderTop: '1px dashed var(--color-border)',
-            paddingTop: '8px',
-            fontSize: '0.8rem',
+            paddingTop: 'var(--space-sm)',
+            fontSize: 'var(--font-size-sm)',
           }}
         >
-          <p style={{ margin: '0 0 4px 0', color: 'var(--color-text-secondary)' }}>
+          <p style={{ margin: '0 0 var(--space-2xs) 0', color: 'var(--color-text-secondary)' }}>
             Tu pronóstico: {prediction.home_prediction} - {prediction.away_prediction}
           </p>
           {prediction?.qualifier_prediction_id && (
-            <p style={{ margin: '0 0 4px 0', color: 'var(--color-text-secondary)' }}>
+            <p style={{ margin: '0 0 var(--space-2xs) 0', color: 'var(--color-text-secondary)' }}>
               Elegiste que clasifica: {predictionQualifierName}{' '}
               {match.is_finished && match.is_playoff && isTie ? (hitQualifier ? '✅' : '❌') : ''}
             </p>

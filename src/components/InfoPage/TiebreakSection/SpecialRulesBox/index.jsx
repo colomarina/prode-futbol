@@ -4,33 +4,33 @@ const SpecialRulesBox = ({ icon, title, description, note }) => {
   return (
     <div
       style={{
-        padding: '12px',
+        padding: 'var(--space-md)',
         backgroundColor: tint('var(--color-error)', 8),
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-md)',
         border: `2px solid ${tint('var(--color-error)', 20)}`,
-        marginBottom: '16px',
+        marginBottom: 'var(--space-lg)',
       }}
     >
       <div
         style={{
           display: 'flex',
           alignItems: 'flex-start',
-          gap: '10px',
+          gap: 'var(--space-sm)',
         }}
       >
-        <span style={{ fontSize: '1.3rem' }}>{icon}</span>
+        <span style={{ fontSize: 'var(--font-size-xl)' }}>{icon}</span>
         <div>
           <strong
             style={{
-              fontSize: '0.95rem',
+              fontSize: 'var(--font-size-base)',
               color: 'var(--color-error)',
               display: 'block',
-              marginBottom: '4px',
+              marginBottom: 'var(--space-2xs)',
             }}
           >
             {title}
           </strong>
-          <div style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
+          <div style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)' }}>
             {description}
           </div>
           {note && (
@@ -38,9 +38,9 @@ const SpecialRulesBox = ({ icon, title, description, note }) => {
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '8px',
-                marginTop: '8px',
-                fontSize: '0.85rem',
+                gap: 'var(--space-sm)',
+                marginTop: 'var(--space-sm)',
+                fontSize: 'var(--font-size-md)',
                 color: 'var(--color-text-secondary)',
               }}
             >

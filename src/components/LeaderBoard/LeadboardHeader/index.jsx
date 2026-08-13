@@ -28,17 +28,17 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
   }
 
   return (
-    <div style={{ marginBottom: '16px' }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
       <h2
         style={{
           fontWeight: '700',
           color: 'var(--color-primary)',
-          margin: '0 0 12px 0',
+          margin: '0 0 var(--space-md) 0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8px',
-          fontSize: '1.5rem',
+          gap: 'var(--space-sm)',
+          fontSize: 'var(--font-size-2xl)',
         }}
       >
         <span>🏆</span>

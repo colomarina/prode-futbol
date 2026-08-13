@@ -11,7 +11,7 @@ export default function PointsSystemSection() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
+          gap: 'var(--space-md)',
         }}
       >
         {pointsSystemData.map(item => (

@@ -23,7 +23,7 @@ const MatchSelector = ({ matches, selectedMatchId, onMatchChange, disabled, isLo
           )}
           <span
             style={{
-              fontSize: '0.9rem',
+              fontSize: 'var(--font-size-md)',
               fontWeight: '600',
               whiteSpace: 'nowrap',
               overflow: 'hidden',

@@ -62,14 +62,14 @@ const TableHeader = memo(function TableHeader({ columns }) {
           <th
             key={column}
             style={{
-              padding: '12px 8px',
+              padding: 'var(--space-md) var(--space-sm)',
               textAlign:
                 index === 0
                   ? 'left'
                   : column === 'Pts' || column === 'Fch' || column === 'Ver'
                     ? 'center'
                     : 'left',
-              fontSize: '0.7rem',
+              fontSize: 'var(--font-size-2xs)',
               fontWeight: '700',
               color: 'var(--color-text-secondary)',
               textTransform: 'uppercase',

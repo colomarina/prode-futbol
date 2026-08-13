@@ -150,8 +150,8 @@ export default function AdminMatchSchedule() {
     <div className="container" style={{ maxWidth: '1000px' }}>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <h2 style={{ marginBottom: '8px' }}>🕒 Reprogramar partidos</h2>
+      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <h2 style={{ marginBottom: 'var(--space-sm)' }}>🕒 Reprogramar partidos</h2>
         <p style={{ marginTop: 0, color: 'var(--color-text-secondary)' }}>
           Ajustá los horarios de los partidos por fecha para cubrir aplazos, suspensiones o cambios
           de agenda.
@@ -177,7 +177,7 @@ export default function AdminMatchSchedule() {
         <div className="card">No hay partidos cargados para esta fecha.</div>
       ) : (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {matches.map(match => {
               const matchDateValue = scheduleValues[match.id] ?? ''
               const currentDateLabel = formatMatchDateTimeLong(match.match_date)
@@ -186,12 +186,12 @@ export default function AdminMatchSchedule() {
                 scheduleValues[match.id] !== toDatetimeLocalValue(match.match_date)
 
               return (
-                <div key={match.id} className="card" style={{ padding: '16px' }}>
+                <div key={match.id} className="card" style={{ padding: 'var(--space-lg)' }}>
                   <div
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      gap: '16px',
+                      gap: 'var(--space-lg)',
                       flexWrap: 'wrap',
                       alignItems: 'flex-start',
                     }}
@@ -201,9 +201,9 @@ export default function AdminMatchSchedule() {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '12px',
+                          gap: 'var(--space-md)',
                           flexWrap: 'wrap',
-                          marginBottom: '8px',
+                          marginBottom: 'var(--space-sm)',
                         }}
                       >
                         <TeamDisplay team={match.home_team} size="md" />
@@ -211,13 +211,13 @@ export default function AdminMatchSchedule() {
                         <TeamDisplay team={match.away_team} size="md" />
                       </div>
 
-                      <div style={{ fontWeight: '700', marginBottom: '6px' }}>
+                      <div style={{ fontWeight: '700', marginBottom: 'var(--space-xs)' }}>
                         Partido {match.match_number}
                       </div>
                       <div
                         style={{
                           color: 'var(--color-text-secondary)',
-                          fontSize: '0.95rem',
+                          fontSize: 'var(--font-size-base)',
                           lineHeight: 1.5,
                         }}
                       >
@@ -225,7 +225,7 @@ export default function AdminMatchSchedule() {
                           style={{
                             fontWeight: '600',
                             color: 'var(--color-text-primary)',
-                            marginBottom: '4px',
+                            marginBottom: 'var(--space-2xs)',
                           }}
                         >
                           Horario actual
@@ -234,7 +234,7 @@ export default function AdminMatchSchedule() {
                         {hasChanges && (
                           <div
                             style={{
-                              marginTop: '4px',
+                              marginTop: 'var(--space-2xs)',
                               color: 'var(--color-warning)',
                               fontWeight: '600',
                             }}
@@ -258,7 +258,7 @@ export default function AdminMatchSchedule() {
             })}
           </div>
 
-          <div style={{ marginTop: '16px' }}>
+          <div style={{ marginTop: 'var(--space-lg)' }}>
             <Button
               variant="success"
               onClick={handleSaveAll}

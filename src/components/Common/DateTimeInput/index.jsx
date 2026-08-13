@@ -29,7 +29,7 @@ export default function DateTimeInput({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', ...style }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', ...style }}>
       {label ? (
         <label htmlFor={inputId} className="form-label" style={{ display: 'block' }}>
           {label}
@@ -40,10 +40,10 @@ export default function DateTimeInput({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          gap: 'var(--space-sm)',
           width: '100%',
-          padding: '12px 14px',
-          borderRadius: '12px',
+          padding: 'var(--space-md) var(--space-md)',
+          borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-border)',
           backgroundColor: disabled ? 'var(--color-surface-variant)' : 'var(--color-surface)',
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.03)',
@@ -51,7 +51,7 @@ export default function DateTimeInput({
       >
         <span
           style={{
-            fontSize: '1rem',
+            fontSize: 'var(--font-size-base)',
             color: 'var(--color-primary)',
             display: 'inline-flex',
             alignItems: 'center',

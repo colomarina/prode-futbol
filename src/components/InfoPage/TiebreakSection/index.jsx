@@ -19,16 +19,16 @@ export default function TiebreakSection() {
       />
 
       {/* Criterios de desempate */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 'var(--space-lg)' }}>
         <h4
           style={{
-            fontSize: '0.95rem',
+            fontSize: 'var(--font-size-base)',
             fontWeight: '700',
             color: 'var(--color-info)',
-            marginBottom: '12px',
+            marginBottom: 'var(--space-md)',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: 'var(--space-sm)',
           }}
         >
           <span>📌</span>
@@ -38,8 +38,8 @@ export default function TiebreakSection() {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
-            paddingLeft: '8px',
+            gap: 'var(--space-sm)',
+            paddingLeft: 'var(--space-sm)',
           }}
         >
           {tiebreakCriteria.map(criterion => (

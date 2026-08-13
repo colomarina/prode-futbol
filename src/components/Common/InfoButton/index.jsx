@@ -39,12 +39,12 @@ const InfoButton = ({ message, type = 'info', ariaLabel = 'Información', placem
         type="button"
         aria-label={ariaLabel}
         style={{
-          padding: '6px 12px',
-          borderRadius: '12px',
+          padding: 'var(--space-xs) var(--space-md)',
+          borderRadius: 'var(--radius-lg)',
           width: '39px',
           minHeight: '32.5px',
           border: `2px solid ${config.color}`,
-          fontSize: '0.8rem',
+          fontSize: 'var(--font-size-sm)',
           fontWeight: '700',
           lineHeight: '1',
           cursor: 'pointer',

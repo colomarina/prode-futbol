@@ -4,12 +4,12 @@ const SectionHeader = ({ icon, title, color, centered = false }) => {
       style={{
         fontWeight: '700',
         color,
-        marginBottom: '16px',
-        fontSize: '1.1rem',
+        marginBottom: 'var(--space-lg)',
+        fontSize: 'var(--font-size-lg)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: centered ? 'center' : 'flex-start',
-        gap: '8px',
+        gap: 'var(--space-sm)',
       }}
     >
       {icon && <span>{icon}</span>}

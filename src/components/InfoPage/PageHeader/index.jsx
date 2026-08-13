@@ -1,22 +1,24 @@
 export default function PageHeader({ icon, title, subtitle }) {
   return (
-    <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+    <div style={{ marginBottom: 'var(--space-xl)', textAlign: 'center' }}>
       <h2
         style={{
           fontWeight: '700',
           color: 'var(--color-primary)',
-          marginBottom: '8px',
+          marginBottom: 'var(--space-sm)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '12px',
+          gap: 'var(--space-md)',
           flexWrap: 'wrap',
         }}
       >
-        <span style={{ fontSize: '1.1rem' }}>{icon}</span>
+        <span style={{ fontSize: 'var(--font-size-lg)' }}>{icon}</span>
         <span>{title}</span>
       </h2>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>{subtitle}</p>
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)' }}>
+        {subtitle}
+      </p>
     </div>
   )
 }

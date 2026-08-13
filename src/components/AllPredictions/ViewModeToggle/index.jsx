@@ -2,16 +2,16 @@ import styles from './ViewModeToggle.module.css'
 
 const ViewModeToggle = ({ viewMode, onChange }) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
       <div
         role="tablist"
         aria-label="Modo de vista"
         style={{
           display: 'inline-flex',
-          gap: '8px',
+          gap: 'var(--space-sm)',
           background: 'var(--color-surface-variant)',
-          padding: '6px',
-          borderRadius: '12px',
+          padding: 'var(--space-xs)',
+          borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-border)',
         }}
       >

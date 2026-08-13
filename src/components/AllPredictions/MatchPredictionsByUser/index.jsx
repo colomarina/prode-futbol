@@ -3,11 +3,17 @@ import LoadingState from '../../Common/LoadingState'
 
 const MatchPredictionsByUser = ({ matches, roundPredictions, hasMatchStarted, loading }) => {
   if (loading)
-    return <LoadingState message="Cargando pronósticos..." size="md" style={{ padding: '40px' }} />
+    return (
+      <LoadingState
+        message="Cargando pronósticos..."
+        size="md"
+        style={{ padding: 'var(--space-2xl)' }}
+      />
+    )
 
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
         {matches.map(match => (
           <MatchCard
             key={match.id}

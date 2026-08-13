@@ -19,16 +19,18 @@ const ErrorMessage = memo(function ErrorMessage({ error, onRetry }) {
   return (
     <div
       style={{
-        padding: '24px',
+        padding: 'var(--space-xl)',
         textAlign: 'center',
         backgroundColor: tint('var(--color-error)', 10),
         border: '1px solid var(--color-error)',
-        borderRadius: '12px',
+        borderRadius: 'var(--radius-lg)',
         color: 'var(--color-error-text)',
       }}
     >
-      <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
-      <p style={{ marginBottom: '16px', fontWeight: '600' }}>{error || 'Ha ocurrido un error'}</p>
+      <div style={{ fontSize: 'var(--font-size-3xl)', marginBottom: 'var(--space-md)' }}>⚠️</div>
+      <p style={{ marginBottom: 'var(--space-lg)', fontWeight: '600' }}>
+        {error || 'Ha ocurrido un error'}
+      </p>
       {onRetry && (
         <Button variant="danger" size="sm" onClick={onRetry}>
           Reintentar

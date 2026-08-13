@@ -44,7 +44,7 @@ const PositionCell = memo(function PositionCell({ position, emoji }) {
   return (
     <td
       style={{
-        padding: '12px 8px',
+        padding: 'var(--space-md) var(--space-sm)',
         whiteSpace: 'nowrap',
       }}
     >
@@ -52,13 +52,13 @@ const PositionCell = memo(function PositionCell({ position, emoji }) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
+          gap: 'var(--space-xs)',
         }}
       >
-        {emoji && <span style={{ fontSize: '1.3rem' }}>{emoji}</span>}
+        {emoji && <span style={{ fontSize: 'var(--font-size-xl)' }}>{emoji}</span>}
         <span
           style={{
-            fontSize: '1rem',
+            fontSize: 'var(--font-size-base)',
             fontWeight: '700',
             color: 'var(--color-text-primary)',
           }}
@@ -74,15 +74,15 @@ const PlayerCell = memo(function PlayerCell({ player }) {
   const isSuspended = SUSPENDED_PLAYERS.includes(player.full_name)
 
   return (
-    <td style={{ padding: '12px 8px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <td style={{ padding: 'var(--space-md) var(--space-sm)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
         <div>
           <div
             style={{
-              fontSize: '0.9rem',
+              fontSize: 'var(--font-size-md)',
               fontWeight: '600',
               color: isSuspended ? 'var(--color-error)' : 'var(--color-text-primary)',
-              marginBottom: '2px',
+              marginBottom: 'var(--space-3xs)',
               textTransform: 'capitalize',
             }}
           >
@@ -90,7 +90,7 @@ const PlayerCell = memo(function PlayerCell({ player }) {
           </div>
           <div
             style={{
-              fontSize: '0.8rem',
+              fontSize: 'var(--font-size-sm)',
               color: isSuspended ? 'var(--color-error)' : 'var(--color-text-secondary)',
               textTransform: 'capitalize',
             }}
@@ -115,22 +115,22 @@ const PointsCell = memo(function PointsCell({ points }) {
   return (
     <td
       style={{
-        padding: '12px 8px',
+        padding: 'var(--space-md) var(--space-sm)',
         textAlign: 'center',
       }}
     >
       <span
         style={{
-          fontSize: '1.3rem',
+          fontSize: 'var(--font-size-xl)',
           fontWeight: '700',
           color: 'var(--color-primary)',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '4px',
+          gap: 'var(--space-2xs)',
         }}
       >
         {points}
-        <span style={{ fontSize: '0.85rem' }}>pts</span>
+        <span style={{ fontSize: 'var(--font-size-md)' }}>pts</span>
       </span>
     </td>
   )
@@ -140,13 +140,13 @@ const RoundsCell = memo(function RoundsCell({ rounds }) {
   return (
     <td
       style={{
-        padding: '12px 8px',
+        padding: 'var(--space-md) var(--space-sm)',
         textAlign: 'center',
       }}
     >
       <span
         style={{
-          fontSize: '0.85rem',
+          fontSize: 'var(--font-size-md)',
           color: 'var(--color-text-secondary)',
           fontWeight: '600',
         }}

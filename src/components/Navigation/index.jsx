@@ -88,7 +88,7 @@ export default function Navigation() {
       </nav>
 
       {/* Content */}
-      <div style={{ paddingTop: '24px', paddingBottom: '24px' }}>
+      <div style={{ paddingTop: 'var(--space-xl)', paddingBottom: 'var(--space-xl)' }}>
         <div role="tabpanel" aria-labelledby={`tab-${sectionId || viewId}`}>
           <AppRoutes />
         </div>

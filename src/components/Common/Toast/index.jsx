@@ -25,7 +25,11 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
       <span className={styles.icono}>{ICONOS[type] || ICONOS.info}</span>
       <span className={styles.mensaje}>{message}</span>
       {/* El color lo hereda del toast, que ya es blanco sobre fondo de color. */}
-      <IconButton label="Cerrar aviso" onClick={onClose} style={{ fontSize: '1.5rem' }}>
+      <IconButton
+        label="Cerrar aviso"
+        onClick={onClose}
+        style={{ fontSize: 'var(--font-size-2xl)' }}
+      >
         ×
       </IconButton>
     </div>

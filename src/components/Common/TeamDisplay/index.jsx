@@ -22,7 +22,7 @@ export default function TeamDisplay({ team, size = 'md', showNameBelow = false }
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '6px',
+          gap: 'var(--space-xs)',
         }}
       >
         {team.logo_url && (
@@ -59,7 +59,7 @@ export default function TeamDisplay({ team, size = 'md', showNameBelow = false }
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        gap: 'var(--space-sm)',
       }}
     >
       {team.logo_url && (

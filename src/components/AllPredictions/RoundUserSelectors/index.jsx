@@ -61,7 +61,7 @@ const RoundUserSelectors = ({
   return (
     <>
       <div
-        style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}
+        style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-lg)' }}
         className="responsive-selectors"
       >
         <div>

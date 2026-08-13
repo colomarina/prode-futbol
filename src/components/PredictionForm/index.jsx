@@ -237,7 +237,7 @@ export default function PredictionForm() {
     return (
       <div className="container" style={{ maxWidth: '900px' }}>
         {/* Selector de fechas */}
-        <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
           <SelectDropdown
             label="📅 Seleccioná una Fecha"
             items={availableRounds}
@@ -268,7 +268,7 @@ export default function PredictionForm() {
   return (
     <div className="container" style={{ maxWidth: '900px' }}>
       {/* Selector de fechas */}
-      <div className="card" style={{ marginBottom: '16px', padding: '0px' }}>
+      <div className="card" style={{ marginBottom: 'var(--space-lg)', padding: '0' }}>
         <SelectDropdown
           label="📅 Seleccioná una Fecha"
           items={availableRounds}
@@ -290,26 +290,36 @@ export default function PredictionForm() {
       </div>
 
       {/* Resumen de la fecha */}
-      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+      <div style={{ marginBottom: 'var(--space-lg)', textAlign: 'center' }}>
         <div
           style={{
             display: 'inline-flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
-            padding: '16px 24px',
-            borderRadius: '12px',
+            gap: 'var(--space-sm)',
+            padding: 'var(--space-lg) var(--space-xl)',
+            borderRadius: 'var(--radius-lg)',
             backgroundColor: 'var(--color-surface-variant)',
             border: '2px solid var(--color-border)',
             width: '100%',
           }}
         >
           <span
-            style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--color-text-primary)' }}
+            style={{
+              fontSize: 'var(--font-size-base)',
+              fontWeight: '700',
+              color: 'var(--color-text-primary)',
+            }}
           >
             {currentRound ? getRoundDisplayName(currentRound) : 'Fecha seleccionada'}
           </span>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+          <p
+            style={{
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--font-size-md)',
+              margin: 0,
+            }}
+          >
             {isReadOnly
               ? 'Este torneo ya terminó. Estás viendo el histórico de pronósticos y resultados.'
               : allMatchesLocked
@@ -325,13 +335,19 @@ export default function PredictionForm() {
           style={{
             background: 'var(--color-surface-highlight)',
             border: '2px solid var(--color-success)',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-lg)',
+            marginBottom: 'var(--space-xl)',
             textAlign: 'center',
           }}
         >
-          <p style={{ color: 'var(--color-success)', fontWeight: '600', marginBottom: '8px' }}>
+          <p
+            style={{
+              color: 'var(--color-success)',
+              fontWeight: '600',
+              marginBottom: 'var(--space-sm)',
+            }}
+          >
             💡 {getRoundDisplayName(activeRound)} está abierta para pronósticos
           </p>
           <Button
@@ -345,7 +361,7 @@ export default function PredictionForm() {
       )}
 
       {/* Lista de partidos */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
         {matches.map(match => (
           <MatchPrediction
             key={`${match.round_number}-${match.match_number}-${match.id}`}
@@ -361,7 +377,7 @@ export default function PredictionForm() {
       {hasEditableMatches && (
         <div
           style={{
-            marginTop: '24px',
+            marginTop: 'var(--space-xl)',
             position: 'sticky',
             bottom: '20px',
             zIndex: 'var(--z-sticky)',
@@ -384,11 +400,11 @@ export default function PredictionForm() {
       {!isReadOnly && allMatchesLocked && (
         <div
           style={{
-            marginTop: '24px',
-            padding: '16px',
+            marginTop: 'var(--space-xl)',
+            padding: 'var(--space-lg)',
             textAlign: 'center',
             backgroundColor: 'var(--color-surface-variant)',
-            borderRadius: '12px',
+            borderRadius: 'var(--radius-lg)',
           }}
         >
           <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>

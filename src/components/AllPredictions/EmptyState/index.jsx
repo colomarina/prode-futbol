@@ -6,8 +6,8 @@ const EmptyState = ({ icon, title, description }) => {
       icon={icon}
       title={title}
       description={description}
-      style={{ padding: '48px 16px' }}
-      iconStyle={{ fontSize: '3rem' }}
+      style={{ padding: 'var(--space-3xl) var(--space-lg)' }}
+      iconStyle={{ fontSize: 'var(--font-size-4xl)' }}
       descriptionStyle={{ lineHeight: 1.6, maxWidth: '500px', margin: '0 auto' }}
     />
   )

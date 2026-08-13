@@ -49,17 +49,17 @@ export default function Playoffs() {
 
   return (
     <div className="container" style={{ maxWidth: '1200px' }}>
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: 'var(--space-lg)' }}>
         <h2
           style={{
             fontWeight: '700',
             color: 'var(--color-primary)',
-            margin: '0 0 6px 0',
+            margin: '0 0 var(--space-xs) 0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
-            fontSize: '1.5rem',
+            gap: 'var(--space-sm)',
+            fontSize: 'var(--font-size-2xl)',
           }}
         >
           <span>🥊</span>
@@ -70,7 +70,7 @@ export default function Playoffs() {
             margin: 0,
             textAlign: 'center',
             color: 'var(--color-text-secondary)',
-            fontSize: '0.92rem',
+            fontSize: 'var(--font-size-md)',
           }}
         >
           Seguimiento completo de cruces: confirmados, pendientes y camino a la final.

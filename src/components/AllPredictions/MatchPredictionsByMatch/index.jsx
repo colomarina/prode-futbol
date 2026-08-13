@@ -8,9 +8,13 @@ const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, match
       {selectedMatch && <MatchDetailCard match={selectedMatch} />}
 
       {matchLoading ? (
-        <LoadingState message="Cargando pronósticos..." size="md" style={{ padding: '40px' }} />
+        <LoadingState
+          message="Cargando pronósticos..."
+          size="md"
+          style={{ padding: 'var(--space-2xl)' }}
+        />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {users
             .filter(user => matchPredictions[user.id])
             .map(user => (

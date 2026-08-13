@@ -175,8 +175,8 @@ export default function AdminWorldCupBonus() {
 
   return (
     <div className="container" style={{ maxWidth: '1000px' }}>
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <h2 style={{ marginBottom: '8px' }}>Admin Mundialistas</h2>
+      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <h2 style={{ marginBottom: 'var(--space-sm)' }}>Admin Mundialistas</h2>
         <p style={{ color: 'var(--color-text-secondary)', marginTop: 0 }}>
           Predicciones recibidas: {stats.totalPredictions}
         </p>
@@ -185,16 +185,18 @@ export default function AdminWorldCupBonus() {
             El margen lo pone el contenedor —antes lo daba la clase `.form-group`—
             porque `FormField` no define espaciado externo. Se va cuando esta
             pantalla tenga su propio CSS Module. */}
-        <FormField label="Calendario de bloqueo" group style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: '8px' }}>
+        <FormField label="Calendario de bloqueo" group style={{ marginBottom: 'var(--space-lg)' }}>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: 'var(--space-sm)' }}
+          >
             <input
               type="date"
               value={lockDate}
               onChange={event => setLockDate(event.target.value)}
               style={{
                 width: '100%',
-                padding: '12px',
-                borderRadius: '10px',
+                padding: 'var(--space-md)',
+                borderRadius: 'var(--radius-lg)',
                 border: '2px solid var(--color-border)',
               }}
             />
@@ -204,15 +206,15 @@ export default function AdminWorldCupBonus() {
               onChange={event => setLockTime(event.target.value)}
               style={{
                 width: '100%',
-                padding: '12px',
-                borderRadius: '10px',
+                padding: 'var(--space-md)',
+                borderRadius: 'var(--radius-lg)',
                 border: '2px solid var(--color-border)',
               }}
             />
           </div>
         </FormField>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
           <Button onClick={onSaveLock} disabled={saving}>
             Guardar lock
           </Button>
@@ -222,16 +224,16 @@ export default function AdminWorldCupBonus() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '16px' }}>
+      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
         <h3 style={{ marginTop: 0 }}>Resultados oficiales</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {WORLD_CUP_BONUS_QUESTIONS.map(question => (
             <div
               key={question.key}
               style={{
                 border: '1px solid var(--color-border)',
-                borderRadius: '12px',
-                padding: '12px',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-md)',
                 backgroundColor: 'var(--color-surface-variant)',
               }}
             >
@@ -320,7 +322,14 @@ export default function AdminWorldCupBonus() {
           ))}
         </div>
 
-        <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div
+          style={{
+            marginTop: 'var(--space-lg)',
+            display: 'flex',
+            gap: 'var(--space-sm)',
+            flexWrap: 'wrap',
+          }}
+        >
           <Button onClick={onSaveOfficialResults} disabled={saving}>
             Guardar resultados oficiales
           </Button>

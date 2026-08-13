@@ -62,13 +62,13 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
 
   return (
     <div className="container" style={{ maxWidth: '1000px' }}>
-      <div style={{ marginBottom: '12px', textAlign: 'center' }}>
+      <div style={{ marginBottom: 'var(--space-md)', textAlign: 'center' }}>
         <h2
           style={{
-            fontSize: '1.1rem',
+            fontSize: 'var(--font-size-lg)',
             fontWeight: '700',
             color: 'var(--color-primary)',
-            marginBottom: '8px',
+            marginBottom: 'var(--space-sm)',
           }}
         >
           👥 Espia como vienen los rivales
@@ -84,7 +84,7 @@ export default function AllPredictions({ initialRound = null, initialUser = '' }
       )}
 
       {availableRounds.length > 0 && (
-        <div className="card" style={{ marginBottom: '8px' }}>
+        <div className="card" style={{ marginBottom: 'var(--space-sm)' }}>
           <ViewModeToggle viewMode={viewMode} onChange={setViewMode} />
           <RoundUserSelectors
             availableRounds={availableRounds}

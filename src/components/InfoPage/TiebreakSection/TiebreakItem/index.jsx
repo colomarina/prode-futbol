@@ -6,21 +6,21 @@ const TiebreakItem = ({ order, title, description }) => {
       style={{
         display: 'flex',
         alignItems: 'flex-start',
-        gap: '10px',
-        padding: '8px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-sm)',
         backgroundColor: tint('var(--color-info)', 8),
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-md)',
       }}
     >
-      <span style={{ fontSize: '1.2rem', minWidth: '24px' }}>{order}</span>
-      <div style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
+      <span style={{ fontSize: 'var(--font-size-xl)', minWidth: '24px' }}>{order}</span>
+      <div style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)' }}>
         <strong>{title}</strong>
         {description && (
           <div
             style={{
-              fontSize: '0.85rem',
+              fontSize: 'var(--font-size-md)',
               color: 'var(--color-text-secondary)',
-              marginTop: '2px',
+              marginTop: 'var(--space-3xs)',
             }}
           >
             {description}

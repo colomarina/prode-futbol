@@ -6,7 +6,7 @@ const PointsSystemItem = ({ item }) => {
       style={{
         padding: isComplexRule ? '4px' : '12px',
         backgroundColor: 'var(--color-surface)',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-md)',
       }}
     >
       {isComplexRule ? (
@@ -16,20 +16,22 @@ const PointsSystemItem = ({ item }) => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              marginBottom: '8px',
+              gap: 'var(--space-md)',
+              marginBottom: 'var(--space-sm)',
             }}
           >
             <span
               style={{
-                fontSize: '2rem',
+                fontSize: 'var(--font-size-3xl)',
                 minWidth: '40px',
                 textAlign: 'center',
               }}
             >
               {item.icon}
             </span>
-            <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
+            <strong
+              style={{ color: 'var(--color-text-primary)', fontSize: 'var(--font-size-base)' }}
+            >
               {item.title}
             </strong>
           </div>
@@ -38,8 +40,8 @@ const PointsSystemItem = ({ item }) => {
               marginLeft: '52px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '4px',
-              fontSize: '0.9rem',
+              gap: 'var(--space-2xs)',
+              fontSize: 'var(--font-size-md)',
               color: 'var(--color-text-secondary)',
             }}
           >
@@ -64,12 +66,12 @@ const PointsSystemItem = ({ item }) => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: 'var(--space-md)',
           }}
         >
           <span
             style={{
-              fontSize: '2rem',
+              fontSize: 'var(--font-size-3xl)',
               minWidth: '40px',
               textAlign: 'center',
             }}
@@ -77,16 +79,18 @@ const PointsSystemItem = ({ item }) => {
             {item.icon}
           </span>
           <div>
-            <strong style={{ color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>
+            <strong
+              style={{ color: 'var(--color-text-primary)', fontSize: 'var(--font-size-base)' }}
+            >
               {item.title}
             </strong>
             {item.points && (
               <span
                 style={{
-                  marginLeft: '8px',
+                  marginLeft: 'var(--space-sm)',
                   color: 'var(--color-success)',
                   fontWeight: '700',
-                  fontSize: '1.1rem',
+                  fontSize: 'var(--font-size-lg)',
                 }}
               >
                 {item.points}

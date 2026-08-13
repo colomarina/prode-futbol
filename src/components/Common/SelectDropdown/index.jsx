@@ -4,9 +4,9 @@ import styles from './SelectDropdown.module.css'
 
 const SELECT_STYLE = {
   width: '100%',
-  padding: '14px 16px',
-  fontSize: '1rem',
-  borderRadius: '10px',
+  padding: 'var(--space-md) var(--space-lg)',
+  fontSize: 'var(--font-size-base)',
+  borderRadius: 'var(--radius-lg)',
   border: '2px solid var(--color-primary)',
   cursor: 'pointer',
 }
@@ -105,7 +105,7 @@ const SelectDropdown = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
+            gap: 'var(--space-sm)',
             flex: 1,
             overflow: 'hidden',
           }}
@@ -116,7 +116,7 @@ const SelectDropdown = ({
             <span style={{ color: 'var(--color-text-secondary)' }}>{placeholder}</span>
           )}
         </span>
-        <span style={{ fontSize: '1.2rem', marginLeft: '8px' }}>▼</span>
+        <span style={{ fontSize: 'var(--font-size-xl)', marginLeft: 'var(--space-sm)' }}>▼</span>
       </button>
 
       {isOpen && !disabled && (
@@ -129,8 +129,8 @@ const SelectDropdown = ({
             right: 0,
             background: 'var(--color-surface)',
             border: '2px solid var(--color-primary)',
-            borderRadius: '10px',
-            marginTop: '4px',
+            borderRadius: 'var(--radius-lg)',
+            marginTop: 'var(--space-2xs)',
             maxHeight: '300px',
             overflowY: 'auto',
             zIndex: 'var(--z-dropdown)',
@@ -144,10 +144,10 @@ const SelectDropdown = ({
               onClick={() => handleSelect(item[valueKey])}
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: 'var(--space-md) var(--space-lg)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: 'var(--space-sm)',
                 border: 'none',
                 background: selectedId === item[valueKey] ? 'var(--color-primary)' : 'transparent',
                 color:
@@ -158,7 +158,7 @@ const SelectDropdown = ({
                 textAlign: 'left',
                 transition: 'background 200ms',
                 // borderBottom: '1px solid var(--color-border)',
-                fontSize: '0.95rem',
+                fontSize: 'var(--font-size-base)',
               }}
               onMouseEnter={e => {
                 if (selectedId !== item[valueKey]) {
@@ -178,7 +178,11 @@ const SelectDropdown = ({
       )}
 
       {isLoading && (
-        <LoadingState message="Cargando..." size="xs" style={{ marginTop: '8px', padding: 0 }} />
+        <LoadingState
+          message="Cargando..."
+          size="xs"
+          style={{ marginTop: 'var(--space-sm)', padding: 0 }}
+        />
       )}
     </div>
   )

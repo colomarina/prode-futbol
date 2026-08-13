@@ -15,11 +15,11 @@ const Card = ({ color, children }) => {
     <div
       className="card"
       style={{
-        marginBottom: '24px',
+        marginBottom: 'var(--space-xl)',
         backgroundColor: tint(color, 5),
         border: `2px solid ${color}`,
-        padding: '16px',
-        borderRadius: '12px',
+        padding: 'var(--space-lg)',
+        borderRadius: 'var(--radius-lg)',
       }}
     >
       {children}

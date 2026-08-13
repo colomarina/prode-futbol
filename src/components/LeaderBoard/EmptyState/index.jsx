@@ -11,11 +11,15 @@ const EmptyState = memo(function EmptyState({
       icon={icon}
       title={title}
       description={subtitle}
-      style={{ padding: '32px 16px' }}
-      iconStyle={{ fontSize: '3rem', marginBottom: '12px' }}
+      style={{ padding: 'var(--space-2xl) var(--space-lg)' }}
+      iconStyle={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--space-md)' }}
       titleTag="p"
-      titleStyle={{ fontSize: '1rem', marginBottom: '4px', fontWeight: '600' }}
-      descriptionStyle={{ fontSize: '0.85rem' }}
+      titleStyle={{
+        fontSize: 'var(--font-size-base)',
+        marginBottom: 'var(--space-2xs)',
+        fontWeight: '600',
+      }}
+      descriptionStyle={{ fontSize: 'var(--font-size-md)' }}
     />
   )
 })

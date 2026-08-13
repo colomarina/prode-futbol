@@ -1,6 +1,6 @@
 const TITLE_STYLE = {
   color: 'var(--color-text-primary)',
-  marginBottom: '8px',
+  marginBottom: 'var(--space-sm)',
 }
 
 const DESCRIPTION_STYLE = {
@@ -21,9 +21,17 @@ export default function EmptyState({
   const TitleTag = titleTag
 
   return (
-    <div style={{ textAlign: 'center', padding: '48px 16px', ...style }}>
+    <div style={{ textAlign: 'center', padding: 'var(--space-3xl) var(--space-lg)', ...style }}>
       {showIcon && (
-        <div style={{ fontSize: '4rem', marginBottom: '16px', ...iconStyle }}>{icon}</div>
+        <div
+          style={{
+            fontSize: 'var(--font-size-4xl)',
+            marginBottom: 'var(--space-lg)',
+            ...iconStyle,
+          }}
+        >
+          {icon}
+        </div>
       )}
       <TitleTag style={{ ...TITLE_STYLE, ...titleStyle }}>{title}</TitleTag>
       {description && <p style={{ ...DESCRIPTION_STYLE, ...descriptionStyle }}>{description}</p>}

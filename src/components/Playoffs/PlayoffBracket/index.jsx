@@ -20,7 +20,7 @@ const BRACKET_UNIT = BRACKET_SLOT_HEIGHT + BRACKET_BASE_GAP
 const getColumnStyle = () => ({
   minWidth: '220px',
   flex: '0 0 220px',
-  paddingTop: '0px',
+  paddingTop: '0',
 })
 
 const getStackStyle = stageIndex => {
@@ -39,7 +39,7 @@ const getStackStyle = stageIndex => {
 const teamNameStyle = {
   margin: 0,
   color: 'var(--color-text-primary)',
-  fontSize: '0.82rem',
+  fontSize: 'var(--font-size-sm)',
   fontWeight: '700',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
@@ -49,7 +49,7 @@ const teamNameStyle = {
 const teamRowStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: 'var(--space-sm)',
   minWidth: 0,
 }
 
@@ -101,22 +101,22 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
   return (
     <div>
       <div className={styles.mobile}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {mobileStageDescriptors.map(stage => (
-            <section key={stage.id} className="card" style={{ padding: '12px' }}>
+            <section key={stage.id} className="card" style={{ padding: 'var(--space-md)' }}>
               <h3
                 style={{
-                  margin: '0 0 10px 0',
+                  margin: '0 0 var(--space-sm) 0',
                   color: 'var(--color-primary)',
-                  fontSize: '0.95rem',
+                  fontSize: 'var(--font-size-base)',
                   borderBottom: '1px solid var(--color-border)',
-                  paddingBottom: '6px',
+                  paddingBottom: 'var(--space-xs)',
                 }}
               >
                 {STAGE_LABELS[stage.id] || stage.id}
               </h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                 {(stage.matches || []).map(match => (
                   <PlayoffMatch
                     key={match.id}
@@ -130,9 +130,9 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
                     style={{
                       margin: 0,
                       color: 'var(--color-text-secondary)',
-                      fontSize: '0.9rem',
+                      fontSize: 'var(--font-size-md)',
                       textAlign: 'center',
-                      padding: '8px 0',
+                      padding: 'var(--space-sm) 0',
                     }}
                   >
                     Sin cruces cargados aún.
@@ -149,26 +149,31 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
           style={{
             overflowX: 'auto',
             border: '1px solid var(--color-border)',
-            borderRadius: '16px',
-            padding: '16px',
+            borderRadius: 'var(--radius-xl)',
+            padding: 'var(--space-lg)',
             background:
               'radial-gradient(circle at 0% 0%, var(--color-surface-highlight), transparent 45%), var(--color-surface)',
           }}
         >
           <div
-            style={{ display: 'flex', gap: '14px', minWidth: '980px', alignItems: 'flex-start' }}
+            style={{
+              display: 'flex',
+              gap: 'var(--space-md)',
+              minWidth: '980px',
+              alignItems: 'flex-start',
+            }}
           >
             {stageDescriptors.map((stage, stageIndex) => (
               <section key={stage.id} style={getColumnStyle(stageIndex)}>
                 <h3
                   style={{
-                    margin: '0 0 12px 0',
-                    fontSize: '0.95rem',
+                    margin: '0 0 var(--space-md) 0',
+                    fontSize: 'var(--font-size-base)',
                     color: 'var(--color-primary)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     borderBottom: '1px solid var(--color-border)',
-                    paddingBottom: '6px',
+                    paddingBottom: 'var(--space-xs)',
                   }}
                 >
                   {STAGE_LABELS[stage.id] || stage.id}
@@ -186,8 +191,8 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center',
-                            borderRadius: '8px',
-                            padding: '8px 10px',
+                            borderRadius: 'var(--radius-md)',
+                            padding: 'var(--space-sm) var(--space-sm)',
                             backgroundColor: 'var(--color-surface-variant)',
                             border: '1px solid var(--color-border)',
                             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.06)',
@@ -197,15 +202,15 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
                             {match.home_team?.logo_url ? (
                               <img src={match.home_team.logo_url} alt="" style={logoStyle} />
                             ) : (
-                              <span style={{ fontSize: '0.8rem' }}>⚽</span>
+                              <span style={{ fontSize: 'var(--font-size-sm)' }}>⚽</span>
                             )}
                             <p style={teamNameStyle}>{match.home_team?.name || 'A confirmar'}</p>
                           </div>
-                          <div style={{ ...teamRowStyle, marginTop: '4px' }}>
+                          <div style={{ ...teamRowStyle, marginTop: 'var(--space-2xs)' }}>
                             {match.away_team?.logo_url ? (
                               <img src={match.away_team.logo_url} alt="" style={logoStyle} />
                             ) : (
-                              <span style={{ fontSize: '0.8rem' }}>⚽</span>
+                              <span style={{ fontSize: 'var(--font-size-sm)' }}>⚽</span>
                             )}
                             <p style={teamNameStyle}>{match.away_team?.name || 'A confirmar'}</p>
                           </div>
@@ -217,18 +222,18 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center',
-                            borderRadius: '8px',
-                            padding: '8px 10px',
+                            borderRadius: 'var(--radius-md)',
+                            padding: 'var(--space-sm) var(--space-sm)',
                             backgroundColor: 'var(--color-surface-variant)',
                             border: '1px dashed var(--color-border)',
                           }}
                         >
                           <div style={teamRowStyle}>
-                            <span style={{ fontSize: '0.8rem' }}>⚽</span>
+                            <span style={{ fontSize: 'var(--font-size-sm)' }}>⚽</span>
                             <p style={teamNameStyle}>A confirmar</p>
                           </div>
-                          <div style={{ ...teamRowStyle, marginTop: '4px' }}>
-                            <span style={{ fontSize: '0.8rem' }}>⚽</span>
+                          <div style={{ ...teamRowStyle, marginTop: 'var(--space-2xs)' }}>
+                            <span style={{ fontSize: 'var(--font-size-sm)' }}>⚽</span>
                             <p style={teamNameStyle}>A confirmar</p>
                           </div>
                         </article>
