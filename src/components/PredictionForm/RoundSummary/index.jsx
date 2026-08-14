@@ -7,7 +7,7 @@ import styles from './RoundSummary.module.css'
  * escribir en ella.
  *
  * Los minutos del texto salen de `PREDICTION_CUTOFF_MINUTES` y no de un "10"
- * escrito a mano, que es la regla de `utils/matchTiming.js`: si algún día el corte
+ * escrito a mano, que es la regla de `utils/matchTiming.ts`: si algún día el corte
  * cambia, el mensaje no queda mintiendo.
  */
 export default function RoundSummary({ round, isReadOnly, allMatchesLocked }) {

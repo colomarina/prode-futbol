@@ -15,15 +15,28 @@ pnpm test:watch
 pnpm test:coverage
 pnpm lint           # eslint src
 pnpm lint:fix
+pnpm typecheck      # tsc --noEmit
 pnpm format         # prettier --write sobre src/
 pnpm format:check
 ```
 
-**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.js` → `matchTiming.test.js`).
+**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.ts` → `matchTiming.test.js`).
 
 Para testear un hook de datos: `src/test/supabaseMock.js` arma un mock del query builder encadenable de Supabase y cuenta consultas por tabla (útil para verificar que el cache deduplica). Ver `useRounds.test.jsx` como referencia — hay que mockear `../lib/supabase` con un getter y envolver el `renderHook` en un `QueryClientProvider` con `retry: false`.
 
-CI en `.github/workflows/ci.yml`: corre `lint`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
+CI en `.github/workflows/ci.yml`: corre `lint`, `typecheck`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
+
+## TypeScript (migración gradual, fase 7)
+
+El proyecto está a mitad de camino: conviven `.js`/`.jsx` con `.ts`/`.tsx`.
+
+- **`pnpm build` no chequea tipos.** El build lo hace SWC, que borra las anotaciones sin mirarlas, así que **el único chequeo real es `pnpm typecheck`** (`tsc --noEmit`). Está en CI como paso propio; si se saca, un error de tipos llega a producción en verde.
+- `tsconfig.json` tiene `allowJs: true` y `checkJs: false` (lo no migrado no reporta nada) y `strict: false`, que se sube a `true` cuando no queden `.jsx` por migrar. `types: ["vite/client"]` es lo que tipa `import.meta.env` y los imports de `*.module.css`.
+- **`typescript` está fijado en `^5.9` a propósito.** `pnpm add -D typescript` instala la 7.x (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta `<6.1.0`: con la 7 el lint queda con un peer sin resolver. Subir recién cuando typescript-eslint la soporte.
+- **`src/types/domain.ts` es la fuente de los tipos de dominio** (una interfaz por tabla, más las uniones de los CHECK constraints). Están escritos a mano y verificados contra la base; cuando se adopte `supabase gen types typescript` pasan a ser un alias de los generados.
+- Las funciones piden **el subconjunto de columnas que usan** (`Pick<Match, 'home_team_id' | 'away_team_id'>`) en vez de la fila entera: así sirven igual para un registro de la base y para un objeto armado en un test.
+- **Los tests siguen en `.js` por ahora.** Con `strict: false` un fixture parcial igual falla por propiedades faltantes, así que migrarlos ahora sería pelear con los tipos en vez de migrar código. Van cuando el código esté anotado.
+- ESLint aplica las reglas del proyecto (`no-console`, `import-x`, a11y, prettier) también a `.ts`/`.tsx`, más un bloque de `typescript-eslint` al final que apaga las reglas core que se pisan con las suyas.
 
 Prettier corre **como regla de ESLint** (`prettier/prettier: error`), así que `pnpm lint` falla por problemas de formato. Config: sin punto y coma, comillas simples, `printWidth: 100`, `arrowParens: avoid`.
 
@@ -122,9 +135,9 @@ El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` 
 
 ### Reglas de dominio en el cliente
 
-- `src/utils/matchTiming.js` — fuente única de verdad de tiempos: `PREDICTION_CUTOFF_MINUTES = 10` (cierre de pronósticos), `RESULT_LOAD_DELAY_HOURS = 2` (cuándo el admin puede cargar el resultado), y `getNextActiveRoundNumber()`, que deriva la fecha activa desde los `match_date` (no desde `round.status`). Usar `canPredictMatch()` antes de habilitar cualquier input de pronóstico, y `getResultLoadTime()` para mostrar el horario — no recalcular el delay a mano, o el texto termina mintiendo cuando cambia la constante.
+- `src/utils/matchTiming.ts` — fuente única de verdad de tiempos: `PREDICTION_CUTOFF_MINUTES = 10` (cierre de pronósticos), `RESULT_LOAD_DELAY_HOURS = 2` (cuándo el admin puede cargar el resultado), y `getNextActiveRoundNumber()`, que deriva la fecha activa desde los `match_date` (no desde `round.status`). Usar `canPredictMatch()` antes de habilitar cualquier input de pronóstico, y `getResultLoadTime()` para mostrar el horario — no recalcular el delay a mano, o el texto termina mintiendo cuando cambia la constante.
 - `src/constants/hiddenPlayers.js` — `filterHiddenPlayers()` oculta jugadores por coincidencia de nombre normalizado. Se aplica en `useLeaderboard`, `useAllPredictions`, `RoundManager` y `usePersonalStats` (este último con `isHiddenPlayer` sobre el perfil embebido, y sin filtrar nunca al usuario propio). **Si agregás una vista con listas de usuarios, aplicalo también**: si un consumidor se lo saltea, los totales dejan de coincidir entre pantallas.
-- `PREDICTION_CUTOFF_MINUTES` vive solo en `utils/matchTiming.js` (se borró la copia de `constants/predictions.js`). No volver a duplicarla.
+- `PREDICTION_CUTOFF_MINUTES` vive solo en `utils/matchTiming.ts` (se borró la copia de `constants/predictions.js`). No volver a duplicarla.
 - `src/utils/leaderboardRounds.js` — qué fechas tienen tabla propia en la tabla de posiciones y si el torneo tiene playoffs. **El criterio sale de los partidos, no de `rounds.status`**: una fecha aparece cuando tiene al menos un partido `is_finished`, y las de playoff se detectan por `is_playoff` en vez de por un rango fijo. `rounds.status` se actualiza a mano desde el panel de fechas y queda desincronizado (Clausura 2026 tiene la fecha 4 jugada entera y en `open`; en el Mundial las de playoff siguen en `pending`), así que filtrar por status hacía desaparecer fechas ya jugadas. Lo consumen `LeaderBoard` (opciones del selector) y `Navigation` (mostrar u ocultar el tab de la llave). `WORLD_CUP_STANDALONE_ROUNDS = {4, 5}` es la única excepción hardcodeada y **solo aplica al Mundial**: ahí 16avos y octavos tienen tabla propia y el resto se agrega en "Cuartos a Final".
 - `src/constants/worldCupBonus.js` — preguntas bonus del Mundial con sus puntos (`WORLD_CUP_BONUS_MAX_POINTS = 50`) y el mapa slug → código de país para las banderas de flagcdn.
 - Sistema de puntos y desempates (texto que ve el usuario): `src/components/InfoPage/info.config.jsx`. El README describe un esquema de puntos viejo (5/3/1) que ya no aplica.

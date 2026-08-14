@@ -6,7 +6,7 @@ import styles from './ActiveRoundCard.module.css'
  * La tarjeta destacada de la fecha activa, con el progreso de los jugadores.
  *
  * "Activa" no quiere decir `status === 'open'`: se deriva del partido más próximo
- * que todavía no empezó (`utils/matchTiming.js`). `rounds.status` se actualiza a
+ * que todavía no empezó (`utils/matchTiming.ts`). `rounds.status` se actualiza a
  * mano y queda desincronizado, así que no sirve para esto.
  *
  * @param {{ round: object, players: Array<object> }} props

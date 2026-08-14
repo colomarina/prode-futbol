@@ -6,7 +6,7 @@ import styles from './ScoreInput.module.css'
  * Estaba escrita dos veces, casi igual: en `MatchResult` para que el admin cargue
  * el resultado y en `MatchPrediction` para que el usuario pronostique. Con los
  * helpers `parseScoreValue` y `getWinnerTeamId` copiados literal en los dos
- * archivos, que se fueron a `utils/score.js`.
+ * archivos, que se fueron a `utils/score.ts`.
  *
  * Las dos diferencias reales entre aquellas copias son las dos props de acá:
  * `tone` —el admin ve en verde el resultado ya cargado— y `readOnly`, que en

@@ -1,7 +1,7 @@
 /**
  * Qué mensaje y qué estado mostrar en la tarjeta de un partido, según el reloj.
  *
- * Todo el cálculo de tiempos sale de `utils/matchTiming.js`, que es la fuente
+ * Todo el cálculo de tiempos sale de `utils/matchTiming.ts`, que es la fuente
  * única: acá no se resta ni un minuto a mano. Antes eran seis expresiones
  * booleanas sueltas al principio del componente, con las condiciones repetidas
  * entre ellas y sin forma de testearlas sin renderizar la tarjeta.

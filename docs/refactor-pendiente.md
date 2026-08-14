@@ -79,14 +79,31 @@ dispara el scoring, así que es una decisión de producto, no un refactor mecán
 
 El plan sigue vigente casi entero. Orden:
 
-1. `tsconfig.json` con `allowJs: true` y `strict: false`.
-   `@vitejs/plugin-react-swc` ya compila TS sin config extra.
-2. **`types/domain.ts` primero**: `Tournament`, `Round`, `Match`, `Prediction`,
-   `Profile`, `RoundScore`, `WorldCupPrediction`. Es lo que más rinde.
+1. ~~`tsconfig.json` con `allowJs: true` y `strict: false`~~ → **hecho**, con dos
+   cosas que el plan no preveía:
+   - `@vitejs/plugin-react-swc` compila TS sin config, pero **no chequea tipos**:
+     SWC borra las anotaciones sin mirarlas. Por eso se agregó `pnpm typecheck`
+     (`tsc --noEmit`) y un paso propio en CI. Sin eso, la fase no daba seguridad
+     ninguna.
+   - **`typescript` quedó fijado en `^5.9`**: `pnpm add -D typescript` trae la 7.x
+     (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta
+     `<6.1.0`. Con la 7 el lint queda con un peer sin resolver.
+2. ~~**`types/domain.ts` primero**~~ → **hecho**. Una interfaz por tabla más las
+   uniones de los CHECK constraints, verificadas **contra la base** y no copiadas
+   del snapshot. Incluye `MatchMeta` (el select compartido de `useMatchesMeta`) y
+   `MatchWithTeams` (los tres joins de `MATCH_WITH_TEAMS`).
 3. Considerar `supabase gen types typescript` para que los tipos de tablas dejen
    de desincronizarse con `docs/supabase-schema.md`, que se mantiene a mano.
+   Necesita el CLI de Supabase y acceso al proyecto, así que va con la fase 9.
 4. Orden de migración: `utils/` → `types/` → `lib/` → `hooks/` → `Common/` →
-   features de menor a mayor.
+   features de menor a mayor. **Empezado**: van `utils/score.ts` y
+   `utils/matchTiming.ts`, las dos reglas de dominio más consumidas. Convención
+   que salió de ahí: cada función pide **el subconjunto de columnas que usa**
+   (`Pick<Match, 'home_team_id' | 'away_team_id'>`) y no la fila entera, así sirve
+   igual para un registro de la base y para un objeto armado en un test.
+   **Los tests siguen en `.js`**: con `strict: false` un fixture parcial igual
+   falla por propiedades faltantes, así que migrarlos ahora sería pelear con los
+   tipos en vez de migrar código.
 5. Renombrar los **18 `.jsx` que no contienen JSX** a `.ts`. Lista verificada:
 
    ```
