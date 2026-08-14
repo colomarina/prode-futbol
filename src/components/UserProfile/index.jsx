@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import TextInput from '../Common/TextInput'
+import PasswordInput from '../Common/PasswordInput'
 import Toast from '../Common/Toast'
 import styles from './UserProfile.module.css'
 
@@ -41,8 +42,6 @@ export default function UserProfile() {
   const [fullName, setFullName] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
   const [error, setError] = useState('')
@@ -238,54 +237,28 @@ export default function UserProfile() {
               <label className={styles.label} htmlFor="new-password">
                 Nueva contraseña
               </label>
-              <div className={styles.passwordField}>
-                <TextInput
-                  id="new-password"
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={event => setNewPassword(event.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                  minLength={6}
-                  required
-                  style={{ paddingRight: '56px' }}
-                />
-                <button
-                  type="button"
-                  className={styles.passwordToggle}
-                  onClick={() => setShowNewPassword(prev => !prev)}
-                  aria-label={showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  aria-pressed={showNewPassword}
-                >
-                  {showNewPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
+              <PasswordInput
+                id="new-password"
+                value={newPassword}
+                onChange={event => setNewPassword(event.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                minLength={6}
+                required
+              />
             </div>
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="confirm-password">
                 Confirmar contraseña
               </label>
-              <div className={styles.passwordField}>
-                <TextInput
-                  id="confirm-password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={event => setConfirmPassword(event.target.value)}
-                  placeholder="Repetí la nueva contraseña"
-                  minLength={6}
-                  required
-                  style={{ paddingRight: '56px' }}
-                />
-                <button
-                  type="button"
-                  className={styles.passwordToggle}
-                  onClick={() => setShowConfirmPassword(prev => !prev)}
-                  aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  aria-pressed={showConfirmPassword}
-                >
-                  {showConfirmPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
+              <PasswordInput
+                id="confirm-password"
+                value={confirmPassword}
+                onChange={event => setConfirmPassword(event.target.value)}
+                placeholder="Repetí la nueva contraseña"
+                minLength={6}
+                required
+              />
             </div>
 
             <button type="submit" className={styles.secondaryButton} disabled={savingPassword}>

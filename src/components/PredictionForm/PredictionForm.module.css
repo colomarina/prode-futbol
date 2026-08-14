@@ -1,0 +1,79 @@
+/*
+ * El contenedor replica la clase global `.container` con su padding responsive,
+ * más el `max-width: 900px` que antes venía de un `style` inline al lado. El
+ * inline ganaba también contra la media query de 1024px, que sube el ancho a
+ * 1200px: acá el 900 es fijo, igual que se veía.
+ */
+.container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 var(--space-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 var(--space-2xl);
+  }
+}
+
+/*
+ * Las dos tarjetas del selector replican la clase global `.card` en vez de
+ * combinarse con ella, que es el patrón del resto de los módulos: así el padding
+ * y el margen no dependen de qué hoja de estilos cargó última.
+ *
+ * Se diferencian a propósito y venían así: la del formulario no lleva padding
+ * —el dropdown ya trae el suyo— y la de la pantalla sin partidos sí. Unificarlas
+ * sería un cambio visual, no un refactor.
+ */
+.selectorCard {
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.emptySelectorCard {
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 640px) {
+  .emptySelectorCard {
+    padding: var(--space-xl);
+  }
+}
+
+/*
+ * El gap es el único mecanismo de separación entre tarjetas. Antes eran dos
+ * sumándose: este gap más el margin-bottom que traía la clase global `.card` de
+ * cada tarjeta, o sea 40px reales que no estaban escritos en ningún lado. Ahora
+ * `MatchPrediction` no lleva margen propio y la separación la decide la lista,
+ * que es de quien es.
+ */
+.matches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+/* El botón de guardar sigue al scroll: en una fecha de 8 partidos queda lejos. */
+.saveBar {
+  position: sticky;
+  bottom: 20px;
+  z-index: var(--z-sticky);
+  margin-top: var(--space-xl);
+}
+
+.saveIcon {
+  font-size: var(--font-size-2xl);
+}

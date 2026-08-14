@@ -1,0 +1,74 @@
+/*
+ * El contenedor replica la clase global `.container` con su padding responsive,
+ * más el `max-width: 1000px` que antes venía de un `style` inline al lado.
+ */
+.container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 var(--space-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 var(--space-2xl);
+  }
+}
+
+.header {
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.titleIcon {
+  font-size: var(--font-size-3xl);
+}
+
+.subtitle {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+/*
+ * Es la clase global `.card` sin su padding: las tarjetas de fecha traen el suyo
+ * y el original lo anulaba con `style={{ padding: 0 }}`. Se replica acá en vez de
+ * combinar la clase global con una override, porque un `padding: 0` de módulo y
+ * el `padding: 24px` de la media query global tienen la misma especificidad y
+ * cuál gana depende del orden en que se inyecten las hojas.
+ */
+.listCard {
+  padding: 0;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-lg);
+}
+
+@media (min-width: 640px) {
+  .listCard {
+    margin-bottom: var(--space-xl);
+  }
+}
+
+.list {
+  display: grid;
+  gap: var(--space-md);
+}

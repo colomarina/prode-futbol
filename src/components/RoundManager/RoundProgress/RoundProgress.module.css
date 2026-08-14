@@ -1,0 +1,115 @@
+/*
+ * El bloque de "Progreso de Usuarios" dentro de la tarjeta de la fecha activa.
+ *
+ * Los tintes de `--color-success` que antes se armaban con `tint()` en JS ahora
+ * son `color-mix` acá. Se pasó de seis pasos de alfa escritos a mano
+ * (0.05/0.1/0.12/0.15/0.2/0.3) a los cuatro que se distinguen a la vista: 0.1 y
+ * 0.12 eran indistinguibles, igual que 0.15 y 0.2 en un borde de 2px.
+ */
+.panel {
+  padding: var(--space-xl);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--color-success) 5%, transparent);
+  border: 2px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.headingIcon {
+  font-size: var(--font-size-2xl);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  margin: var(--space-3xs) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-md);
+}
+
+/* El espacio de abajo solo hace falta cuando el detalle está abierto. */
+.summary[data-expanded='true'] {
+  margin-bottom: var(--space-xl);
+}
+
+.stat {
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+}
+
+.statValue {
+  margin-bottom: var(--space-2xs);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.statLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/*
+ * El borde va con el color de relleno y la letra con el `-text`: en el Mundial
+ * `--color-success` es un celeste claro y como número sobre este fondo no llega
+ * al contraste mínimo.
+ */
+.stat[data-level='complete'] {
+  border-color: var(--color-success);
+}
+.stat[data-level='complete'] .statValue {
+  color: var(--color-success-text);
+}
+
+.stat[data-level='partial'] {
+  border-color: var(--color-warning);
+}
+.stat[data-level='partial'] .statValue {
+  color: var(--color-warning-text);
+}
+
+.stat[data-level='none'] {
+  border-color: var(--color-error);
+}
+.stat[data-level='none'] .statValue {
+  color: var(--color-error-text);
+}
+
+.details {
+  /* Con muchos jugadores la lista tapaba toda la pantalla. */
+  max-height: 400px;
+  overflow-y: auto;
+  padding-top: var(--space-lg);
+  border-top: 2px solid color-mix(in srgb, var(--color-success) 15%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
