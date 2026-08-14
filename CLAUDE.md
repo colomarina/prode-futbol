@@ -52,7 +52,7 @@ En `.env` (no versionado), prefijo `VITE_`:
 
 `.env.example` tiene la lista completa con comentarios.
 
-`src/lib/supabase.jsx` **no** debe tirar si faltan las variables: `createClient` se ejecuta al evaluar el módulo, o sea antes de que React monte, así que un throw ahí deja la pantalla en blanco sin mensaje (ni el `ErrorBoundary` llega a existir). En su lugar construye el cliente con placeholders y exporta `missingSupabaseEnvVars`; `App.jsx` lo chequea antes de los providers y renderiza `Common/ConfigError`. En Vercel las variables se configuran por entorno: Production, Preview y Development son listas separadas.
+`src/lib/supabase.ts` **no** debe tirar si faltan las variables: `createClient` se ejecuta al evaluar el módulo, o sea antes de que React monte, así que un throw ahí deja la pantalla en blanco sin mensaje (ni el `ErrorBoundary` llega a existir). En su lugar construye el cliente con placeholders y exporta `missingSupabaseEnvVars`; `App.jsx` lo chequea antes de los providers y renderiza `Common/ConfigError`. En Vercel las variables se configuran por entorno: Production, Preview y Development son listas separadas.
 
 Deploy en Vercel; `vercel.json` reescribe todo a `/index.html` (SPA) y define los headers de seguridad. La CSP incluye `style-src 'unsafe-inline'` porque la app todavía usa cientos de estilos inline y bloques `<style>` inyectados; se puede endurecer cuando eso se migre.
 
@@ -104,12 +104,12 @@ Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o e
 
 ### Capa de datos
 
-`src/lib/supabase.jsx` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`. La única lectura que queda fuera de un hook es la RPC de progreso de jugadores en `RoundManager`.
+`src/lib/supabase.ts` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`. La única lectura que queda fuera de un hook es la RPC de progreso de jugadores en `RoundManager`.
 
 **TanStack Query**: todos los hooks de datos están migrados. Ya no queda ningún `useEffect` de fetching en `src/hooks/`.
 
-- Cliente y defaults en `src/lib/queryClient.js` (`staleTime` 30s, `retry` 1 en lecturas y **0 en mutaciones**, porque reintentar una escritura duplicaría un pronóstico).
-- **Las query keys se arman siempre con `src/lib/queryKeys.js` y empiezan por el id del torneo.** Es lo que impide que el cache mezcle torneos, igual que el filtro `tournament_id` en las queries. Nunca escribir un array de key a mano.
+- Cliente y defaults en `src/lib/queryClient.ts` (`staleTime` 30s, `retry` 1 en lecturas y **0 en mutaciones**, porque reintentar una escritura duplicaría un pronóstico).
+- **Las query keys se arman siempre con `src/lib/queryKeys.ts` y empiezan por el id del torneo.** Es lo que impide que el cache mezcle torneos, igual que el filtro `tournament_id` en las queries. Nunca escribir un array de key a mano.
 - `useMatchesMeta` es la consulta compartida de "todos los partidos del torneo" (`id, round_number, match_date, is_finished, is_playoff`). Su select es un superconjunto a propósito: la usan `useRounds`, `MatchManager`, `RoundManager`, `LeaderBoard` y `Navigation`. Si necesitás otra columna de esa lista, agregala ahí en vez de crear una query nueva. Sin `tournamentId` la query queda deshabilitada (`enabled`), porque traer los partidos de todos los torneos no sirve para nada.
 - Las mutaciones invalidan en vez de parchear estado local, y conservan el contrato `{ data, error }` que ya usan los componentes.
 - Las devtools están disponibles en `pnpm dev` (botón abajo a la izquierda); son la forma de verificar que no haya queries duplicadas.

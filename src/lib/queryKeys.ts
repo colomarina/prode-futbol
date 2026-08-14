@@ -9,22 +9,36 @@
  * `?? null` normaliza undefined a null para que `['rounds', undefined]` y
  * `['rounds', null]` no sean dos entradas distintas del cache.
  */
+import type { Uuid } from '../types/domain'
+
+/** Los ids llegan como `undefined` mientras el contexto todavía no resolvió. */
+type TournamentId = Uuid | null | undefined
+type UserId = Uuid | null | undefined
+type MatchId = Uuid | null | undefined
+type RoundNumber = number | null | undefined
+
+/**
+ * La fecha en la tabla de posiciones no es solo un número: `null` es la tabla
+ * general y `'playoffs'` la agregada de la llave (ver `useLeaderboard`).
+ */
+type LeaderboardRound = RoundNumber | 'playoffs'
+
 export const queryKeys = {
   /** Todo lo de un torneo, para invalidar de una. */
-  tournament: tournamentId => [tournamentId ?? null],
+  tournament: (tournamentId: TournamentId) => [tournamentId ?? null],
 
   /** Fechas del torneo. */
-  rounds: tournamentId => [tournamentId ?? null, 'rounds'],
+  rounds: (tournamentId: TournamentId) => [tournamentId ?? null, 'rounds'],
 
   /**
    * Datos mínimos de todos los partidos del torneo (id, fecha, número de fecha,
    * si terminó). Es la query que antes se repetía en `useRounds`, `MatchManager`,
    * `RoundManager` y `useAllPredictions`, cada uno con su propio select.
    */
-  matchesMeta: tournamentId => [tournamentId ?? null, 'matches', 'meta'],
+  matchesMeta: (tournamentId: TournamentId) => [tournamentId ?? null, 'matches', 'meta'],
 
   /** Partidos completos de una fecha, con los equipos embebidos. */
-  matchesByRound: (tournamentId, roundNumber) => [
+  matchesByRound: (tournamentId: TournamentId, roundNumber: RoundNumber) => [
     tournamentId ?? null,
     'matches',
     'round',
@@ -32,7 +46,7 @@ export const queryKeys = {
   ],
 
   /** Pronósticos del usuario para una fecha. */
-  predictions: (tournamentId, roundNumber, userId) => [
+  predictions: (tournamentId: TournamentId, roundNumber: RoundNumber, userId: UserId) => [
     tournamentId ?? null,
     'predictions',
     'round',
@@ -41,16 +55,14 @@ export const queryKeys = {
   ],
 
   /** Pronósticos de otro jugador en una fecha (vista "todas las predicciones"). */
-  predictionsOfUserInRound: (tournamentId, roundNumber, userId) => [
-    tournamentId ?? null,
-    'predictions',
-    'by-user',
-    roundNumber ?? null,
-    userId || null,
-  ],
+  predictionsOfUserInRound: (
+    tournamentId: TournamentId,
+    roundNumber: RoundNumber,
+    userId: UserId
+  ) => [tournamentId ?? null, 'predictions', 'by-user', roundNumber ?? null, userId || null],
 
   /** Pronósticos de todos los jugadores para un partido. */
-  predictionsByMatch: (tournamentId, matchId) => [
+  predictionsByMatch: (tournamentId: TournamentId, matchId: MatchId) => [
     tournamentId ?? null,
     'predictions',
     'by-match',
@@ -61,35 +73,38 @@ export const queryKeys = {
   profiles: () => ['profiles'],
 
   /** Tabla de posiciones: general, de una fecha, o de playoffs. */
-  leaderboard: (tournamentId, roundNumber, isWorldCupTournament) => [
-    tournamentId ?? null,
-    'leaderboard',
-    roundNumber ?? null,
-    Boolean(isWorldCupTournament),
-  ],
+  leaderboard: (
+    tournamentId: TournamentId,
+    roundNumber: LeaderboardRound,
+    isWorldCupTournament?: boolean
+  ) => [tournamentId ?? null, 'leaderboard', roundNumber ?? null, Boolean(isWorldCupTournament)],
 
   /** Estadísticas personales del usuario en el torneo. */
-  personalStats: (tournamentId, userId) => [tournamentId ?? null, 'personal-stats', userId ?? null],
+  personalStats: (tournamentId: TournamentId, userId: UserId) => [
+    tournamentId ?? null,
+    'personal-stats',
+    userId ?? null,
+  ],
 
   /** Cuánto pronosticó cada jugador en una fecha (panel de fechas del admin). */
-  roundProgress: (tournamentId, roundNumber) => [
+  roundProgress: (tournamentId: TournamentId, roundNumber: RoundNumber) => [
     tournamentId ?? null,
     'round-progress',
     roundNumber ?? null,
   ],
 
   /** Bonus del Mundial: configuración, equipos, resultados y pronósticos. */
-  worldCupBonus: (tournamentId, userId) => [
+  worldCupBonus: (tournamentId: TournamentId, userId: UserId) => [
     tournamentId ?? null,
     'world-cup-bonus',
     userId ?? null,
   ],
 
   /** Partidos de playoffs con sus equipos. */
-  playoffMatches: tournamentId => [tournamentId ?? null, 'matches', 'playoffs'],
+  playoffMatches: (tournamentId: TournamentId) => [tournamentId ?? null, 'matches', 'playoffs'],
 
   /** Pronósticos de playoffs del usuario. */
-  playoffPredictions: (tournamentId, userId) => [
+  playoffPredictions: (tournamentId: TournamentId, userId: UserId) => [
     tournamentId ?? null,
     'predictions',
     'playoffs',

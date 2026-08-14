@@ -129,10 +129,24 @@ El plan sigue vigente casi entero. Orden:
      405 partidos de la base tengan las dos FK cargadas: `teamReads` solo cuenta el
      partido si están los dos, y el dominio admite un cruce de playoff sin equipos
      todavía. Si el embed no trae la fila, PostgREST devuelve null.
-5. Renombrar los **18 `.jsx` que no contienen JSX** a `.ts`. Lista verificada:
+   **`lib/` está terminado** también: `supabase.ts`, `queryClient.ts` y
+   `queryKeys.ts`. Dos cosas salieron de ahí:
+
+   - **`src/vite-env.d.ts` declara las variables de entorno**, que hasta ahora eran
+     `any`. Van opcionales a propósito: pueden faltar, y todo el mecanismo de
+     `missingSupabaseEnvVars` + `Common/ConfigError` existe para avisarlo en
+     pantalla. Con el `?` el chequeo de faltantes también le dice algo al compilador.
+   - `missingSupabaseEnvVars` usaba `.filter(Boolean)`, que **TypeScript no
+     estrecha**: el tipo seguía siendo `(string | null)[]` y un null podía llegar al
+     consumidor. Ahora el filtro lleva un predicado (`name is string`).
+   - En `queryKeys` la fecha de la tabla de posiciones quedó tipada como
+     `number | 'playoffs' | null`, que es lo que de verdad recibe: `null` es la
+     tabla general y `'playoffs'` la agregada de la llave.
+
+5. Renombrar los **`.jsx` que no contienen JSX** a `.ts`. Quedan **17**:
+   `src/lib/supabase.jsx` ya se migró en el punto anterior.
 
    ```
-   src/lib/supabase.jsx
    src/hooks/useAllPredictions.jsx      src/hooks/usePersonalStats.jsx
    src/hooks/useDialogBehavior.jsx      src/hooks/usePlayoffs.jsx
    src/hooks/useHomePath.jsx            src/hooks/usePredictions.jsx
