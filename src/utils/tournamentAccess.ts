@@ -13,16 +13,20 @@
  */
 export const TEST_TOURNAMENT_SLUG_PREFIX = 'test-'
 
-/** @param {{slug?: string}|null|undefined} tournament */
-export const isTestTournament = tournament =>
+/** Lo mínimo que hace falta para decidir: el slug. */
+type ConSlug = { slug?: string | null }
+
+export const isTestTournament = (tournament: ConSlug | null | undefined): boolean =>
   typeof tournament?.slug === 'string' && tournament.slug.startsWith(TEST_TOURNAMENT_SLUG_PREFIX)
 
 /**
  * Torneos que le corresponde ver a este usuario. Los de prueba se ocultan del
  * todo para los que no son admin, en vez de mostrarse deshabilitados.
  *
- * @param {Array<{slug?: string}>} tournaments
- * @param {boolean} isUserAdmin
+ * Genérico para devolver el mismo tipo que recibió: quien filtre una lista de
+ * `Tournament` sigue teniendo `Tournament[]` y no una lista de `{ slug }`.
  */
-export const filterVisibleTournaments = (tournaments, isUserAdmin) =>
-  (tournaments || []).filter(tournament => isUserAdmin || !isTestTournament(tournament))
+export const filterVisibleTournaments = <T extends ConSlug>(
+  tournaments: T[] | null | undefined,
+  isUserAdmin: boolean
+): T[] => (tournaments || []).filter(tournament => isUserAdmin || !isTestTournament(tournament))

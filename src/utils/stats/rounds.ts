@@ -8,19 +8,18 @@
  * primera y perder la segunda.
  */
 import { classifyPrediction } from './accuracy'
+import type { AnalyzedPrediction, RoundPoints, RoundTotals } from './types'
 
-/**
- * @param {Array<{match: object, prediction: object}>} analyzedPredictions
- * @returns {{
- *   evolutionByRound: Array<{roundNumber: number, points: number}>,
- *   bestRound: {roundNumber: number|null, points: number},
- *   worstRound: {roundNumber: number|null, points: number},
- *   mostPreciseRound: {roundNumber: number, percentage: number}|null,
- * }}
- */
-export const buildRoundTotals = analyzedPredictions => {
-  const pointsByRound = new Map()
-  const hitsByRound = new Map()
+/** Lo que se acumula por fecha para medir la puntería. */
+interface RoundHits {
+  roundNumber: number
+  correct: number
+  total: number
+}
+
+export const buildRoundTotals = (analyzedPredictions: AnalyzedPrediction[]): RoundTotals => {
+  const pointsByRound = new Map<number, number>()
+  const hitsByRound = new Map<number, RoundHits>()
 
   analyzedPredictions.forEach(({ match, prediction }) => {
     const { points, scored } = classifyPrediction(match, prediction)
@@ -38,17 +37,17 @@ export const buildRoundTotals = analyzedPredictions => {
     .map(([roundNumber, points]) => ({ roundNumber, points }))
     .sort((a, b) => a.roundNumber - b.roundNumber)
 
-  const emptyRound = { roundNumber: null, points: 0 }
+  const emptyRound: RoundPoints = { roundNumber: null, points: 0 }
 
   // Los `reduce` sin valor inicial arrancan del primer elemento, y como el array
   // ya viene ordenado por fecha, ante empate de puntos gana la fecha más
   // temprana. Es el criterio que la pantalla venía mostrando.
-  const bestRound =
+  const bestRound: RoundPoints =
     evolutionByRound.length > 0
       ? evolutionByRound.reduce((best, round) => (round.points > best.points ? round : best))
       : emptyRound
 
-  const worstRound =
+  const worstRound: RoundPoints =
     evolutionByRound.length > 0
       ? evolutionByRound.reduce((worst, round) => (round.points < worst.points ? round : worst))
       : emptyRound

@@ -14,12 +14,18 @@ const SUPPORTED_GROUP_LETTERS = new Set([
   'L',
 ])
 
-const normalizeGroupLabel = groupLabel => {
+const normalizeGroupLabel = (groupLabel: unknown): string => {
   if (typeof groupLabel !== 'string') return ''
   return groupLabel.trim().toUpperCase()
 }
 
-export const getGroupBadgeColors = (groupLabel, tournamentSlug) => {
+/** Los dos colores del badge de grupo, o null si no corresponde mostrarlo. */
+type GroupBadgeColors = { backgroundColor: string; color: string }
+
+export const getGroupBadgeColors = (
+  groupLabel: string | null | undefined,
+  tournamentSlug: string | null | undefined
+): GroupBadgeColors | null => {
   if (tournamentSlug !== MUNDIAL_TOURNAMENT_SLUG) return null
 
   const normalizedLabel = normalizeGroupLabel(groupLabel)

@@ -10,6 +10,14 @@
  * `buildTournamentStats`, mezclado con las cuentas por equipo y por fecha, así
  * que la regla más importante del dominio no tenía un solo test.
  */
+import type { Match, Prediction } from '../../types/domain'
+import type {
+  AccuracyBreakdown,
+  AnalyzedPrediction,
+  ClassifiedPrediction,
+  Outcome,
+  PredictionKind,
+} from './types'
 
 /**
  * Resultado de un partido desde el punto de vista del local.
@@ -20,7 +28,7 @@
  * comportamiento que ya tenía: un partido marcado como terminado pero sin
  * marcador cargado cuenta como 0-0.
  */
-export const getOutcome = (home, away) => {
+export const getOutcome = (home: number, away: number): Outcome => {
   if (home > away) return 1
   if (home < away) return -1
   return 0
@@ -34,27 +42,27 @@ export const getOutcome = (home, away) => {
  */
 export const GOALS_BONUS_MIN_TOTAL = 3
 
-/** Las cuatro categorías posibles, en orden de mérito. */
+/**
+ * Las cuatro categorías posibles, en orden de mérito.
+ *
+ * El `satisfies` mantiene los valores como literales (`'exact'` y no `string`), que
+ * es lo que hace que `PredictionKind` y este mapa no puedan desincronizarse.
+ */
 export const PREDICTION_KIND = {
   EXACT: 'exact',
   GOAL_DIFF: 'goalDiff',
   WINNER_ONLY: 'winnerOnly',
   ERROR: 'error',
-}
+} satisfies Record<string, PredictionKind>
 
-/**
- * @param {{home_score: number, away_score: number}} match
- * @param {{home_prediction: number, away_prediction: number, points: number}} prediction
- * @returns {{
- *   kind: string,
- *   points: number,
- *   scored: boolean,
- *   hitsGoalsBonus: boolean,
- *   actualOutcome: number,
- *   predictedOutcome: number,
- * }}
- */
-export const classifyPrediction = (match, prediction) => {
+/** Del partido y del pronóstico solo se leen los marcadores y los puntos. */
+type MarcadorReal = Pick<Match, 'home_score' | 'away_score'>
+type MarcadorPronosticado = Pick<Prediction, 'home_prediction' | 'away_prediction' | 'points'>
+
+export const classifyPrediction = (
+  match: MarcadorReal,
+  prediction: MarcadorPronosticado
+): ClassifiedPrediction => {
   const actualHome = Number(match.home_score)
   const actualAway = Number(match.away_score)
   const predictedHome = Number(prediction.home_prediction)
@@ -66,7 +74,7 @@ export const classifyPrediction = (match, prediction) => {
 
   const isExact = predictedHome === actualHome && predictedAway === actualAway
 
-  let kind = PREDICTION_KIND.ERROR
+  let kind: PredictionKind = PREDICTION_KIND.ERROR
   if (isExact) {
     kind = PREDICTION_KIND.EXACT
   } else if (actualOutcome === predictedOutcome) {
@@ -101,7 +109,9 @@ export const classifyPrediction = (match, prediction) => {
  * muestra "acertó el ganador" como un solo número, pero el desglose fino se
  * sigue exponiendo aparte.
  */
-export const buildAccuracyBreakdown = analyzedPredictions => {
+export const buildAccuracyBreakdown = (
+  analyzedPredictions: AnalyzedPrediction[]
+): AccuracyBreakdown => {
   let exactScores = 0
   let goalDiffCorrect = 0
   let winnerOnly = 0
@@ -134,7 +144,7 @@ export const buildAccuracyBreakdown = analyzedPredictions => {
  * Cuántos pronósticos sumaron puntos. Va aparte del desglose porque no forma
  * parte de lo que muestra la tarjeta: alimenta el porcentaje de acierto.
  */
-export const countScoringPredictions = analyzedPredictions =>
+export const countScoringPredictions = (analyzedPredictions: AnalyzedPrediction[]): number =>
   analyzedPredictions.filter(
     ({ match, prediction }) => classifyPrediction(match, prediction).scored
   ).length
@@ -147,7 +157,7 @@ export const countScoringPredictions = analyzedPredictions =>
  * cálculos. Es el número del que cuelgan el total, el promedio por fecha y el
  * promedio por partido.
  */
-export const sumPoints = analyzedPredictions =>
+export const sumPoints = (analyzedPredictions: AnalyzedPrediction[]): number =>
   analyzedPredictions.reduce(
     (total, { match, prediction }) => total + classifyPrediction(match, prediction).points,
     0

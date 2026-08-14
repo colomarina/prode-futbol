@@ -10,19 +10,13 @@
  *     por fecha del torneo.
  *
  * En las dos, "no participó" no corta la racha: los elementos que no existen en
- * la secuencia simplemente no están (ver `analyzed.js` y `positions.js`).
+ * la secuencia simplemente no están (ver `analyzed.ts` y `positions.ts`).
  */
 import { classifyPrediction, PREDICTION_KIND } from './accuracy'
+import type { AnalyzedPrediction, PositionHistoryEntry, Streaks } from './types'
 
-/**
- * Tira más larga de elementos consecutivos que cumplen el predicado.
- *
- * @template T
- * @param {T[]} items
- * @param {(item: T) => boolean} predicate
- * @returns {number}
- */
-export const getLongestConsecutive = (items, predicate) => {
+/** Tira más larga de elementos consecutivos que cumplen el predicado. */
+export const getLongestConsecutive = <T>(items: T[], predicate: (item: T) => boolean): number => {
   let longest = 0
   let current = 0
 
@@ -43,10 +37,13 @@ export const PODIUM_LIMIT = 3
 export const TOP_LIMIT = 10
 
 /**
- * @param {Array<{match: object, prediction: object}>} analyzedPredictions en orden de fecha de juego
- * @param {Array<{position: number}>} positionHistory en orden de número de fecha
+ * @param analyzedPredictions en orden de fecha de juego
+ * @param positionHistory en orden de número de fecha
  */
-export const buildStreaks = (analyzedPredictions, positionHistory) => ({
+export const buildStreaks = (
+  analyzedPredictions: AnalyzedPrediction[],
+  positionHistory: PositionHistoryEntry[]
+): Streaks => ({
   longestPointStreak: getLongestConsecutive(
     analyzedPredictions,
     ({ match, prediction }) => classifyPrediction(match, prediction).scored

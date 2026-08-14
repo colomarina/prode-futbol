@@ -9,22 +9,24 @@
  * resultado depende del orden en que Postgres devolvió las filas, que puede
  * variar entre consultas.
  *
- * @param {(entry: any) => number|string} getPoints
- * @param {(entry: any) => string|number} getId
- * @returns {(a: any, b: any) => number} comparador para Array.prototype.sort
+ * Los dos parámetros son getters y no nombres de campo porque cada pantalla trae
+ * la fila con una forma distinta (`total_points`, `points`, un acumulado propio).
  */
-export const compareByPoints = (getPoints, getId) => (a, b) =>
-  Number(getPoints(b) || 0) - Number(getPoints(a) || 0) ||
-  String(getId(a)).localeCompare(String(getId(b)))
+export const compareByPoints =
+  <T>(
+    getPoints: (entry: T) => number | string | null | undefined,
+    getId: (entry: T) => string | number
+  ) =>
+  (a: T, b: T): number =>
+    Number(getPoints(b) || 0) - Number(getPoints(a) || 0) ||
+    String(getId(a)).localeCompare(String(getId(b)))
 
 /**
  * Agrega `position` 1-based respetando el orden que ya trae el array.
  * Los empatados reciben posiciones distintas y consecutivas, que es lo que la
  * UI viene mostrando.
- *
- * @template T
- * @param {T[]} entries
- * @returns {(T & { position: number })[]}
  */
-export const assignPositions = entries =>
+export const assignPositions = <T extends object>(
+  entries: T[] | null | undefined
+): (T & { position: number })[] =>
   (entries || []).map((entry, index) => ({ ...entry, position: index + 1 }))

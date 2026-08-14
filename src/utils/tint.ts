@@ -7,8 +7,8 @@
  * custom property como argumento, así que el color quedaba clavado a mano; con
  * `color-mix` sí se puede, y entonces el tinte acompaña al tema.
  *
- * @param {string} color - Un color CSS, típicamente `var(--color-success)`.
- * @param {number} porcentaje - Cuánto del color queda; el resto es transparente.
+ * @param color Un color CSS, típicamente `var(--color-success)`.
+ * @param porcentaje Cuánto del color queda; el resto es transparente.
  */
-export const tint = (color, porcentaje) =>
+export const tint = (color: string, porcentaje: number): string =>
   `color-mix(in srgb, ${color} ${porcentaje}%, transparent)`

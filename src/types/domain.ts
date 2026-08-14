@@ -90,7 +90,7 @@ export interface Round {
   round_number: number
   /** Puede traer un valor fuera de `RoundStatus`; ver la nota de esa unión. */
   status: string
-  /** Opcional: si está vacío, la UI cae a `Fecha N` (`utils/roundLabels.js`). */
+  /** Opcional: si está vacío, la UI cae a `Fecha N` (`utils/roundLabels.ts`). */
   name: string | null
   /** Sin uso en el cliente: la fecha activa se deriva de los `match_date`. */
   opens_at: IsoDate | null
@@ -139,8 +139,15 @@ export type MatchMeta = Pick<
  * el select los desambigua nombrando la FK.
  */
 export interface MatchWithTeams extends Match {
-  home_team: TeamSummary
-  away_team: TeamSummary
+  /**
+   * Nullable aunque `home_team_id` no lo sea, y a propósito: en los 405 partidos
+   * de la base no hay ni un FK nulo, pero el código se defiende de que falte (ver
+   * `utils/stats/teamReads.ts`, que solo cuenta el partido si están los dos) y el
+   * dominio lo admite: un cruce de playoff puede existir antes de saber quién lo
+   * juega. Si el embed no trae la fila, PostgREST devuelve null.
+   */
+  home_team: TeamSummary | null
+  away_team: TeamSummary | null
   qualifier_team: TeamSummary | null
 }
 

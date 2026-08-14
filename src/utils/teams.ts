@@ -6,12 +6,22 @@
  * `MatchPrediction`. Son la misma pregunta con dos respuestas distintas —el
  * objeto o el nombre—, así que la segunda se apoya en la primera.
  */
+import type { MatchWithTeams, Prediction, TeamSummary, Uuid } from '../types/domain'
+
+/** Un partido con los dos equipos embebidos, que es lo único que se necesita acá. */
+type PartidoConEquipos = Pick<
+  MatchWithTeams,
+  'home_team_id' | 'away_team_id' | 'home_team' | 'away_team'
+>
 
 /**
  * El equipo del partido que tiene ese id, o null si el id no es ninguno de los
  * dos (pasa en playoffs, cuando el cruce todavía no está definido).
  */
-export const resolveTeamById = (teamId, match) => {
+export const resolveTeamById = (
+  teamId: Uuid | null | undefined,
+  match: PartidoConEquipos | null | undefined
+): TeamSummary | null => {
   if (!teamId || !match) return null
   if (teamId === match.home_team_id) return match.home_team
   if (teamId === match.away_team_id) return match.away_team
@@ -25,7 +35,10 @@ export const resolveTeamById = (teamId, match) => {
  * Los fallbacks 'Local' y 'Visitante' importan: el id puede coincidir aunque el
  * equipo no venga embebido en la consulta, y ahí hace falta decir algo.
  */
-export const resolveTeamName = (teamId, match) => {
+export const resolveTeamName = (
+  teamId: Uuid | null | undefined,
+  match: PartidoConEquipos | null | undefined
+): string => {
   if (!teamId || !match) return 'Sin definir'
 
   const team = resolveTeamById(teamId, match)
@@ -40,7 +53,13 @@ export const resolveTeamName = (teamId, match) => {
  * Si el pronóstico no es empate, el ganador sale del marcador; el equipo elegido
  * a dedo solo cuenta cuando empatan.
  */
-export const resolvePredictedQualifierTeam = (prediction, match) => {
+export const resolvePredictedQualifierTeam = (
+  prediction:
+    | Pick<Prediction, 'home_prediction' | 'away_prediction' | 'qualifier_prediction_id'>
+    | null
+    | undefined,
+  match: (PartidoConEquipos & Pick<MatchWithTeams, 'is_playoff'>) | null | undefined
+): TeamSummary | null => {
   if (!prediction || !match?.is_playoff) return null
 
   const home = Number(prediction.home_prediction)

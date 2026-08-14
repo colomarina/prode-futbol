@@ -8,7 +8,9 @@
  * ese equipo le dieron puntos. Un equipo puede aparecer en la primera sin
  * aparecer en las otras dos (ver el comentario de `matches` más abajo).
  */
+import type { TeamSummary, Uuid } from '../../types/domain'
 import { classifyPrediction } from './accuracy'
+import type { AnalyzedPrediction, TeamRead, TeamStats } from './types'
 
 /**
  * Debajo de esta cantidad de partidos el porcentaje de acierto no dice nada: con
@@ -16,13 +18,24 @@ import { classifyPrediction } from './accuracy'
  */
 export const MIN_TEAM_PREDICTIONS = 3
 
-const getTeamRecord = (records, team) => {
+/** Lo que se acumula por equipo mientras se recorren los pronósticos. */
+interface TeamRecord {
+  team: TeamSummary
+  matches: number
+  correctMatches: number
+  predictedWinnerCount: number
+}
+
+const getTeamRecord = (
+  records: Map<Uuid, TeamRecord>,
+  team: TeamSummary | null | undefined
+): TeamRecord | null => {
   if (!team?.id) return null
 
   const existing = records.get(team.id)
   if (existing) return existing
 
-  const record = { team, matches: 0, correctMatches: 0, predictedWinnerCount: 0 }
+  const record: TeamRecord = { team, matches: 0, correctMatches: 0, predictedWinnerCount: 0 }
   records.set(team.id, record)
   return record
 }
@@ -37,8 +50,8 @@ const getTeamRecord = (records, team) => {
  * `away_team` en null. Ese equipo entra en la cuenta de favoritos con
  * `matches: 0`, y por eso el favorito no se filtra por cantidad de partidos.
  */
-const buildTeamRecords = analyzedPredictions => {
-  const records = new Map()
+const buildTeamRecords = (analyzedPredictions: AnalyzedPrediction[]): TeamRecord[] => {
+  const records = new Map<Uuid, TeamRecord>()
 
   analyzedPredictions.forEach(({ match, prediction }) => {
     const { scored, predictedOutcome } = classifyPrediction(match, prediction)
@@ -66,9 +79,9 @@ const buildTeamRecords = analyzedPredictions => {
   return Array.from(records.values())
 }
 
-const accuracyOf = record => record.correctMatches / record.matches
+const accuracyOf = (record: TeamRecord): number => record.correctMatches / record.matches
 
-const asPercentage = record =>
+const asPercentage = (record: TeamRecord | null): TeamRead | null =>
   record
     ? {
         name: record.team.name,
@@ -77,18 +90,10 @@ const asPercentage = record =>
       }
     : null
 
-/**
- * @param {Array<{match: object, prediction: object}>} analyzedPredictions
- * @returns {{
- *   favoriteTeam: {name: string, count: number}|null,
- *   bestReadTeam: {name: string, percentage: number, matches: number}|null,
- *   worstReadTeam: {name: string, percentage: number, matches: number}|null,
- * }}
- */
-export const buildTeamStats = analyzedPredictions => {
+export const buildTeamStats = (analyzedPredictions: AnalyzedPrediction[]): TeamStats => {
   const records = buildTeamRecords(analyzedPredictions)
 
-  const favoriteTeam = records.reduce(
+  const favoriteTeam = records.reduce<TeamRecord | null>(
     (best, record) =>
       !best || record.predictedWinnerCount > best.predictedWinnerCount ? record : best,
     null
@@ -100,12 +105,12 @@ export const buildTeamStats = analyzedPredictions => {
   const candidatos =
     confiables.length > 0 ? confiables : records.filter(record => record.matches > 0)
 
-  const bestReadTeam = candidatos.reduce(
+  const bestReadTeam = candidatos.reduce<TeamRecord | null>(
     (best, record) => (!best || accuracyOf(record) > accuracyOf(best) ? record : best),
     null
   )
 
-  const worstReadTeam = candidatos.reduce(
+  const worstReadTeam = candidatos.reduce<TeamRecord | null>(
     (worst, record) => (!worst || accuracyOf(record) < accuracyOf(worst) ? record : worst),
     null
   )

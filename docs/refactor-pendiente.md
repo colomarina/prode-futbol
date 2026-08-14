@@ -96,14 +96,39 @@ El plan sigue vigente casi entero. Orden:
    de desincronizarse con `docs/supabase-schema.md`, que se mantiene a mano.
    Necesita el CLI de Supabase y acceso al proyecto, así que va con la fase 9.
 4. Orden de migración: `utils/` → `types/` → `lib/` → `hooks/` → `Common/` →
-   features de menor a mayor. **Empezado**: van `utils/score.ts` y
-   `utils/matchTiming.ts`, las dos reglas de dominio más consumidas. Convención
-   que salió de ahí: cada función pide **el subconjunto de columnas que usa**
-   (`Pick<Match, 'home_team_id' | 'away_team_id'>`) y no la fila entera, así sirve
-   igual para un registro de la base y para un objeto armado en un test.
+   features de menor a mayor.
+
+   **`utils/` está terminado**: los 17 módulos, incluidos los 9 de `utils/stats/`.
+   No queda ningún `.js` que no sea un test. Dos convenciones salieron de ahí:
+
+   - Cada función pide **el subconjunto de columnas que usa**
+     (`Pick<Match, 'home_team_id' | 'away_team_id'>`) y no la fila entera, así
+     sirve igual para un registro de la base y para un objeto armado en un test.
+   - Los tipos que no son filas de la base viven al lado de quien los produce:
+     `utils/stats/types.ts` tiene el contrato de las estadísticas, que **hasta
+     ahora era implícito** —lo definía el literal `emptyStats` y la pantalla leía
+     `stats.metrics.totalPoints` de memoria—. Ahora `emptyStats` está anotado con
+     `TournamentStats`, así que si el contrato gana un campo el literal deja de
+     compilar hasta que se lo agregue.
+
    **Los tests siguen en `.js`**: con `strict: false` un fixture parcial igual
    falla por propiedades faltantes, así que migrarlos ahora sería pelear con los
    tipos en vez de migrar código.
+
+   Lo que TypeScript encontró en esta primera pasada, sin buscarlo:
+
+   - `secondsUntilCutoff` restaba dos `Date` directamente, que en TS es error.
+   - **`getLeaderboardRounds` pisa el `id` de la fila** (un uuid) con el
+     `round_number` (un número), así que `Round & { id: number }` es imposible de
+     tipar y quedó como `Omit<Round, 'id'> & { id: number }`. Es intencional —`id`
+     es la clave del dropdown, y las dos opciones sintéticas del selector
+     (`General` y `playoffs`) también la traen— pero duplica exactamente a
+     `round_number`: el dropdown podría usar `valueKey="round_number"` y la línea
+     desaparecería. Queda como candidato porque toca `LeadboardHeader`.
+   - `MatchWithTeams.home_team` / `away_team` se tiparon **nullable** aunque los
+     405 partidos de la base tengan las dos FK cargadas: `teamReads` solo cuenta el
+     partido si están los dos, y el dominio admite un cruce de playoff sin equipos
+     todavía. Si el embed no trae la fila, PostgREST devuelve null.
 5. Renombrar los **18 `.jsx` que no contienen JSX** a `.ts`. Lista verificada:
 
    ```
