@@ -1,22 +1,42 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
+import { useSelectedRound } from '../../hooks/useSelectedRound'
 import { useTournament } from '../../contexts/TournamentContext'
 import MatchPrediction from './MatchPrediction'
+import ActiveRoundShortcut from './ActiveRoundShortcut'
+import LockedRoundNotice from './LockedRoundNotice'
+import RoundSelector from './RoundSelector'
+import RoundSummary from './RoundSummary'
 import Button from '../Common/Button'
 import Toast from '../Common/Toast'
-import SelectDropdown from '../Common/SelectDropdown'
 import LoadingState from '../Common/LoadingState'
 import EmptyState from '../Common/EmptyState'
-import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
 import { canPredictMatch } from '../../utils/matchTiming'
+import { getFormPlaceholder } from './formPlaceholder'
+import { collectPredictionsToSave, findExpiredPredictions, getSaveToast } from './savePredictions'
+import styles from './PredictionForm.module.css'
 
+/**
+ * El formulario de pronósticos de una fecha.
+ *
+ * Quedó como orquestador: qué fecha se está mirando lo decide
+ * `hooks/useSelectedRound`, qué se guarda y qué toast se muestra sale de
+ * `savePredictions.js`, y las pantallas de espera de `formPlaceholder.js`. Acá
+ * queda el estado de lo tipeado, que es lo único que de verdad vive en la
+ * pantalla.
+ */
 export default function PredictionForm() {
   const { activeTournament, isReadOnly } = useTournament()
   const { rounds, activeRound, loading: roundsLoading } = useRounds(activeTournament?.id)
 
-  const [selectedRound, setSelectedRound] = useState(activeRound?.round_number || null)
+  const { selectedRound, availableRounds, selectRound, followActiveRound } = useSelectedRound({
+    tournamentId: activeTournament?.id,
+    rounds,
+    activeRound,
+    loading: roundsLoading,
+  })
 
   const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
   const { predictions, batchUpsertPredictions } = usePredictions(
@@ -27,22 +47,21 @@ export default function PredictionForm() {
   const [predictionValues, setPredictionValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
-  const hasManualRoundSelection = useRef(false)
+
+  // Los valores tipeados se indexan por match_id, así que al cambiar de torneo son
+  // de partidos que ya no están en pantalla.
+  useEffect(() => {
+    setPredictionValues({})
+  }, [activeTournament?.id])
 
   const predictionsByMatchId = useMemo(() => {
     if (!predictions?.length) return new Map()
     return new Map(predictions.map(prediction => [prediction.match_id, prediction]))
   }, [predictions])
 
-  // Obtener info de la fecha seleccionada - DEBE ESTAR ANTES DE LOS RETURNS
   const currentRound = useMemo(
     () => rounds?.find(r => r.round_number === selectedRound),
     [rounds, selectedRound]
-  )
-
-  const availableRounds = useMemo(
-    () => (rounds || []).slice().sort((a, b) => b.round_number - a.round_number),
-    [rounds]
   )
 
   const hasEditableMatches = useMemo(
@@ -55,6 +74,16 @@ export default function PredictionForm() {
     [matches]
   )
 
+  /**
+   * Si hay algo para guardar, o sea si el botón se habilita. El payload no se
+   * memoiza: entre el último render y el click puede vencer un plazo, y ese
+   * partido no tiene que viajar. Se arma dentro del handler.
+   */
+  const hasPredictionsToSave = useMemo(
+    () => collectPredictionsToSave({ matches, predictionValues }).length > 0,
+    [matches, predictionValues]
+  )
+
   const handleValueChange = useCallback((matchId, field, value) => {
     setPredictionValues(prev => ({
       ...prev,
@@ -65,195 +94,67 @@ export default function PredictionForm() {
     }))
   }, [])
 
+  const handleRoundSelect = useCallback(
+    roundNumber => {
+      selectRound(roundNumber)
+      setPredictionValues({}) // Limpiar valores al cambiar de fecha
+    },
+    [selectRound]
+  )
+
   const handleSaveAll = useCallback(async () => {
     // Guard duro: en un torneo finalizado no se escribe aunque se alcance el handler
     if (isReadOnly) return
 
     setSaving(true)
 
-    // Preparar datos para batch upsert
-    const editableMatches = matches.filter(match => canPredictMatch(match.match_date))
+    // Las dos listas se arman acá, con el reloj del click: no hay contador en vivo
+    // que deshabilite el input cuando se cumple el plazo de un partido.
+    const toSave = collectPredictionsToSave({ matches, predictionValues })
+    const expired = findExpiredPredictions({ matches, predictionValues, predictionsByMatchId })
 
-    const predictionsData = editableMatches
-      .filter(match => {
-        const values = predictionValues[match.id]
-        return values?.home && values?.away
-      })
-      .map(match => {
-        const values = predictionValues[match.id]
-        return {
-          matchId: match.id,
-          homePrediction: parseInt(values.home, 10),
-          awayPrediction: parseInt(values.away, 10),
-          qualifierPredictionId: values.qualifier || null,
-        }
-      })
-
-    /**
-     * Los partidos donde el usuario cambio algo y el plazo vencio antes de que
-     * apretara Guardar. El filtro de arriba los descarta, y antes eso pasaba en
-     * silencio: si era el unico que habia cargado, apretar Guardar no hacia nada
-     * —ni un toast— y quedaba creyendo que se guardo. No hay contador en vivo, asi
-     * que el input sigue habilitado hasta que algo dispare un re-render.
-     *
-     * Se compara contra el pronostico ya guardado y no alcanza con "tiene valores":
-     * `MatchPrediction` siembra `predictionValues` con lo que ya estaba guardado
-     * (su efecto de "inicializar valores desde prediccion existente"), asi que
-     * mirar solo si hay valores contaba partidos que el usuario nunca toco, incluido
-     * alguno ya jugado y con resultado cargado.
-     */
-    const vencidos = matches.filter(match => {
-      if (canPredictMatch(match.match_date)) return false
-
-      const values = predictionValues[match.id]
-      if (!values?.home || !values?.away) return false
-
-      const guardado = predictionsByMatchId.get(match.id)
-      if (!guardado) return true
-
-      return (
-        String(guardado.home_prediction) !== String(values.home) ||
-        String(guardado.away_prediction) !== String(values.away)
-      )
-    })
-
-    if (predictionsData.length === 0) {
+    if (toSave.length === 0) {
       setSaving(false)
-      setToast(
-        vencidos.length > 0
-          ? {
-              message: `El plazo venció mientras cargabas: ${vencidos.length === 1 ? 'ese pronóstico no se guardó' : `esos ${vencidos.length} pronósticos no se guardaron`}.`,
-              type: 'warning',
-            }
-          : { message: 'No hay pronósticos para guardar', type: 'warning' }
-      )
+      setToast(getSaveToast({ savedCount: 0, expiredCount: expired.length }))
       return
     }
 
     // Una sola llamada batch en lugar de múltiples individuales
-    const { error } = await batchUpsertPredictions(predictionsData)
+    const { error } = await batchUpsertPredictions(toSave)
 
     setSaving(false)
-
-    if (!error) {
-      const guardados = `${predictionsData.length} pronóstico${predictionsData.length > 1 ? 's' : ''} guardado${predictionsData.length > 1 ? 's' : ''} correctamente`
-
-      setToast({
-        message:
-          vencidos.length > 0
-            ? `${guardados}. ${vencidos.length === 1 ? 'Otro quedó' : `Otros ${vencidos.length} quedaron`} afuera porque venció el plazo.`
-            : guardados,
-        type: vencidos.length > 0 ? 'warning' : 'success',
-      })
-    } else {
-      setToast({
-        message: 'Error al guardar pronósticos. Intentá de nuevo.',
-        type: 'error',
-      })
-    }
+    setToast(getSaveToast({ savedCount: toSave.length, expiredCount: expired.length, error }))
   }, [matches, predictionValues, predictionsByMatchId, batchUpsertPredictions, isReadOnly])
 
-  // Verificar si hay al menos un pronóstico para guardar
-  const hasValidPredictions = useMemo(
-    () =>
-      matches.some(match => {
-        if (!canPredictMatch(match.match_date)) return false
+  const placeholder = getFormPlaceholder({
+    roundsLoading,
+    rounds,
+    matchesLoading,
+    selectedRound,
+  })
 
-        const values = predictionValues[match.id]
-        return values?.home && values?.away
-      }),
-    [matches, predictionValues]
-  )
-
-  useEffect(() => {
-    setSelectedRound(null)
-    setPredictionValues({})
-    hasManualRoundSelection.current = false
-  }, [activeTournament?.id])
-
-  useEffect(() => {
-    // Hay que esperar a que `useRounds` termine: `availableRounds` esta ordenado
-    // descendente, asi que su primer elemento es la fecha mas alta del torneo. Si
-    // las fechas ya llegaron pero los partidos no, `activeRound` todavia es null y
-    // este fallback elegia esa ultima fecha, pedia sus partidos y sus pronosticos,
-    // y recien despues saltaba a la correcta. El fallback sigue existiendo para el
-    // torneo que ya se jugo entero, donde no hay ninguna fecha activa.
-    if (roundsLoading) return
-    if (availableRounds.length === 0) return
-
-    if (activeRound && !hasManualRoundSelection.current) {
-      if (selectedRound !== activeRound.round_number) {
-        setSelectedRound(activeRound.round_number)
-      }
-      return
-    }
-
-    if (!selectedRound) {
-      setSelectedRound(availableRounds[0].round_number)
-    }
-  }, [activeRound, availableRounds, selectedRound, roundsLoading])
-
-  // Mientras carga la información de fechas o se está auto-seleccionando
-  if (roundsLoading) {
+  if (placeholder) {
     return (
       <div className="container">
-        <LoadingState message="Cargando información..." />
+        {placeholder.type === 'loading' ? (
+          <LoadingState message={placeholder.message} />
+        ) : (
+          <EmptyState title={placeholder.title} description={placeholder.description} />
+        )}
       </div>
     )
   }
 
-  // Si no hay fechas en absoluto
-  if (!rounds || rounds.length === 0) {
-    return (
-      <div className="container">
-        <EmptyState
-          title="No hay fechas disponibles"
-          description="Esperá a que el administrador cree las fechas del torneo"
-        />
-      </div>
-    )
-  }
-
-  // Mientras cargan los partidos
-  if (matchesLoading) {
-    return (
-      <div className="container">
-        <LoadingState message="Cargando partidos..." />
-      </div>
-    )
-  }
-
-  // No renderizar hasta que haya una fecha seleccionada
-  if (!selectedRound) {
-    return (
-      <div className="container">
-        <LoadingState message="Preparando información..." />
-      </div>
-    )
-  }
-
-  // Si la fecha no tiene partidos
+  // La fecha existe pero todavía no tiene partidos: el selector se muestra igual,
+  // para poder irse a otra.
   if (!matches || matches.length === 0) {
     return (
-      <div className="container" style={{ maxWidth: '900px' }}>
-        {/* Selector de fechas */}
-        <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <SelectDropdown
-            label="📅 Seleccioná una Fecha"
-            items={availableRounds}
-            selectedId={selectedRound}
-            onSelect={roundNumber => {
-              hasManualRoundSelection.current = true
-              setSelectedRound(roundNumber)
-            }}
-            valueKey="round_number"
-            placeholder="Seleccionar fecha..."
-            renderButton={round => (
-              <span style={{ fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
-            )}
-            renderOption={round => (
-              <span style={{ flex: 1, fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
-            )}
+      <div className={styles.container}>
+        <div className={styles.emptySelectorCard}>
+          <RoundSelector
+            rounds={availableRounds}
+            selectedRound={selectedRound}
+            onSelect={selectRound}
           />
         </div>
 
@@ -266,110 +167,27 @@ export default function PredictionForm() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '900px' }}>
-      {/* Selector de fechas */}
-      <div className="card" style={{ marginBottom: 'var(--space-lg)', padding: '0' }}>
-        <SelectDropdown
-          label="📅 Seleccioná una Fecha"
-          items={availableRounds}
-          selectedId={selectedRound}
-          onSelect={roundNumber => {
-            hasManualRoundSelection.current = true
-            setSelectedRound(roundNumber)
-            setPredictionValues({}) // Limpiar valores al cambiar de fecha
-          }}
-          valueKey="round_number"
-          placeholder="Seleccionar fecha..."
-          renderButton={round => (
-            <span style={{ fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
-          )}
-          renderOption={round => (
-            <span style={{ flex: 1, fontWeight: '600' }}>{getRoundDisplayName(round)}</span>
-          )}
+    <div className={styles.container}>
+      <div className={styles.selectorCard}>
+        <RoundSelector
+          rounds={availableRounds}
+          selectedRound={selectedRound}
+          onSelect={handleRoundSelect}
         />
       </div>
 
-      {/* Resumen de la fecha */}
-      <div style={{ marginBottom: 'var(--space-lg)', textAlign: 'center' }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            padding: 'var(--space-lg) var(--space-xl)',
-            borderRadius: 'var(--radius-lg)',
-            backgroundColor: 'var(--color-surface-variant)',
-            border: '2px solid var(--color-border)',
-            width: '100%',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 'var(--font-size-base)',
-              fontWeight: '700',
-              color: 'var(--color-text-primary)',
-            }}
-          >
-            {currentRound ? getRoundDisplayName(currentRound) : 'Fecha seleccionada'}
-          </span>
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 'var(--font-size-md)',
-              margin: 0,
-            }}
-          >
-            {isReadOnly
-              ? 'Este torneo ya terminó. Estás viendo el histórico de pronósticos y resultados.'
-              : allMatchesLocked
-                ? 'Todos los partidos de esta fecha ya superaron el límite de edición: podés cargar pronósticos hasta 10 minutos antes del horario de cada partido.'
-                : 'Todavía podés cargar y actualizar pronósticos en los partidos que sigan habilitados. El límite es 10 minutos antes del horario de cada partido.'}
-          </p>
-        </div>
-      </div>
+      <RoundSummary
+        round={currentRound}
+        isReadOnly={isReadOnly}
+        allMatchesLocked={allMatchesLocked}
+      />
 
-      {/* Atajo a fecha activa - en modo consulta no hay fecha abierta, se oculta */}
+      {/* En modo consulta no hay fecha abierta a la que ir, se oculta */}
       {!isReadOnly && activeRound && selectedRound !== activeRound.round_number && (
-        <div
-          style={{
-            background: 'var(--color-surface-highlight)',
-            border: '2px solid var(--color-success)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 'var(--space-lg)',
-            marginBottom: 'var(--space-xl)',
-            textAlign: 'center',
-          }}
-        >
-          <p
-            style={{
-              color: 'var(--color-success)',
-              fontWeight: '600',
-              marginBottom: 'var(--space-sm)',
-            }}
-          >
-            💡 {getRoundDisplayName(activeRound)} está abierta para pronósticos
-          </p>
-          <Button
-            variant="success"
-            size="sm"
-            onClick={() => setSelectedRound(activeRound.round_number)}
-          >
-            Ir a {getRoundDisplayNameByNumber(activeRound.round_number, rounds)} →
-          </Button>
-        </div>
+        <ActiveRoundShortcut activeRound={activeRound} rounds={rounds} onGo={followActiveRound} />
       )}
 
-      {/*
-        Lista de partidos.
-
-        El gap es el único mecanismo de separación entre tarjetas. Antes eran dos
-        sumándose: este `gap` de 16px más el `margin-bottom` de 24px que traía la
-        clase global `.card`, o sea 40px reales que no estaban escritos en ningún
-        lado. Ahora `MatchPrediction` no lleva margen propio y la separación la
-        decide la lista, que es de quien es.
-      */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)' }}>
+      <div className={styles.matches}>
         {matches.map(match => (
           <MatchPrediction
             key={`${match.round_number}-${match.match_number}-${match.id}`}
@@ -381,48 +199,22 @@ export default function PredictionForm() {
         ))}
       </div>
 
-      {/* Botón único para guardar todos */}
       {hasEditableMatches && (
-        <div
-          style={{
-            marginTop: 'var(--space-xl)',
-            position: 'sticky',
-            bottom: '20px',
-            zIndex: 'var(--z-sticky)',
-          }}
-        >
+        <div className={styles.saveBar}>
           <Button
             size="lg"
             fullWidth
             onClick={handleSaveAll}
-            disabled={saving || !hasValidPredictions}
+            disabled={saving || !hasPredictionsToSave}
           >
-            <span style={{ fontSize: 'var(--font-size-2xl)' }}>{saving ? '⏳' : '💾'}</span>
+            <span className={styles.saveIcon}>{saving ? '⏳' : '💾'}</span>
             <span>{saving ? 'Guardando...' : 'Guardar Todos los Pronósticos'}</span>
           </Button>
         </div>
       )}
 
-      {/* Mensaje cuando todos los partidos ya pasaron el cutoff.
-          En modo consulta se omite: ya lo dice el resumen de arriba y quedaría duplicado. */}
-      {!isReadOnly && allMatchesLocked && (
-        <div
-          style={{
-            marginTop: 'var(--space-xl)',
-            padding: 'var(--space-lg)',
-            textAlign: 'center',
-            backgroundColor: 'var(--color-surface-variant)',
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
-            ⚽ Esta fecha ya pasó su ventana de edición. Los pronósticos que no estén guardados ya
-            no se pueden modificar.
-          </p>
-        </div>
-      )}
+      {!isReadOnly && allMatchesLocked && <LockedRoundNotice />}
 
-      {/* Toast notifications */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
