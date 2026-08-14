@@ -1,0 +1,33 @@
+{
+  // Migracion gradual: `allowJs` deja convivir .js/.jsx con .ts/.tsx, y `checkJs`
+  // en false hace que los archivos que todavia no se migraron no reporten nada.
+  // `strict` arranca apagado a proposito: se sube a true cuando no queden .jsx
+  // sin migrar, porque encenderlo ahora inundaria de errores codigo sin anotar.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+
+    // `vite/client` es lo que tipa `import.meta.env` y los imports de
+    // `*.module.css`. Sin eso, el primer archivo migrado que lea una variable de
+    // entorno o importe un modulo CSS no compila.
+    "types": ["vite/client"],
+
+    "allowJs": true,
+    "checkJs": false,
+    "strict": false,
+
+    // El build lo hace SWC, que borra los tipos sin chequearlos: `tsc` corre solo
+    // para verificar (`pnpm typecheck`), nunca para emitir.
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}
