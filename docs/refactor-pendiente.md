@@ -1,4 +1,4 @@
-# Refactor: lo que queda (fases 6-pendiente, 7, 8 y 9)
+# Refactor: lo que queda (fases 7, 8 y 9)
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
 previo**. El plan original completo está en
@@ -26,38 +26,52 @@ Métricas verificadas:
 
 | | Valor |
 |---|---|
-| Tests | 375 en 44 archivos |
-| Archivos > 250 líneas | 8 (era 12 al empezar la fase 6) |
+| Tests | 414 en 48 archivos |
+| Archivos > 250 líneas | 7 (era 12 al empezar la fase 6) |
 | Imports de Supabase en componentes | 0 |
 | `useEffect` de fetching en hooks | 0 |
 | `.jsx` que no contienen JSX | 18 |
 
 `pnpm lint && pnpm format:check && pnpm test && pnpm build` en verde.
 
----
+**La fase 6 está cerrada y verificada.** El último punto era
+`PredictionForm/index.jsx` (429 → 223 líneas), con el detalle en
+`docs/pruebas-fase-6.md`: el diff de estilos computados dio **0 diferencias en las
+9 combinaciones** medidas (dos torneos, los dos temas, 1280 y 390px, la fecha sin
+partidos, ida y vuelta de fecha y la barra sticky), comparando todos los nodos del
+árbol y no solo unas sondas. Y se probó **guardar de verdad** en `test-sandbox`,
+con verificación contra la base: upsert sin filas duplicadas, el clasificado por
+penales en sus dos ramas y ningún partido tocado fuera del payload. Con eso quedan
+cerrados los dos pendientes de verificación que arrastraba la fase (la escritura
+real y el `QualifierPicker` en el navegador).
 
-## Fase 6 — lo que falta
+### `MatchManager/MatchResult/index.jsx`: se decidió no tocarlo
 
-Un solo punto: **`PredictionForm/index.jsx`, 429 líneas.** No estaba en el plan
-original; apareció como god component cuando las fases 1 a 5 encogieron el resto.
+Era el punto opcional que quedaba de la fase 6 (308 líneas, ~28 literales fuera de
+la escala de tokens). Se leyó entero y **la decisión fue dejarlo como está**:
 
-Qué separar:
+- **No es un god component.** De sus 308 líneas, ~90 son lógica y ya delegan en
+  `utils/matchTiming`, `utils/score` y `utils/matchDate`. El resto es JSX con
+  estilos inline. Partirlo no sacaría a la luz ninguna regla sin test: sacaría
+  markup de un archivo y lo pondría en otro.
+- **Migrar sus literales es un cambio visual, no un refactor.** `0.75rem`,
+  `0.8rem`, `0.85rem` y `0.9rem` no están en la escala, así que normalizarlos
+  cambia tamaños de letra en el panel de admin y suma superficie nueva a revisar en
+  un merge cuya razón de ser era justamente revisar los cambios visuales juntos.
+  La rama recién llegó a "0 diferencias medidas"; agregar churn cosmético ahora no
+  compra nada.
+- **Las fases 7 y 8 lo van a abrir igual** (TypeScript en `MatchManager/**`, y el
+  repaso de accesibilidad). Ese es el momento natural para normalizar los tokens:
+  el archivo ya está abierto y la revisión visual del merge ya pasó.
 
-- **`handleSaveAll`, ~85 líneas.** Contiene la regla de los pronósticos vencidos
-  (los que el usuario cargó y a los que se les venció el plazo antes de apretar
-  Guardar) y tres armados de mensaje distintos según cuántos entraron y cuántos
-  quedaron afuera. Es lógica pura, no tiene tests, y el comentario que la explica
-  es más largo que el código. Candidato claro a `savePredictions.js` + tests.
-- **El efecto de auto-selección de fecha** (líneas ~174-194): a un hook
-  `useSelectedRound`. Tiene un comentario largo sobre un bug ya arreglado (elegía
-  la última fecha del torneo si las fechas llegaban antes que los partidos) que
-  conviene preservar como test.
-- **Cinco `return` tempranos** de loading/vacío casi idénticos.
-- El bloque del resumen de la fecha está todo inline; quedan ~15 literales.
-
-También queda `MatchManager/MatchResult/index.jsx` (308 líneas) con sus ~28
-literales sin migrar. El plan decía que quedaría chico al usar `ScoreInput` —ya lo
-usa— así que es opcional.
+**Lo que sí conviene anotar, porque es duplicación real y no cosmética:**
+`MatchResult` reimplementa inline la regla del clasificado por penales —ganador
+automático, bloqueo, efecto de sincronización— que `MatchPrediction/qualifier.js`
+ya encapsula y tiene con tests. No son idénticas: el formulario de pronósticos
+muestra el selector **solo si el marcador es empate** (`shouldShowPicker`), y el
+panel de resultados lo muestra siempre en un partido de playoff y lo deshabilita
+cuando hay ganador. Unificarlas cambiaría la UI del admin y toca la escritura que
+dispara el scoring, así que es una decisión de producto, no un refactor mecánico.
 
 ---
 
@@ -192,11 +206,11 @@ plan original.
 
 ## Antes de mergear a main
 
-1. Terminar el punto pendiente de la fase 6 y las fases 7 y 8, mergeando cada una
-   a `refactor/fase-5-design-system`.
+1. Terminar las fases 7 y 8, mergeando cada una a
+   `refactor/fase-5-design-system`.
 2. **Revisar los cambios visuales juntos.** Están listados en
-   `docs/pruebas-fase-6.md` (sección "Cambios visuales deliberados") y son los que
-   motivaron la estrategia de ramas. Los de la fase 5 que quedaron señalados:
+   `docs/pruebas-fase-6.md` (sección "Cambios visuales deliberados") y son los
+   que motivaron la estrategia de ramas. Los de la fase 5 que quedaron señalados:
    texto secundario de `#757575` a `#666666`, títulos con el primario más oscuros,
    e ícono de estado vacío de 4rem a 3rem.
 3. `pnpm lint && pnpm format:check && pnpm test && pnpm build`.
