@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
@@ -19,7 +20,7 @@ export const missingSupabaseEnvVars: string[] = [
 // corre al evaluar el modulo (antes de que React monte) el resultado era una
 // pantalla en blanco sin ningun mensaje: ni el ErrorBoundary llegaba a existir.
 // Con los placeholders el modulo carga, la app monta y App muestra que falta.
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   supabaseUrl || 'https://placeholder.invalid',
   supabaseAnonKey || 'placeholder-key'
 )

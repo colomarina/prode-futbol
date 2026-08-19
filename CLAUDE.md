@@ -16,6 +16,7 @@ pnpm test:coverage
 pnpm lint           # eslint src
 pnpm lint:fix
 pnpm typecheck      # tsc --noEmit
+pnpm types:db       # regenera src/types/database.ts desde Supabase (pide supabase login)
 pnpm format         # prettier --write sobre src/
 pnpm format:check
 ```
@@ -33,7 +34,10 @@ El proyecto está a mitad de camino: conviven `.js`/`.jsx` con `.ts`/`.tsx`.
 - **`pnpm build` no chequea tipos.** El build lo hace SWC, que borra las anotaciones sin mirarlas, así que **el único chequeo real es `pnpm typecheck`** (`tsc --noEmit`). Está en CI como paso propio; si se saca, un error de tipos llega a producción en verde.
 - `tsconfig.json` tiene `allowJs: true` y `checkJs: false` (lo no migrado no reporta nada) y `strict: false`, que se sube a `true` cuando no queden `.jsx` por migrar. `types: ["vite/client"]` es lo que tipa `import.meta.env` y los imports de `*.module.css`.
 - **`typescript` está fijado en `^5.9` a propósito.** `pnpm add -D typescript` instala la 7.x (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta `<6.1.0`: con la 7 el lint queda con un peer sin resolver. Subir recién cuando typescript-eslint la soporte.
-- **`src/types/domain.ts` es la fuente de los tipos de dominio** (una interfaz por tabla, más las uniones de los CHECK constraints). Están escritos a mano y verificados contra la base; cuando se adopte `supabase gen types typescript` pasan a ser un alias de los generados.
+- **`src/types/database.ts` es la verdad y lo genera Supabase** (`pnpm types:db`): no se edita a mano. Está en `.prettierignore` y en los `ignores` de ESLint, porque reformatearlo haría que cada regeneración traiga un diff de formato encima del diff real del esquema.
+- **`src/types/domain.ts` le pone los nombres del dominio** (`Match = Tables<'matches'>`) y guarda lo que el generador no puede saber: qué columna está muerta, cuál es el default roto, qué garantiza el cliente. Antes eran interfaces a mano y **varias estaban mal** (ver el registro de la fase 7): escribir tipos a mano es afirmar, no comprobar.
+- Las uniones de estado (`TournamentStatus`, `RoundStatus`, …) siguen a mano y **no son el tipo de la columna**: los estados son `text` + CHECK y no enums de Postgres, así que el esquema generado los da como `string | null` (`Enums` viene vacío). Sirven para comparar y estrechar.
+- El cliente es `createClient<Database>()`, así que `.from(...).select(...)` devuelve el tipo real, incluidos los embeds con alias. Las RPCs también quedan tipadas.
 - Las funciones piden **el subconjunto de columnas que usan** (`Pick<Match, 'home_team_id' | 'away_team_id'>`) en vez de la fila entera: así sirven igual para un registro de la base y para un objeto armado en un test.
 - **Los tests siguen en `.js` por ahora.** Con `strict: false` un fixture parcial igual falla por propiedades faltantes, así que migrarlos ahora sería pelear con los tipos en vez de migrar código. Van cuando el código esté anotado.
 - ESLint aplica las reglas del proyecto (`no-console`, `import-x`, a11y, prettier) también a `.ts`/`.tsx`, más un bloque de `typescript-eslint` al final que apaga las reglas core que se pisan con las suyas.
@@ -121,11 +125,11 @@ Los `value` de `TournamentContext` y `ThemeContext` van con `useMemo` y sus func
 
 Tablas/vistas: `tournaments`, `rounds`, `matches`, `teams`, `predictions`, `profiles`, `round_scores`, `general_leaderboard` (vista), `world_cup_*` (`teams`, `predictions`, `bonus_config`, `bonus_scores`, `official_results`).
 
-RPCs que usa el cliente: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_predictions_summary[_by_tournament][_v2]`, `upsert_world_cup_prediction`, `admin_set_world_cup_lock`, `admin_lock_world_cup_predictions`, `recalculate_world_cup_bonus`.
+RPCs que usa el cliente: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_predictions_summary_by_tournament[_v2]` (**la variante sin scope no existe en la base**: lo confirma el esquema generado), `upsert_world_cup_prediction`, `admin_set_world_cup_lock`, `admin_lock_world_cup_predictions`, `recalculate_world_cup_bonus`.
 
 En Supabase existen además las RPCs de pagos y finanzas (`get_round_payments_status`, `register_payment`, `remove_round_allocation`, `upsert_round_finance`, `get_all_round_financial_summaries`, con sus variantes `_by_tournament`), pero **ya no las llama nadie**: los paneles que las usaban se borraron por no estar cableados.
 
-**Nunca consultar sin scope de torneo.** Los `round_number` se repiten entre torneos, así que una query a `round_scores` (o la RPC `get_round_predictions_summary` legacy) sin `tournament_id` no devuelve un error: devuelve datos de otros torneos mezclados. Existía un patrón de fallback que ante un error en la query scopeada reintentaba sin el filtro — se eliminó, porque degradaba en silencio a datos incorrectos. Si la consulta con scope falla, propagar el error.
+**Nunca consultar sin scope de torneo.** Los `round_number` se repiten entre torneos, así que una query a `round_scores` sin `tournament_id` no devuelve un error: devuelve datos de otros torneos mezclados. Existía un patrón de fallback que ante un error en la query scopeada reintentaba sin el filtro — se eliminó, porque degradaba en silencio a datos incorrectos. Si la consulta con scope falla, propagar el error.
 
 `RoundManager` todavía prueba dos RPC con scope en orden (`_by_tournament_v2` y `_by_tournament`) porque no todas las bases tienen la primera; eso es aceptable, las dos filtran por torneo. Lo que no se hace más es caer a la variante sin scope.
 

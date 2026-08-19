@@ -88,13 +88,83 @@ El plan sigue vigente casi entero. Orden:
    - **`typescript` quedó fijado en `^5.9`**: `pnpm add -D typescript` trae la 7.x
      (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta
      `<6.1.0`. Con la 7 el lint queda con un peer sin resolver.
-2. ~~**`types/domain.ts` primero**~~ → **hecho**. Una interfaz por tabla más las
-   uniones de los CHECK constraints, verificadas **contra la base** y no copiadas
-   del snapshot. Incluye `MatchMeta` (el select compartido de `useMatchesMeta`) y
-   `MatchWithTeams` (los tres joins de `MATCH_WITH_TEAMS`).
-3. Considerar `supabase gen types typescript` para que los tipos de tablas dejen
-   de desincronizarse con `docs/supabase-schema.md`, que se mantiene a mano.
-   Necesita el CLI de Supabase y acceso al proyecto, así que va con la fase 9.
+2. ~~**`types/domain.ts` primero**~~ → **hecho**, primero a mano y después
+   derivado del esquema generado (ver el punto 3). Incluye `MatchMeta` (el select
+   compartido de `useMatchesMeta`) y `MatchWithTeams` (los tres joins de
+   `MATCH_WITH_TEAMS`).
+
+   La lección de haberlo hecho a mano primero: se "verificó contra la base"
+   consultando unas filas de cada tabla, y eso alcanza para los **nombres** de las
+   columnas pero **no para la nulabilidad** — tres filas de muestra no pueden
+   mostrar que una columna acepta null. Ahí se colaron los siete errores que lista
+   el punto 3.
+3. ~~Considerar `supabase gen types typescript`~~ → **hecho, y adelantado a esta
+   fase a propósito.** El plan lo agrupaba con adoptar migraciones versionadas
+   (fase 9), pero son separables: generar tipos de la base viva funciona hoy, y lo
+   único que depende de las migraciones es el *drift*.
+
+   Se adelantó porque tipar los hooks a mano significaba escribir `as Match[]`:
+   afirmar, no comprobar. Con `createClient<Database>()` el tipo lo deduce
+   supabase-js parseando el string del select, y **las 35 funciones de la base
+   quedan tipadas** — sus retornos no están documentados en ningún lado del repo,
+   así que a mano eran adivinanza.
+
+   `src/types/database.ts` (1631 líneas) se generó desde el dashboard
+   (*API Docs → Introduction*, no *Project Settings*) y **no se edita**: está en
+   `.prettierignore` y en los `ignores` de ESLint, porque reformatearlo haría que
+   cada regeneración traiga un diff de formato encima del diff real del esquema.
+   `domain.ts` pasó a ser alias (`Match = Tables<'matches'>`) y se quedó con los
+   comentarios, que es el conocimiento que el generador no tiene. Para regenerar:
+   `pnpm types:db` (pide `supabase login`).
+
+   ### Lo que estaba mal en los tipos escritos a mano
+
+   Se habían verificado consultando la base fila por fila, y aun así:
+
+   | Columna | A mano | Real |
+   |---|---|---|
+   | `matches.is_finished` | `boolean` | **`boolean | null`** |
+   | `matches.tournament_id` | `Uuid` | **`string | null`** |
+   | `rounds.tournament_id` | `Uuid` | **`string | null`** |
+   | `predictions.points` | `number` | **`number | null`** |
+   | `round_scores.total_points` | `number` | **`number | null`** |
+   | `profiles.full_name` | `string` | **`string | null`** |
+   | `teams.logo_url` | `string | null` | **`string`** (al revés) |
+   | `tournaments.season` y los 8 `created_at`/`updated_at` | no nulos | nullables |
+
+   Las tres primeras son las que importan: `is_finished` decide qué fecha tiene
+   tabla propia y qué partido entra en las estadísticas, y los dos
+   `tournament_id` nullables son la columna de la que depende **toda** la
+   separación entre torneos. Que el esquema permita una fecha o un partido sin
+   torneo es material para la fase 9.
+
+   También se había narrado de más: los estados se tipaban con las uniones de los
+   CHECK (`status: TournamentStatus`), pero la base los declara `text` y el esquema
+   generado los da como `string | null` (`Enums` viene vacío). Las uniones quedan
+   como vocabulario para comparar y estrechar, no como el tipo de la columna.
+
+   **Lo que sí estaba bien**: `WorldCupPrediction` (los 16 campos, deducidos del
+   mapa `toRpcParams`) y toda la nulabilidad de `home_score`, `away_score`,
+   `rounds.name`, `group_label`, `playoff_stage` y `qualifier_prediction_id`.
+
+   ### Pistas para la fase 9 que aparecieron en el esquema generado
+
+   No son conclusiones —no se leyó el cuerpo de ninguna función—, pero le contestan
+   parcialmente a preguntas que la fase 9 tiene abiertas:
+
+   - Existen `can_predict(match_id)` y `calculate_points` como funciones de la
+     base. La fase 9 anota "el cierre de pronósticos no tiene trigger" y "no se
+     sabe qué escribe `round_scores.total_points`": hay por dónde empezar.
+   - `get_round_predictions_summary` (la legacy sin scope) **no existe**: solo
+     están `_by_tournament` y `_by_tournament_v2`. `CLAUDE.md` la mencionaba y se
+     corrigió.
+   - Hay **4 vistas, no 1**: `general_leaderboard`,
+     `general_leaderboard_by_tournament`, `leaderboard` y `round_leaderboard`. El
+     plan propone borrar la primera; hay tres más para revisar.
+   - Con `strictNullChecks` prendido a mano (solo para medir), lo migrado hasta
+     ahora da **0 errores**: `utils/` y `lib/` ya son null-safe, así que el paso 6
+     no arranca en cero. La deuda va a estar en los hooks y los componentes.
+
 4. Orden de migración: `utils/` → `types/` → `lib/` → `hooks/` → `Common/` →
    features de menor a mayor.
 

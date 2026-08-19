@@ -11,6 +11,10 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
 export default [
+  // El esquema generado por Supabase no se lintea: no se edita a mano, y la regla
+  // de prettier lo marcaria entero.
+  { ignores: ['src/types/database.ts'] },
+
   // ESLint core recomendado
   js.configs.recommended,
 
