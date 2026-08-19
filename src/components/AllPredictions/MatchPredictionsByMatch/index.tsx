@@ -1,8 +1,23 @@
 import MatchDetailCard from '../MatchDetailCard'
 import UserPredictionRow from '../UserPredictionRow'
 import LoadingState from '../../Common/LoadingState'
+import type { MatchWithTeams } from '../../../types/domain'
+import type { PredictionsByKey, PredictionsUser } from '../../../hooks/useAllPredictions'
 
-const MatchPredictionsByMatch = ({ selectedMatch, users, matchPredictions, matchLoading }) => {
+interface MatchPredictionsByMatchProps {
+  selectedMatch?: MatchWithTeams | null
+  users: PredictionsUser[]
+  /** Indexados por id de usuario. */
+  matchPredictions: PredictionsByKey
+  matchLoading?: boolean
+}
+
+const MatchPredictionsByMatch = ({
+  selectedMatch,
+  users,
+  matchPredictions,
+  matchLoading,
+}: MatchPredictionsByMatchProps) => {
   return (
     <div>
       {selectedMatch && <MatchDetailCard match={selectedMatch} />}

@@ -5,8 +5,17 @@ import MatchPredictionsByUser from './MatchPredictionsByUser'
 import MatchPredictionsByMatch from './MatchPredictionsByMatch'
 import EmptyState from './EmptyState'
 import LoadingState from '../Common/LoadingState'
+import type { Uuid } from '../../types/domain'
 
-export default function AllPredictions({ initialRound = null, initialUser = '' }) {
+export default function AllPredictions({
+  initialRound = null,
+  initialUser = '',
+}: {
+  /** Fecha con la que se entra desde un deep link. */
+  initialRound?: number | null
+  /** Jugador con el que se entra desde el 👀 de la tabla de posiciones. */
+  initialUser?: Uuid | ''
+}) {
   const {
     roundsLoading,
     availableRounds,

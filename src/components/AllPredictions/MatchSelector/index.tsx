@@ -1,6 +1,21 @@
 import SelectDropdown from '../../Common/SelectDropdown'
+import type { MatchWithTeams, Uuid } from '../../../types/domain'
 
-const MatchSelector = ({ matches, selectedMatchId, onMatchChange, disabled, isLoading }) => {
+interface MatchSelectorProps {
+  matches: MatchWithTeams[]
+  selectedMatchId: Uuid | null
+  onMatchChange: (id: Uuid | null) => void
+  disabled?: boolean
+  isLoading?: boolean
+}
+
+const MatchSelector = ({
+  matches,
+  selectedMatchId,
+  onMatchChange,
+  disabled,
+  isLoading,
+}: MatchSelectorProps) => {
   return (
     <SelectDropdown
       label="⚽ Seleccionar Partido"

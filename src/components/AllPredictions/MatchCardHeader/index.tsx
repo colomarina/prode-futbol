@@ -2,6 +2,7 @@ import Badge from '../../Common/Badge'
 import MatchStatusBadge from '../MatchStatusBadge'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
+import type { MatchWithTeams } from '../../../types/domain'
 import styles from './MatchCardHeader.module.css'
 
 /**
@@ -11,7 +12,7 @@ import styles from './MatchCardHeader.module.css'
  * idénticas—, incluido el cálculo de `groupLabel` y de los colores del grupo, que
  * los dos componentes hacían por su cuenta con el mismo código.
  */
-export default function MatchCardHeader({ match }) {
+export default function MatchCardHeader({ match }: { match: MatchWithTeams }) {
   const { activeTournament } = useTournament()
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
   const groupBadgeColors = getGroupBadgeColors(groupLabel, activeTournament?.slug)

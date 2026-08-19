@@ -1,6 +1,13 @@
+import type { ReactNode } from 'react'
 import CommonEmptyState from '../../Common/EmptyState'
 
-const EmptyState = ({ icon, title, description }) => {
+interface EmptyStateProps {
+  icon?: ReactNode
+  title?: ReactNode
+  description?: ReactNode
+}
+
+const EmptyState = ({ icon, title, description }: EmptyStateProps) => {
   return (
     <CommonEmptyState
       icon={icon}

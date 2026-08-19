@@ -1,5 +1,6 @@
 import TeamDisplay from '../../Common/TeamDisplay'
 import MatchCardHeader from '../MatchCardHeader'
+import type { MatchWithTeams } from '../../../types/domain'
 import styles from './MatchDetailCard.module.css'
 
 /**
@@ -8,7 +9,7 @@ import styles from './MatchDetailCard.module.css'
  * El encabezado —número, grupo y estado— se fue a `MatchCardHeader`, que era 38
  * de 41 líneas idénticas a las de `MatchCard`.
  */
-const MatchDetailCard = ({ match }) => {
+const MatchDetailCard = ({ match }: { match: MatchWithTeams }) => {
   return (
     <div className={styles.card}>
       <MatchCardHeader match={match} />

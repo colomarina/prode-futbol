@@ -1,6 +1,13 @@
+import type { AllPredictionsViewMode } from '../../../hooks/useAllPredictions'
 import styles from './ViewModeToggle.module.css'
 
-const ViewModeToggle = ({ viewMode, onChange }) => {
+const ViewModeToggle = ({
+  viewMode,
+  onChange,
+}: {
+  viewMode: AllPredictionsViewMode
+  onChange: (modo: AllPredictionsViewMode) => void
+}) => {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
       <div

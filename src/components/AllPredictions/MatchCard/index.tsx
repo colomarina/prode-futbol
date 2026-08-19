@@ -1,7 +1,15 @@
 import TeamDisplay from '../../Common/TeamDisplay'
 import MatchCardHeader from '../MatchCardHeader'
 import { resolveTeamById } from '../../../utils/teams'
+import type { MatchWithTeams, Prediction } from '../../../types/domain'
 import styles from './MatchCard.module.css'
+
+interface MatchCardProps {
+  match: MatchWithTeams
+  prediction?: Prediction | null
+  /** Si el partido ya arrancó. Los que no, se muestran atenuados. */
+  started?: boolean
+}
 
 /**
  * La tarjeta de un partido con el pronóstico de un jugador.
@@ -9,7 +17,7 @@ import styles from './MatchCard.module.css'
  * El encabezado se fue a `MatchCardHeader`: eran 38 de 41 líneas idénticas a las
  * de `MatchDetailCard`, incluido el cálculo de los colores del grupo.
  */
-const MatchCard = ({ match, prediction, started }) => {
+const MatchCard = ({ match, prediction, started }: MatchCardProps) => {
   const isTiePrediction =
     prediction && Number(prediction.home_prediction) === Number(prediction.away_prediction)
   const qualifierPredictionTeam = resolveTeamById(prediction?.qualifier_prediction_id, match)

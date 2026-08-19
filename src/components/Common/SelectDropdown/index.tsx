@@ -23,15 +23,24 @@ const SELECT_STYLE: CSSProperties = {
  * fase 8, acá solo se cubre el nombre y el estado.
  */
 /**
- * Lo que identifica a una opcion. No es solo un uuid: la tabla de posiciones usa
- * numeros de fecha, `null` para la general y el literal `'playoffs'`.
+ * Lo que identifica a una opcion cuando el consumidor no dice nada mas. No es solo
+ * un uuid: la tabla de posiciones usa numeros de fecha, `null` para la general y el
+ * literal `'playoffs'`.
  */
 export type OptionId = string | number | null
 
-interface SelectDropdownProps<T> {
+/**
+ * El tipo del id es un parametro (`TId`) y no un `OptionId` fijo.
+ *
+ * Con el tipo fijo, cada consumidor recibia de vuelta `string | number | null` y lo
+ * metia en un `useState` tipado: los tres selectores de "Ver pronosticos" no
+ * compilaban. Ahora el id sale inferido de `selectedId` y de `onSelect`, asi que
+ * quien elige fechas recibe numeros y quien elige jugadores recibe uuids.
+ */
+interface SelectDropdownProps<T, TId> {
   items?: T[]
-  selectedId?: OptionId
-  onSelect: (id: OptionId) => void
+  selectedId?: TId
+  onSelect: (id: TId) => void
   label?: ReactNode
   disabled?: boolean
   isLoading?: boolean
@@ -42,7 +51,7 @@ interface SelectDropdownProps<T> {
   valueKey?: keyof T & string
 }
 
-const SelectDropdown = <T extends object>({
+const SelectDropdown = <T extends object, TId = OptionId>({
   items = [],
   selectedId,
   onSelect,
@@ -53,7 +62,7 @@ const SelectDropdown = <T extends object>({
   renderOption,
   placeholder = 'Seleccionar...',
   valueKey = 'id' as keyof T & string,
-}: SelectDropdownProps<T>) => {
+}: SelectDropdownProps<T, TId>) => {
   const labelId = useId()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
@@ -61,9 +70,9 @@ const SelectDropdown = <T extends object>({
   const selectedOptionRef = useRef(null)
   /**
    * El unico cast del componente, y esta acotado a un lugar: `item[valueKey]` es
-   * `T[keyof T]` para TypeScript, pero por construccion siempre es un id.
+   * `T[keyof T]` para TypeScript, pero por construccion siempre es el id.
    */
-  const idDe = (item: T): OptionId => item[valueKey] as OptionId
+  const idDe = (item: T): TId => item[valueKey] as TId
 
   const selectedItem = items.find(item => idDe(item) === selectedId)
 
@@ -97,7 +106,7 @@ const SelectDropdown = <T extends object>({
     list.scrollTop = Math.max(0, Math.min(centeredTop, list.scrollHeight - list.clientHeight))
   }, [isOpen])
 
-  const handleSelect = (id: OptionId): void => {
+  const handleSelect = (id: TId): void => {
     onSelect(id)
     setIsOpen(false)
   }

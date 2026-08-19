@@ -1,7 +1,16 @@
 import { resolvePredictedQualifierTeam } from '../../../utils/teams'
+import type { MatchWithTeams, Prediction } from '../../../types/domain'
+import type { PredictionsUser } from '../../../hooks/useAllPredictions'
 import styles from './UserPredictionRow.module.css'
 
-const UserPredictionRow = ({ user, prediction, isFinished, match }) => {
+interface UserPredictionRowProps {
+  user: PredictionsUser
+  prediction: Prediction
+  isFinished?: boolean | null
+  match?: MatchWithTeams | null
+}
+
+const UserPredictionRow = ({ user, prediction, isFinished, match }: UserPredictionRowProps) => {
   const showPlayoffColumn = Boolean(match?.is_playoff)
   const qualifierPredictionTeam = resolvePredictedQualifierTeam(prediction, match)
   const showQualifierTeam = Boolean(showPlayoffColumn && qualifierPredictionTeam)

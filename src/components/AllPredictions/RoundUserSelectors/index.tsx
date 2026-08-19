@@ -2,6 +2,22 @@ import { useEffect } from 'react'
 import MatchSelector from '../MatchSelector'
 import SelectDropdown from '../../Common/SelectDropdown'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
+import type { MatchWithTeams, Round, Uuid } from '../../../types/domain'
+import type { AllPredictionsViewMode, PredictionsUser } from '../../../hooks/useAllPredictions'
+
+interface RoundUserSelectorsProps {
+  availableRounds: Round[]
+  selectedRound: number | null
+  onRoundChange: (roundNumber: number | null) => void
+  viewMode: AllPredictionsViewMode
+  users: PredictionsUser[]
+  selectedUser: Uuid | ''
+  onUserChange: (userId: Uuid | '') => void
+  matches: MatchWithTeams[]
+  matchesLoading?: boolean
+  selectedMatchId: Uuid | null
+  onMatchChange: (matchId: Uuid | null) => void
+}
 
 const RoundUserSelectors = ({
   availableRounds,
@@ -15,7 +31,7 @@ const RoundUserSelectors = ({
   matchesLoading,
   selectedMatchId,
   onMatchChange,
-}) => {
+}: RoundUserSelectorsProps) => {
   // Seleccionar automáticamente la última fecha si no hay seleccionada
   useEffect(() => {
     if (!selectedRound && availableRounds.length > 0) {
@@ -54,7 +70,7 @@ const RoundUserSelectors = ({
     }
   }, [viewMode, onMatchChange])
 
-  const getRoundLabel = round => {
+  const getRoundLabel = (round: Round): string => {
     return `${getRoundDisplayName(round)} ${round.status === 'finished' ? '🏁' : '⚽'}`
   }
 
