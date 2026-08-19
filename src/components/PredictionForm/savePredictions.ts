@@ -12,9 +12,28 @@
  * por `!= null`.
  */
 import { canPredictMatch } from '../../utils/matchTiming'
+import type { Match, Prediction, Uuid } from '../../types/domain'
+import type { PredictionUpsertInput } from '../../hooks/types'
+
+/** Lo que el usuario tiene tipeado para un partido. Todo string, ver arriba. */
+export interface MatchPredictionValues {
+  home?: string
+  away?: string
+  qualifier?: Uuid | null
+}
+
+/** El estado del formulario: lo tipeado, indexado por id de partido. */
+export type PredictionFormValues = Record<Uuid, MatchPredictionValues | undefined>
+
+/** Del partido solo se necesitan el id y el horario. */
+type PartidoGuardable = Pick<Match, 'id' | 'match_date'>
+
+/** Del pronóstico guardado, solo los dos goles, para comparar contra lo tipeado. */
+type PronosticoGuardado = Pick<Prediction, 'home_prediction' | 'away_prediction'>
 
 /** Un pronóstico está completo cuando tiene los dos goles. */
-const isComplete = values => Boolean(values?.home && values?.away)
+const isComplete = (values: MatchPredictionValues | undefined): boolean =>
+  Boolean(values?.home && values?.away)
 
 /**
  * Los pronósticos que se van a mandar: completos y de partidos todavía abiertos.
@@ -24,9 +43,17 @@ const isComplete = values => Boolean(values?.home && values?.away)
  * plazo. No hay contador en vivo: el input sigue habilitado hasta que algo
  * dispare un re-render.
  *
- * @returns {Array<{ matchId, homePrediction: number, awayPrediction: number, qualifierPredictionId: string|null }>}
+ * El tipo del retorno es el mismo que consume `usePredictions.batchUpsertPredictions`
+ * (`PredictionUpsertInput`): antes cada lado describía la forma en su comentario y
+ * nada los ataba, así que agregar un campo en uno y no en el otro compilaba igual.
  */
-export const collectPredictionsToSave = ({ matches, predictionValues }) =>
+export const collectPredictionsToSave = ({
+  matches,
+  predictionValues,
+}: {
+  matches: PartidoGuardable[]
+  predictionValues: PredictionFormValues
+}): PredictionUpsertInput[] =>
   matches
     .filter(match => canPredictMatch(match.match_date) && isComplete(predictionValues[match.id]))
     .map(match => {
@@ -54,7 +81,15 @@ export const collectPredictionsToSave = ({ matches, predictionValues }) =>
  * si hay valores contaba partidos que el usuario nunca tocó, incluido alguno ya
  * jugado y con resultado cargado.
  */
-export const findExpiredPredictions = ({ matches, predictionValues, predictionsByMatchId }) =>
+export const findExpiredPredictions = <T extends PartidoGuardable>({
+  matches,
+  predictionValues,
+  predictionsByMatchId,
+}: {
+  matches: T[]
+  predictionValues: PredictionFormValues
+  predictionsByMatchId: Map<Uuid, PronosticoGuardado>
+}): T[] =>
   matches.filter(match => {
     if (canPredictMatch(match.match_date)) return false
 
@@ -70,16 +105,24 @@ export const findExpiredPredictions = ({ matches, predictionValues, predictionsB
     )
   })
 
+/** El tono del toast, que es el de `Common/Toast`. */
+type ToastType = 'success' | 'warning' | 'error'
+
 /**
  * El toast del guardado: los cinco resultados posibles en un solo lugar.
  *
  * Los vencidos cambian el tono a `warning` incluso cuando el guardado salió bien,
  * porque algo que el usuario cargó no entró y tiene que saberlo.
- *
- * @param {{ savedCount: number, expiredCount: number, error?: unknown }} params
- * @returns {{ message: string, type: 'success'|'warning'|'error' }}
  */
-export const getSaveToast = ({ savedCount, expiredCount, error }) => {
+export const getSaveToast = ({
+  savedCount,
+  expiredCount,
+  error,
+}: {
+  savedCount: number
+  expiredCount: number
+  error?: unknown
+}): { message: string; type: ToastType } => {
   if (error) {
     return { message: 'Error al guardar pronósticos. Intentá de nuevo.', type: 'error' }
   }

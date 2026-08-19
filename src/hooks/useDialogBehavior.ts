@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { RefObject } from 'react'
 
 /**
  * Todo lo que un diálogo tiene que hacer además de dibujarse: cerrar con Escape,
@@ -8,10 +9,6 @@ import { useEffect, useRef } from 'react'
  * overlay (`TournamentDrawer`). Lo que se repetiría entre overlays es este
  * comportamiento, no el marco: un drawer entra desde el costado y un modal se
  * centra, así que comparten la conducta y no el layout.
- *
- * @param {boolean} isOpen
- * @param {() => void} onClose
- * @returns {{ contenedorRef: React.RefObject }} Va en el nodo con role="dialog".
  */
 
 /**
@@ -22,9 +19,9 @@ import { useEffect, useRef } from 'react'
  * contador, el scroll vuelve cuando se cierra el último.
  */
 let abiertos = 0
-let overflowOriginal = null
+let overflowOriginal: string | null = null
 
-const bloquearScroll = () => {
+const bloquearScroll = (): void => {
   if (abiertos === 0) {
     // Se guarda el valor que había en vez de asumir uno. El código anterior
     // restauraba `'unset'` a ciegas, así que si el body tenía un overflow propio
@@ -35,7 +32,7 @@ const bloquearScroll = () => {
   abiertos += 1
 }
 
-const liberarScroll = () => {
+const liberarScroll = (): void => {
   abiertos = Math.max(0, abiertos - 1)
   if (abiertos === 0) {
     document.body.style.overflow = overflowOriginal ?? ''
@@ -61,25 +58,36 @@ const FOCUSABLES = [
  * para todo y el filtro se llevaba puestos a los elementos visibles. Con dos
  * botones reales el ciclo quedaba con uno solo y el Tab no rotaba.
  */
-const esVisible = nodo => {
+const esVisible = (nodo: HTMLElement): boolean => {
   if (nodo.hidden || nodo.getAttribute('aria-hidden') === 'true') return false
 
   const estilo = getComputedStyle(nodo)
   return estilo.display !== 'none' && estilo.visibility !== 'hidden'
 }
 
-const focusablesDe = contenedor => [...contenedor.querySelectorAll(FOCUSABLES)].filter(esVisible)
+const focusablesDe = (contenedor: HTMLElement): HTMLElement[] =>
+  [...contenedor.querySelectorAll<HTMLElement>(FOCUSABLES)].filter(esVisible)
 
-export function useDialogBehavior(isOpen, onClose) {
-  const contenedorRef = useRef(null)
-  const focoAnteriorRef = useRef(null)
+/**
+ * @returns El ref que va en el nodo con `role="dialog"`.
+ */
+export function useDialogBehavior(
+  isOpen: boolean,
+  onClose: () => void
+): { contenedorRef: RefObject<HTMLDivElement | null> } {
+  const contenedorRef = useRef<HTMLDivElement | null>(null)
+  // Los dos tipos que pueden tener el foco y saben devolverlo: `focus()` viene de
+  // `HTMLOrSVGElement`, que implementan tanto HTMLElement como SVGElement.
+  const focoAnteriorRef = useRef<HTMLElement | SVGElement | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
 
     // De dónde vino el foco, para devolverlo al cerrar. Sin esto, quien abre el
     // menú con teclado queda al principio de la página cuando lo cierra.
-    focoAnteriorRef.current = document.activeElement
+    const activo = document.activeElement
+    focoAnteriorRef.current =
+      activo instanceof HTMLElement || activo instanceof SVGElement ? activo : null
     bloquearScroll()
 
     const contenedor = contenedorRef.current
@@ -90,7 +98,7 @@ export function useDialogBehavior(isOpen, onClose) {
       contenedor.focus()
     }
 
-    const alPresionarTecla = evento => {
+    const alPresionarTecla = (evento: KeyboardEvent): void => {
       if (evento.key === 'Escape') {
         onClose()
         return
@@ -124,7 +132,7 @@ export function useDialogBehavior(isOpen, onClose) {
     return () => {
       document.removeEventListener('keydown', alPresionarTecla)
       liberarScroll()
-      focoAnteriorRef.current?.focus?.()
+      focoAnteriorRef.current?.focus()
     }
   }, [isOpen, onClose])
 
@@ -132,4 +140,4 @@ export function useDialogBehavior(isOpen, onClose) {
 }
 
 /** Solo para los tests: el contador es estado de módulo. */
-export const __dialogosAbiertos = () => abiertos
+export const __dialogosAbiertos = (): number => abiertos

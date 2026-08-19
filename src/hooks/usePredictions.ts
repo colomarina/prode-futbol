@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { useAuth } from '../contexts/AuthContext'
+import type { Match, Prediction, TeamSummary, Uuid } from '../types/domain'
+import type { MutationError, PredictionUpsertInput } from './types'
 
 const PREDICTION_WITH_MATCH = `
   *,
@@ -23,6 +25,30 @@ const PREDICTION_WITH_MATCH = `
   )
 `
 
+/** El partido embebido: un subconjunto de columnas más los dos equipos. */
+export interface PredictionMatch extends Pick<
+  Match,
+  | 'id'
+  | 'home_team_id'
+  | 'away_team_id'
+  | 'match_date'
+  | 'home_score'
+  | 'away_score'
+  | 'is_finished'
+  | 'round_number'
+  | 'is_playoff'
+  | 'playoff_stage'
+  | 'qualifier_team_id'
+> {
+  home_team: TeamSummary | null
+  away_team: TeamSummary | null
+}
+
+/** El partido no es opcional porque el embed es `!inner`: sin partido no hay fila. */
+export interface PredictionWithMatch extends Prediction {
+  matches: PredictionMatch
+}
+
 /**
  * Pronósticos del usuario para una fecha.
  *
@@ -30,19 +56,19 @@ const PREDICTION_WITH_MATCH = `
  * de un recurso embebido sin inner join no descarta las filas de arriba, así que
  * con el embed común esto traía todo el historial del usuario en cada cambio de
  * fecha.
- *
- * @param {number|null} roundNumber
- * @param {string|null} tournamentId
  */
-export const usePredictions = (roundNumber = null, tournamentId = null) => {
+export const usePredictions = (
+  roundNumber: number | null = null,
+  tournamentId: Uuid | null = null
+) => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const userId = user?.id ?? null
+  const userId: Uuid | null = user?.id ?? null
 
   const { data, isPending, error } = useQuery({
     queryKey: queryKeys.predictions(tournamentId, roundNumber, userId),
     enabled: Boolean(userId) && Boolean(roundNumber),
-    queryFn: async () => {
+    queryFn: async (): Promise<PredictionWithMatch[]> => {
       let query = supabase
         .from('predictions')
         .select(PREDICTION_WITH_MATCH)
@@ -86,7 +112,7 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
    * lugar es un trigger en `predictions`, no este hook.
    */
   const batchUpsertMutation = useMutation({
-    mutationFn: async predictionsData => {
+    mutationFn: async (predictionsData: PredictionUpsertInput[]) => {
       const now = new Date().toISOString()
       const rows = predictionsData.map(
         ({ matchId, homePrediction, awayPrediction, qualifierPredictionId = null }) => ({
@@ -110,9 +136,20 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
     onSuccess: invalidatePredictions,
   })
 
-  /** Se conserva el contrato { data, error } que ya usan los componentes. */
+  /**
+   * Se conserva el contrato { data, error } que ya usan los componentes.
+   *
+   * Ojo con el tipo del error: la rama de "no autenticado" devuelve un **string** y
+   * el resto devuelve el error de PostgREST. Es lo que ya hacía, y hoy no molesta
+   * porque el único consumidor (`PredictionForm`) lo usa como booleano — pero si
+   * alguien leyera `error.message` en esa rama, obtendría `undefined`. Unificarlo
+   * es un cambio de comportamiento, así que queda anotado y no tocado.
+   */
   const runMutation = useCallback(
-    async (mutation, variables) => {
+    async <TVars, TData>(
+      mutation: { mutateAsync: (variables: TVars) => Promise<TData> },
+      variables: TVars
+    ): Promise<{ data: TData | null; error: MutationError | string | null }> => {
       if (!userId) return { data: null, error: 'No autenticado' }
 
       try {
@@ -126,12 +163,13 @@ export const usePredictions = (roundNumber = null, tournamentId = null) => {
   )
 
   const batchUpsertPredictions = useCallback(
-    predictionsData => runMutation(batchUpsertMutation, predictionsData),
+    (predictionsData: PredictionUpsertInput[]) => runMutation(batchUpsertMutation, predictionsData),
     [runMutation, batchUpsertMutation]
   )
 
   const getUserPredictionForMatch = useCallback(
-    matchId => predictions.find(prediction => prediction.match_id === matchId),
+    (matchId: Uuid): PredictionWithMatch | undefined =>
+      predictions.find(prediction => prediction.match_id === matchId),
     [predictions]
   )
 

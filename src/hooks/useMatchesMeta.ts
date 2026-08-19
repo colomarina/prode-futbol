@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
+import type { MatchMeta, Uuid } from '../types/domain'
 
 /**
  * Datos mínimos de todos los partidos del torneo, sin los equipos embebidos.
@@ -19,15 +20,17 @@ import { queryKeys } from '../lib/queryKeys'
  * scope por torneo. Por eso `loading` combina `isPending` con la misma
  * condición: con la query deshabilitada, `isPending` no baja nunca.
  *
- * @param {string|null} tournamentId
+ * El `Promise<MatchMeta[]>` del `queryFn` no es decorativo: es lo que verifica que
+ * el select y el tipo `MatchMeta` de `domain.ts` no se desincronicen. Si alguien
+ * agrega una columna a uno y no al otro, no compila.
  */
-export const useMatchesMeta = (tournamentId = null) => {
+export const useMatchesMeta = (tournamentId: Uuid | null = null) => {
   const enabled = Boolean(tournamentId)
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: queryKeys.matchesMeta(tournamentId),
     enabled,
-    queryFn: async () => {
+    queryFn: async (): Promise<MatchMeta[]> => {
       const { data: matches, error: matchesError } = await supabase
         .from('matches')
         .select('id, round_number, match_date, is_finished, is_playoff')

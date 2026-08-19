@@ -8,7 +8,7 @@ import { getSectionPath } from '../components/Navigation/pages-with-sections.con
  * pronósticos no tiene nada que ofrecer y la tabla final es lo que se viene a
  * ver. Lo usan tanto la ruta `/` como los guards que redirigen.
  */
-export const useHomePath = () => {
+export const useHomePath = (): string => {
   const { isReadOnly } = useTournament()
   return isReadOnly ? getSectionPath('leaderboard') : getSectionPath('predictions')
 }

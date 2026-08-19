@@ -2,6 +2,8 @@ import { useCallback, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
+import type { MatchWithTeams, TablesInsert, TablesUpdate, Uuid } from '../types/domain'
+import type { MutationResult, MutationResultWithData } from './types'
 
 const MATCH_WITH_TEAMS = `
   *,
@@ -17,17 +19,14 @@ const MATCH_WITH_TEAMS = `
  * para tapar un flash de EmptyState. Ya no hace falta: al cambiar la query key
  * React Query no sirve los datos de la fecha anterior, así que no hay un
  * intervalo en el que el estado diga "listo" con los datos viejos.
- *
- * @param {number|null} roundNumber
- * @param {string|null} tournamentId
  */
-export const useMatches = (roundNumber = null, tournamentId = null) => {
+export const useMatches = (roundNumber: number | null = null, tournamentId: Uuid | null = null) => {
   const queryClient = useQueryClient()
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: queryKeys.matchesByRound(tournamentId, roundNumber),
     enabled: Boolean(roundNumber),
-    queryFn: async () => {
+    queryFn: async (): Promise<MatchWithTeams[]> => {
       let query = supabase.from('matches').select(MATCH_WITH_TEAMS).eq('round_number', roundNumber)
 
       if (tournamentId) {
@@ -53,7 +52,7 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
   }, [queryClient, tournamentId, roundNumber])
 
   const createMutation = useMutation({
-    mutationFn: async matchData => {
+    mutationFn: async (matchData: TablesInsert<'matches'>) => {
       const { data: created, error: createError } = await supabase
         .from('matches')
         .insert([matchData])
@@ -66,7 +65,13 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async ({ matchId, updates }) => {
+    mutationFn: async ({
+      matchId,
+      updates,
+    }: {
+      matchId: Uuid
+      updates: TablesUpdate<'matches'>
+    }) => {
       const { data: updated, error: updateError } = await supabase
         .from('matches')
         .update(updates)
@@ -80,7 +85,7 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async matchId => {
+    mutationFn: async (matchId: Uuid): Promise<void> => {
       const { error: deleteError } = await supabase.from('matches').delete().eq('id', matchId)
       if (deleteError) throw deleteError
     },
@@ -89,7 +94,9 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
 
   // Se conserva el contrato { data, error } que ya usan los componentes.
   const createMatch = useCallback(
-    async matchData => {
+    async (
+      matchData: TablesInsert<'matches'>
+    ): Promise<MutationResultWithData<MatchWithTeams[]>> => {
       try {
         const created = await createMutation.mutateAsync(matchData)
         return { data: created, error: null }
@@ -101,7 +108,10 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
   )
 
   const updateMatch = useCallback(
-    async (matchId, updates) => {
+    async (
+      matchId: Uuid,
+      updates: TablesUpdate<'matches'>
+    ): Promise<MutationResultWithData<MatchWithTeams[]>> => {
       try {
         const updated = await updateMutation.mutateAsync({ matchId, updates })
         return { data: updated, error: null }
@@ -113,7 +123,7 @@ export const useMatches = (roundNumber = null, tournamentId = null) => {
   )
 
   const deleteMatch = useCallback(
-    async matchId => {
+    async (matchId: Uuid): Promise<MutationResult> => {
       try {
         await deleteMutation.mutateAsync(matchId)
         return { error: null }

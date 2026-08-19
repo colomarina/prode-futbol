@@ -10,7 +10,7 @@ export const RESET_COOLDOWN_MS = 5 * 60 * 1000
  */
 export const RESET_COOLDOWN_STORAGE_KEY = 'auth_reset_cooldown_until'
 
-const readStoredDeadline = () => {
+const readStoredDeadline = (): number => {
   if (typeof window === 'undefined') return 0
 
   const saved = Number(window.localStorage.getItem(RESET_COOLDOWN_STORAGE_KEY) || 0)
@@ -24,9 +24,12 @@ const readStoredDeadline = () => {
  * intervalo de un segundo mientras el cooldown corre y lo limpia al vencer, así
  * que el consumidor solo lee un número.
  *
- * @returns {{ remainingSeconds: number, isOnCooldown: boolean, start: () => void }}
  */
-export const useResetCooldown = () => {
+export const useResetCooldown = (): {
+  remainingSeconds: number
+  isOnCooldown: boolean
+  start: () => void
+} => {
   const [deadline, setDeadline] = useState(readStoredDeadline)
   const [now, setNow] = useState(() => Date.now())
 
@@ -66,7 +69,7 @@ export const useResetCooldown = () => {
     }
   }, [deadline])
 
-  const start = useCallback(() => {
+  const start = useCallback((): void => {
     const nextDeadline = Date.now() + RESET_COOLDOWN_MS
     setNow(Date.now())
     setDeadline(nextDeadline)

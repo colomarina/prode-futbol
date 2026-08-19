@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { getNextActiveRoundNumber } from '../utils/matchTiming'
 import { useMatchesMeta } from './useMatchesMeta'
+import type { Round, Uuid } from '../types/domain'
+import type { MutationResult } from './types'
 
 /**
  * Fechas del torneo y cuál es la activa.
@@ -12,10 +14,8 @@ import { useMatchesMeta } from './useMatchesMeta'
  * dos queries encadenadas (rondas y después partidos), o sea 18 consultas por
  * pantalla; ahora las dos comparten cache y corren en paralelo, porque no
  * dependen una de la otra.
- *
- * @param {string|null} tournamentId
  */
-export const useRounds = (tournamentId = null) => {
+export const useRounds = (tournamentId: Uuid | null = null) => {
   const queryClient = useQueryClient()
 
   const {
@@ -25,7 +25,7 @@ export const useRounds = (tournamentId = null) => {
     refetch: refetchRounds,
   } = useQuery({
     queryKey: queryKeys.rounds(tournamentId),
-    queryFn: async () => {
+    queryFn: async (): Promise<Round[]> => {
       let query = supabase.from('rounds').select('*')
 
       if (tournamentId) {
@@ -60,7 +60,7 @@ export const useRounds = (tournamentId = null) => {
    * saltaba a la correcta. La version encadenada no tenia el problema porque
    * calculaba la fecha activa con las dos respuestas ya en la mano.
    */
-  const activeRound = useMemo(() => {
+  const activeRound = useMemo((): Round | null => {
     if (matchesLoading) return null
 
     const activeRoundNumber = getNextActiveRoundNumber(roundsList, matchesMeta)
@@ -73,7 +73,13 @@ export const useRounds = (tournamentId = null) => {
   )
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ roundNumber, status }) => {
+    mutationFn: async ({
+      roundNumber,
+      status,
+    }: {
+      roundNumber: number
+      status: string
+    }): Promise<void> => {
       let query = supabase
         .from('rounds')
         .update({ status, updated_at: new Date().toISOString() })
@@ -95,7 +101,7 @@ export const useRounds = (tournamentId = null) => {
    * propio toast.
    */
   const runStatusMutation = useCallback(
-    async (roundNumber, status) => {
+    async (roundNumber: number, status: string): Promise<MutationResult> => {
       try {
         await updateStatusMutation.mutateAsync({ roundNumber, status })
         return { error: null }
@@ -107,21 +113,21 @@ export const useRounds = (tournamentId = null) => {
   )
 
   const updateRoundStatus = useCallback(
-    (roundNumber, status) => runStatusMutation(roundNumber, status),
+    (roundNumber: number, status: string) => runStatusMutation(roundNumber, status),
     [runStatusMutation]
   )
 
   const lockRound = useCallback(
-    roundNumber => runStatusMutation(roundNumber, 'locked'),
+    (roundNumber: number) => runStatusMutation(roundNumber, 'locked'),
     [runStatusMutation]
   )
 
   const finishRound = useCallback(
-    roundNumber => runStatusMutation(roundNumber, 'finished'),
+    (roundNumber: number) => runStatusMutation(roundNumber, 'finished'),
     [runStatusMutation]
   )
 
-  const openNextRound = useCallback(async () => {
+  const openNextRound = useCallback(async (): Promise<MutationResult> => {
     const pendingRound = roundsList.find(round => round.status === 'pending')
 
     if (!pendingRound) {
@@ -132,11 +138,12 @@ export const useRounds = (tournamentId = null) => {
   }, [roundsList, runStatusMutation])
 
   const isRoundOpen = useCallback(
-    roundNumber => roundsList.find(round => round.round_number === roundNumber)?.status === 'open',
+    (roundNumber: number): boolean =>
+      roundsList.find(round => round.round_number === roundNumber)?.status === 'open',
     [roundsList]
   )
 
-  const fetchRounds = useCallback(() => {
+  const fetchRounds = useCallback((): void => {
     refetchRounds()
     refetchMatches()
   }, [refetchRounds, refetchMatches])

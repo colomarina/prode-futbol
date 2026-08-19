@@ -19,6 +19,14 @@ type PublicSchema = Database['public']
 /** La fila de una tabla: `Tables<'matches'>`. */
 export type Tables<T extends keyof PublicSchema['Tables']> = PublicSchema['Tables'][T]['Row']
 
+/** Lo que hace falta para insertar una fila: `TablesInsert<'matches'>`. */
+export type TablesInsert<T extends keyof PublicSchema['Tables']> =
+  PublicSchema['Tables'][T]['Insert']
+
+/** Lo que se puede mandar en un update: `TablesUpdate<'matches'>`, todo opcional. */
+export type TablesUpdate<T extends keyof PublicSchema['Tables']> =
+  PublicSchema['Tables'][T]['Update']
+
 /** La fila de una vista: `ViewRow<'general_leaderboard'>`. */
 export type ViewRow<T extends keyof PublicSchema['Views']> = PublicSchema['Views'][T]['Row']
 
