@@ -17,7 +17,23 @@
 
     "allowJs": true,
     "checkJs": false,
+
+    // `strict` es un paraguas de ocho flags. Con `src` ya migrado, cuatro de esas
+    // ocho **no cuestan nada**: dan cero errores hoy, así que se prenden para que
+    // no puedan volver atrás. Las otras cuatro son la deuda que falta, medida:
+    //
+    //   strictNullChecks             132 errores
+    //   noImplicitAny                100
+    //   useUnknownInCatchVariables    12
+    //   strictPropertyInitialization   1
+    //
+    // Prender `strict: true` de una son 241 errores en una sola tanda; conviene ir
+    // flag por flag, empezando por las dos chicas.
     "strict": false,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
 
     // El build lo hace SWC, que borra los tipos sin chequearlos: `tsc` corre solo
     // para verificar (`pnpm typecheck`), nunca para emitir.

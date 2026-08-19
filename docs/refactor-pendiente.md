@@ -1,4 +1,4 @@
-# Refactor: lo que queda (fases 7, 8 y 9)
+# Refactor: lo que queda (fases 8 y 9)
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
 previo**. El plan original completo está en
@@ -6,7 +6,7 @@ previo**. El plan original completo está en
 escrito contra el estado de hace 6 fases: varios de sus números y varios de sus
 puntos ya no aplican. Acá está el estado **verificado** al cerrar la fase 6.
 
-Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`.
+Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`, `-7`.
 
 ---
 
@@ -75,173 +75,73 @@ dispara el scoring, así que es una decisión de producto, no un refactor mecán
 
 ---
 
-## Fase 7 — TypeScript gradual
+## Fase 7 — TypeScript: **terminada**
 
-El plan sigue vigente casi entero. Orden:
+`src/` entero en TypeScript, **157 archivos**. El detalle está en
+`docs/pruebas-fase-7.md`; acá queda lo que hace falta para seguir.
 
-1. ~~`tsconfig.json` con `allowJs: true` y `strict: false`~~ → **hecho**, con dos
-   cosas que el plan no preveía:
-   - `@vitejs/plugin-react-swc` compila TS sin config, pero **no chequea tipos**:
-     SWC borra las anotaciones sin mirarlas. Por eso se agregó `pnpm typecheck`
-     (`tsc --noEmit`) y un paso propio en CI. Sin eso, la fase no daba seguridad
-     ninguna.
-   - **`typescript` quedó fijado en `^5.9`**: `pnpm add -D typescript` trae la 7.x
-     (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta
-     `<6.1.0`. Con la 7 el lint queda con un peer sin resolver.
-2. ~~**`types/domain.ts` primero**~~ → **hecho**, primero a mano y después
-   derivado del esquema generado (ver el punto 3). Incluye `MatchMeta` (el select
-   compartido de `useMatchesMeta`) y `MatchWithTeams` (los tres joins de
-   `MATCH_WITH_TEAMS`).
+**Verificado en el navegador**: 19 rutas en los dos torneos, los dos temas, escritorio
+y mobile, diffeando el árbol completo contra el estado anterior a la fase → **0
+diferencias**. La única esperada apareció donde tenía que aparecer: en "Ver
+pronósticos → por jugador", 15 tarjetas pasaron de `opacity: 0.6` a `1`, que es el
+bug que el tipado encontró (se le pasaba el partido entero a `hasMatchStarted`, que
+espera la fecha, así que la comparación daba siempre falso y **todas** las tarjetas
+salían atenuadas).
 
-   La lección de haberlo hecho a mano primero: se "verificó contra la base"
-   consultando unas filas de cada tabla, y eso alcanza para los **nombres** de las
-   columnas pero **no para la nulabilidad** — tres filas de muestra no pueden
-   mostrar que una columna acepta null. Ahí se colaron los siete errores que lista
-   el punto 3.
-3. ~~Considerar `supabase gen types typescript`~~ → **hecho, y adelantado a esta
-   fase a propósito.** El plan lo agrupaba con adoptar migraciones versionadas
-   (fase 9), pero son separables: generar tipos de la base viva funciona hoy, y lo
-   único que depende de las migraciones es el *drift*.
+Lo que el tipado sacó a la luz, resumido: un bug real, **cinco props que no hacían
+nada**, **siete tipos escritos a mano que estaban mal** (los tres importantes:
+`matches.is_finished`, `matches.tournament_id` y `rounds.tournament_id` son
+nullables), y varios contratos que estaban implícitos y ahora están escritos.
 
-   Se adelantó porque tipar los hooks a mano significaba escribir `as Match[]`:
-   afirmar, no comprobar. Con `createClient<Database>()` el tipo lo deduce
-   supabase-js parseando el string del select, y **las 35 funciones de la base
-   quedan tipadas** — sus retornos no están documentados en ningún lado del repo,
-   así que a mano eran adivinanza.
+### Lo que queda como deuda, medido
 
-   `src/types/database.ts` (1631 líneas) se generó desde el dashboard
-   (*API Docs → Introduction*, no *Project Settings*) y **no se edita**: está en
-   `.prettierignore` y en los `ignores` de ESLint, porque reformatearlo haría que
-   cada regeneración traiga un diff de formato encima del diff real del esquema.
-   `domain.ts` pasó a ser alias (`Match = Tables<'matches'>`) y se quedó con los
-   comentarios, que es el conocimiento que el generador no tiene. Para regenerar:
-   `pnpm types:db` (pide `supabase login`).
+**`strict` está a medio prender.** De sus ocho flags, cuatro ya estaban en cero y se
+prendieron; las otras cuatro son:
 
-   ### Lo que estaba mal en los tipos escritos a mano
+| Flag | Errores |
+|---|---|
+| `strictPropertyInitialization` | 1 |
+| `useUnknownInCatchVariables` | 12 |
+| `noImplicitAny` | 100 |
+| `strictNullChecks` | 132 |
 
-   Se habían verificado consultando la base fila por fila, y aun así:
+De una sola vez son 241 errores; conviene ir flag por flag empezando por las dos
+chicas. De los 132 de `strictNullChecks`, **24 son un solo caso repetido**: las RPC
+del bonus del Mundial declaran sus 15 argumentos como `string` no nullable y el
+cliente manda `null` para las preguntas sin responder. El tipo generado es más
+estricto que la función real; se arregla en la base (fase 9), no en el cliente.
 
-   | Columna | A mano | Real |
-   |---|---|---|
-   | `matches.is_finished` | `boolean` | **`boolean | null`** |
-   | `matches.tournament_id` | `Uuid` | **`string | null`** |
-   | `rounds.tournament_id` | `Uuid` | **`string | null`** |
-   | `predictions.points` | `number` | **`number | null`** |
-   | `round_scores.total_points` | `number` | **`number | null`** |
-   | `profiles.full_name` | `string` | **`string | null`** |
-   | `teams.logo_url` | `string | null` | **`string`** (al revés) |
-   | `tournaments.season` y los 8 `created_at`/`updated_at` | no nulos | nullables |
+**Los tests siguen en `.js`**, y conviene migrarlos junto con `strictNullChecks`: es
+trabajo de fixtures, no de tipos.
 
-   Las tres primeras son las que importan: `is_finished` decide qué fecha tiene
-   tabla propia y qué partido entra en las estadísticas, y los dos
-   `tournament_id` nullables son la columna de la que depende **toda** la
-   separación entre torneos. Que el esquema permita una fecha o un partido sin
-   torneo es material para la fase 9.
+### Tres intenciones que se pueden recuperar (mueven píxeles)
 
-   También se había narrado de más: los estados se tipaban con las uniones de los
-   CHECK (`status: TournamentStatus`), pero la base los declara `text` y el esquema
-   generado los da como `string | null` (`Enums` viene vacío). Las uniones quedan
-   como vocabulario para comparar y estrechar, no como el tipo de la columna.
+Las cinco props que no hacían nada se sacaron sin cambiar comportamiento, pero en
+tres la intención original está clara y recuperarla es un cambio visual, así que
+queda a decisión:
 
-   **Lo que sí estaba bien**: `WorldCupPrediction` (los 16 campos, deducidos del
-   mapa `toRpcParams`) y toda la nulabilidad de `home_score`, `away_score`,
-   `rounds.name`, `group_label`, `playoff_stage` y `qualifier_prediction_id`.
+- El globito del jugador suspendido arriba en vez de a la derecha (`placement="top"`).
+- El input del datepicker al 100% de ancho, por `className`.
+- **El emoji de cada torneo en el selector**: `TournamentCard` leía
+  `tournament.emoji` y esa columna no existe en la tabla —el emoji vive en
+  `config/tournaments.config.ts`—, así que todas las tarjetas mostraron siempre la
+  pelota genérica.
 
-   ### Pistas para la fase 9 que aparecieron en el esquema generado
+### Convenciones: lo que se unificó y lo que no
 
-   No son conclusiones —no se leyó el cuerpo de ninguna función—, pero le contestan
-   parcialmente a preguntas que la fase 9 tiene abiertas:
+- ~~Un solo estilo de export~~ → **hecho**: los 10 componentes de `PersonalStats`
+  pasaron de named a default, que es lo que usa el resto del proyecto.
+- Sigue pendiente: el patrón de carpeta (`TournamentSelector/TournamentCard.tsx` es
+  un archivo plano), los typos (`LeaderBoard/LeadboardHeader/`, y `LeaderBoard` vs
+  `LeaderboardRow` vs `useLeaderboard`), y `Navigation/Sidebar/Views/`, una carpeta
+  plural con un solo hijo a 7 niveles.
 
-   - Existen `can_predict(match_id)` y `calculate_points` como funciones de la
-     base. La fase 9 anota "el cierre de pronósticos no tiene trigger" y "no se
-     sabe qué escribe `round_scores.total_points`": hay por dónde empezar.
-   - `get_round_predictions_summary` (la legacy sin scope) **no existe**: solo
-     están `_by_tournament` y `_by_tournament_v2`. `CLAUDE.md` la mencionaba y se
-     corrigió.
-   - Hay **4 vistas, no 1**: `general_leaderboard`,
-     `general_leaderboard_by_tournament`, `leaderboard` y `round_leaderboard`. El
-     plan propone borrar la primera; hay tres más para revisar.
-   - Con `strictNullChecks` prendido a mano (solo para medir), lo migrado hasta
-     ahora da **0 errores**: `utils/` y `lib/` ya son null-safe, así que el paso 6
-     no arranca en cero. La deuda va a estar en los hooks y los componentes.
+### Un hueco de tests que apareció migrando
 
-4. Orden de migración: `utils/` → `types/` → `lib/` → `hooks/` → `Common/` →
-   features de menor a mayor.
-
-   **`utils/` está terminado**: los 17 módulos, incluidos los 9 de `utils/stats/`.
-   No queda ningún `.js` que no sea un test. Dos convenciones salieron de ahí:
-
-   - Cada función pide **el subconjunto de columnas que usa**
-     (`Pick<Match, 'home_team_id' | 'away_team_id'>`) y no la fila entera, así
-     sirve igual para un registro de la base y para un objeto armado en un test.
-   - Los tipos que no son filas de la base viven al lado de quien los produce:
-     `utils/stats/types.ts` tiene el contrato de las estadísticas, que **hasta
-     ahora era implícito** —lo definía el literal `emptyStats` y la pantalla leía
-     `stats.metrics.totalPoints` de memoria—. Ahora `emptyStats` está anotado con
-     `TournamentStats`, así que si el contrato gana un campo el literal deja de
-     compilar hasta que se lo agregue.
-
-   **Los tests siguen en `.js`**: con `strict: false` un fixture parcial igual
-   falla por propiedades faltantes, así que migrarlos ahora sería pelear con los
-   tipos en vez de migrar código.
-
-   Lo que TypeScript encontró en esta primera pasada, sin buscarlo:
-
-   - `secondsUntilCutoff` restaba dos `Date` directamente, que en TS es error.
-   - **`getLeaderboardRounds` pisa el `id` de la fila** (un uuid) con el
-     `round_number` (un número), así que `Round & { id: number }` es imposible de
-     tipar y quedó como `Omit<Round, 'id'> & { id: number }`. Es intencional —`id`
-     es la clave del dropdown, y las dos opciones sintéticas del selector
-     (`General` y `playoffs`) también la traen— pero duplica exactamente a
-     `round_number`: el dropdown podría usar `valueKey="round_number"` y la línea
-     desaparecería. Queda como candidato porque toca `LeadboardHeader`.
-   - `MatchWithTeams.home_team` / `away_team` se tiparon **nullable** aunque los
-     405 partidos de la base tengan las dos FK cargadas: `teamReads` solo cuenta el
-     partido si están los dos, y el dominio admite un cruce de playoff sin equipos
-     todavía. Si el embed no trae la fila, PostgREST devuelve null.
-   **`lib/` está terminado** también: `supabase.ts`, `queryClient.ts` y
-   `queryKeys.ts`. Dos cosas salieron de ahí:
-
-   - **`src/vite-env.d.ts` declara las variables de entorno**, que hasta ahora eran
-     `any`. Van opcionales a propósito: pueden faltar, y todo el mecanismo de
-     `missingSupabaseEnvVars` + `Common/ConfigError` existe para avisarlo en
-     pantalla. Con el `?` el chequeo de faltantes también le dice algo al compilador.
-   - `missingSupabaseEnvVars` usaba `.filter(Boolean)`, que **TypeScript no
-     estrecha**: el tipo seguía siendo `(string | null)[]` y un null podía llegar al
-     consumidor. Ahora el filtro lleva un predicado (`name is string`).
-   - En `queryKeys` la fecha de la tabla de posiciones quedó tipada como
-     `number | 'playoffs' | null`, que es lo que de verdad recibe: `null` es la
-     tabla general y `'playoffs'` la agregada de la llave.
-
-5. Renombrar los **`.jsx` que no contienen JSX** a `.ts`. Quedan **17**:
-   `src/lib/supabase.jsx` ya se migró en el punto anterior.
-
-   ```
-   src/hooks/useAllPredictions.jsx      src/hooks/usePersonalStats.jsx
-   src/hooks/useDialogBehavior.jsx      src/hooks/usePlayoffs.jsx
-   src/hooks/useHomePath.jsx            src/hooks/usePredictions.jsx
-   src/hooks/useLeaderboard.jsx         src/hooks/useResetCooldown.jsx
-   src/hooks/useMatches.jsx             src/hooks/useRoundProgress.jsx
-   src/hooks/useMatchesMeta.jsx         src/hooks/useRounds.jsx
-                                        src/hooks/useWorldCupBonus.jsx
-   src/components/InfoPage/info.config.jsx
-   src/components/LeaderBoard/leaderboard.config.jsx
-   src/components/Navigation/Sidebar/menu.config.jsx
-   src/hooks/useResetCooldown.test.jsx
-   ```
-
-   Ojo: `pages-with-sections.config.jsx` **sí** tiene JSX (iconos), no entra.
-6. Subir a `strict: true` cuando no queden `.jsx`.
-
-**Convenciones a unificar mientras se migra** (verificado, sigue vigente):
-
-- **Un solo estilo de export.** 81 componentes usan `export default`; **14** usan
-  solo named export (son los de `PersonalStats/**`).
-- Un solo patrón de carpeta `Componente/index.tsx`. Todavía conviven archivos
-  planos, p. ej. `TournamentSelector/TournamentCard.jsx`.
-- Typos: `LeaderBoard/LeadboardHeader/` (falta la "er"). Y `LeaderBoard` vs
-  `LeaderboardRow` vs `useLeaderboard`: tres capitalizaciones del mismo nombre.
-- `Navigation/Sidebar/Views/` es una carpeta plural con un solo hijo, a 7 niveles.
+`Common/SelectDropdown` **no tiene un solo test** y lo usan ~10 pantallas. Se notó
+porque un error que introduje al migrarlo (una recursión infinita) lo atajó el lint
+—por una variable sin usar— y no los tests. La fase 8 lo va a tocar igual, porque le
+falta `role="listbox"` y navegación por flechas.
 
 ---
 
@@ -332,8 +232,7 @@ plan original.
 
 ## Antes de mergear a main
 
-1. Terminar las fases 7 y 8, mergeando cada una a
-   `refactor/fase-5-design-system`.
+1. Terminar la fase 8 y mergearla a `refactor/fase-5-design-system` (la 7 ya está).
 2. **Revisar los cambios visuales juntos.** Están listados en
    `docs/pruebas-fase-6.md` (sección "Cambios visuales deliberados") y son los
    que motivaron la estrategia de ramas. Los de la fase 5 que quedaron señalados:

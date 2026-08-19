@@ -27,19 +27,22 @@ Para testear un hook de datos: `src/test/supabaseMock.js` arma un mock del query
 
 CI en `.github/workflows/ci.yml`: corre `lint`, `typecheck`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
 
-## TypeScript (migración gradual, fase 7)
+## TypeScript (fase 7, terminada)
 
-El proyecto está a mitad de camino: conviven `.js`/`.jsx` con `.ts`/`.tsx`.
+**`src/` está entero en TypeScript**: 157 archivos. Los únicos `.js` que quedan son
+los tests y sus dos helpers (`src/test/`).
 
 - **`pnpm build` no chequea tipos.** El build lo hace SWC, que borra las anotaciones sin mirarlas, así que **el único chequeo real es `pnpm typecheck`** (`tsc --noEmit`). Está en CI como paso propio; si se saca, un error de tipos llega a producción en verde.
-- `tsconfig.json` tiene `allowJs: true` y `checkJs: false` (lo no migrado no reporta nada) y `strict: false`, que se sube a `true` cuando no queden `.jsx` por migrar. `types: ["vite/client"]` es lo que tipa `import.meta.env` y los imports de `*.module.css`.
+- `tsconfig.json` mantiene `allowJs: true` y `checkJs: false` por los tests, que siguen en `.js`. `types: ["vite/client"]` es lo que tipa `import.meta.env` y los imports de `*.module.css`.
+- **`strict` está a medio camino, y a propósito.** Es un paraguas de ocho flags: cuatro (`strictFunctionTypes`, `strictBindCallApply`, `noImplicitThis`, `alwaysStrict`) ya están prendidas porque daban cero errores. Las otras cuatro son deuda medida: `strictNullChecks` 132, `noImplicitAny` 100, `useUnknownInCatchVariables` 12, `strictPropertyInitialization` 1. Conviene ir flag por flag, no prender `strict: true` de una (241 errores juntos).
 - **`typescript` está fijado en `^5.9` a propósito.** `pnpm add -D typescript` instala la 7.x (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta `<6.1.0`: con la 7 el lint queda con un peer sin resolver. Subir recién cuando typescript-eslint la soporte.
 - **`src/types/database.ts` es la verdad y lo genera Supabase** (`pnpm types:db`): no se edita a mano. Está en `.prettierignore` y en los `ignores` de ESLint, porque reformatearlo haría que cada regeneración traiga un diff de formato encima del diff real del esquema.
 - **`src/types/domain.ts` le pone los nombres del dominio** (`Match = Tables<'matches'>`) y guarda lo que el generador no puede saber: qué columna está muerta, cuál es el default roto, qué garantiza el cliente. Antes eran interfaces a mano y **varias estaban mal** (ver el registro de la fase 7): escribir tipos a mano es afirmar, no comprobar.
 - Las uniones de estado (`TournamentStatus`, `RoundStatus`, …) siguen a mano y **no son el tipo de la columna**: los estados son `text` + CHECK y no enums de Postgres, así que el esquema generado los da como `string | null` (`Enums` viene vacío). Sirven para comparar y estrechar.
 - El cliente es `createClient<Database>()`, así que `.from(...).select(...)` devuelve el tipo real, incluidos los embeds con alias. Las RPCs también quedan tipadas.
 - Las funciones piden **el subconjunto de columnas que usan** (`Pick<Match, 'home_team_id' | 'away_team_id'>`) en vez de la fila entera: así sirven igual para un registro de la base y para un objeto armado en un test.
-- **Los tests siguen en `.js` por ahora.** Con `strict: false` un fixture parcial igual falla por propiedades faltantes, así que migrarlos ahora sería pelear con los tipos en vez de migrar código. Van cuando el código esté anotado.
+- **Los tests siguen en `.js`.** Un fixture parcial falla por propiedades faltantes, así que migrarlos es un trabajo de fixtures y no de tipos. Van con las flags de `strict` que faltan.
+- **Los tipos de los componentes se importan de donde viven los datos**, no se redeclaran: las props de una pantalla de estadísticas salen de `utils/stats`, las de una fila de la tabla de `hooks/useLeaderboard`, las del bracket de `hooks/usePlayoffs`. Si un hook cambia su forma, la pantalla deja de compilar.
 - ESLint aplica las reglas del proyecto (`no-console`, `import-x`, a11y, prettier) también a `.ts`/`.tsx`, más un bloque de `typescript-eslint` al final que apaga las reglas core que se pisan con las suyas.
 
 Prettier corre **como regla de ESLint** (`prettier/prettier: error`), así que `pnpm lint` falla por problemas de formato. Config: sin punto y coma, comillas simples, `printWidth: 100`, `arrowParens: avoid`.
