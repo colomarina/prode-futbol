@@ -1,5 +1,6 @@
 import { PREDICTION_CUTOFF_MINUTES } from '../../../utils/matchTiming'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
+import type { Round } from '../../../types/domain'
 import styles from './RoundSummary.module.css'
 
 /**
@@ -10,7 +11,15 @@ import styles from './RoundSummary.module.css'
  * escrito a mano, que es la regla de `utils/matchTiming.ts`: si algún día el corte
  * cambia, el mensaje no queda mintiendo.
  */
-export default function RoundSummary({ round, isReadOnly, allMatchesLocked }) {
+export default function RoundSummary({
+  round,
+  isReadOnly,
+  allMatchesLocked,
+}: {
+  round?: Round
+  isReadOnly?: boolean
+  allMatchesLocked?: boolean
+}) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.box}>

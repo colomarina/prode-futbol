@@ -1,4 +1,5 @@
 import { resolveTeamName } from '../../../../utils/teams'
+import type { MatchWithTeams, Prediction } from '../../../../types/domain'
 import styles from './MatchOutcome.module.css'
 
 /**
@@ -6,10 +7,14 @@ import styles from './MatchOutcome.module.css'
  *
  * Los puntos los escribe Supabase; acá solo se leen. Si el usuario no pronosticó
  * se muestra el resultado igual, sin el chip de puntos.
- *
- * @param {{ match: object, prediction: object|null }} props
  */
-export default function MatchOutcome({ match, prediction }) {
+export default function MatchOutcome({
+  match,
+  prediction,
+}: {
+  match: MatchWithTeams
+  prediction?: Prediction | null
+}) {
   const scored = (prediction?.points ?? 0) > 0
   const predictedQualifier = prediction?.qualifier_prediction_id
 

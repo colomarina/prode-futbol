@@ -2,9 +2,11 @@ import { useState, useMemo } from 'react'
 import Button from '../../Common/Button'
 import PlayerProgressRow from '../PlayerProgressRow'
 import { countByProgressLevel } from '../roundStatus'
+import type { PlayerProgress } from '../../../hooks/useRoundProgress'
+import type { ProgressLevel } from '../roundStatus'
 import styles from './RoundProgress.module.css'
 
-const STATS = [
+const STATS: { level: ProgressLevel; label: string }[] = [
   { level: 'complete', label: 'Completaron' },
   { level: 'partial', label: 'En progreso' },
   { level: 'none', label: 'Sin empezar' },
@@ -14,9 +16,9 @@ const STATS = [
  * Cuánto pronosticó cada jugador en la fecha activa: tres contadores y, si se
  * despliega, el detalle jugador por jugador con los partidos que le faltan.
  *
- * @param {{ players: Array<object> }} props jugadores ya filtrados por el hook
+ * Los jugadores llegan ya filtrados por el hook.
  */
-export default function RoundProgress({ players }) {
+export default function RoundProgress({ players }: { players: PlayerProgress[] }) {
   const [showDetails, setShowDetails] = useState(false)
 
   const counts = useMemo(() => countByProgressLevel(players), [players])

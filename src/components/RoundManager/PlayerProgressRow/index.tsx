@@ -1,23 +1,15 @@
 import { getProgressLevel } from '../roundStatus'
+import type { PlayerProgress } from '../../../hooks/useRoundProgress'
+import type { ProgressLevel } from '../roundStatus'
 import styles from './PlayerProgressRow.module.css'
 
-const ICONS = { complete: '✅', partial: '⚠️', none: '❌' }
+const ICONS: Record<ProgressLevel, string> = { complete: '✅', partial: '⚠️', none: '❌' }
 
 /**
  * Una fila del detalle de progreso: quién es el jugador, cuánto cargó y qué
  * partidos le faltan.
- *
- * @param {{
- *   player: {
- *     name: string,
- *     progress: number,
- *     predictedCount: number,
- *     totalMatches: number,
- *     missingMatches: number[],
- *   }
- * }} props
  */
-export default function PlayerProgressRow({ player }) {
+export default function PlayerProgressRow({ player }: { player: PlayerProgress }) {
   const level = getProgressLevel(player.progress)
   const missing = player.missingMatches ?? []
 

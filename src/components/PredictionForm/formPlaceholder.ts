@@ -10,9 +10,25 @@
  * El quinto caso (la fecha existe pero no tiene partidos) no está acá: ese sí
  * muestra el selector, para que el usuario pueda irse a otra fecha.
  *
- * @returns {{ type: 'loading', message: string } | { type: 'empty', title: string, description: string } | null}
  */
-export const getFormPlaceholder = ({ roundsLoading, rounds, matchesLoading, selectedRound }) => {
+import type { Round } from '../../types/domain'
+
+/** Lo que muestra la pantalla mientras no hay nada que pronosticar. */
+export type FormPlaceholder =
+  | { type: 'loading'; message: string }
+  | { type: 'empty'; title: string; description: string }
+
+export const getFormPlaceholder = ({
+  roundsLoading,
+  rounds,
+  matchesLoading,
+  selectedRound,
+}: {
+  roundsLoading?: boolean
+  rounds?: Round[] | null
+  matchesLoading?: boolean
+  selectedRound?: number | null
+}): FormPlaceholder | null => {
   if (roundsLoading) {
     return { type: 'loading', message: 'Cargando información...' }
   }

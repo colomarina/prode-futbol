@@ -1,7 +1,25 @@
 import IconButton from '../../Common/IconButton'
 import { memo } from 'react'
 import { POSITION_CONFIG } from '../leaderboard.config'
+import type { PositionConfig } from '../leaderboard.config'
 import InfoButton from '../../Common/InfoButton'
+import type { LeaderboardEntry } from '../../../hooks/useLeaderboard'
+import type { LeaderboardSelection } from '../LeadboardHeader'
+
+/** Lo que pide la fila para abrir los pronósticos de un jugador. */
+export interface ViewPredictionsRequest {
+  userId: string | null
+  roundNumber: LeaderboardSelection
+}
+
+interface LeaderboardRowProps {
+  player: LeaderboardEntry
+  position: number
+  showRoundsColumn?: boolean
+  showViewColumn?: boolean
+  onViewPredictions?: (request: ViewPredictionsRequest) => void
+  selectedRound?: LeaderboardSelection
+}
 
 // Lista de jugadores suspendidos
 const SUSPENDED_PLAYERS = ['Geronimo Andres Garcia', 'Ezequiel Cordoba']
@@ -13,8 +31,10 @@ const LeaderboardRow = memo(function LeaderboardRow({
   showViewColumn = false,
   onViewPredictions,
   selectedRound,
-}) {
-  const positionConfig = POSITION_CONFIG[position] || {}
+}: LeaderboardRowProps) {
+  // Solo los tres primeros puestos tienen medalla y fondo: del cuarto en adelante
+  // no hay entrada, y de ahí que sea parcial.
+  const positionConfig: Partial<PositionConfig> = POSITION_CONFIG[position] ?? {}
   const { emoji, bgColor } = positionConfig
 
   return (
@@ -40,7 +60,13 @@ const LeaderboardRow = memo(function LeaderboardRow({
   )
 })
 
-const PositionCell = memo(function PositionCell({ position, emoji }) {
+const PositionCell = memo(function PositionCell({
+  position,
+  emoji,
+}: {
+  position: number
+  emoji?: string
+}) {
   return (
     <td
       style={{
@@ -70,7 +96,7 @@ const PositionCell = memo(function PositionCell({ position, emoji }) {
   )
 })
 
-const PlayerCell = memo(function PlayerCell({ player }) {
+const PlayerCell = memo(function PlayerCell({ player }: { player: LeaderboardEntry }) {
   const isSuspended = SUSPENDED_PLAYERS.includes(player.full_name)
 
   return (
@@ -98,20 +124,21 @@ const PlayerCell = memo(function PlayerCell({ player }) {
             {player.full_name}
           </div>
         </div>
+        {/*
+          Acá había un `position="top"` que **no existe** en `InfoButton` (la prop se
+          llama `placement`), así que el globito nunca se mostró arriba: quedaba en el
+          default, a la derecha. Lo marcó el tipado. Se saca en vez de traducirlo a
+          `placement` porque eso movería el globito, y eso es una decisión visual.
+        */}
         {isSuspended && (
-          <InfoButton
-            message="Jugador suspendido"
-            type="error"
-            ariaLabel="Jugador suspendido"
-            position="top"
-          />
+          <InfoButton message="Jugador suspendido" type="error" ariaLabel="Jugador suspendido" />
         )}
       </div>
     </td>
   )
 })
 
-const PointsCell = memo(function PointsCell({ points }) {
+const PointsCell = memo(function PointsCell({ points }: { points: number }) {
   return (
     <td
       style={{
@@ -136,7 +163,7 @@ const PointsCell = memo(function PointsCell({ points }) {
   )
 })
 
-const RoundsCell = memo(function RoundsCell({ rounds }) {
+const RoundsCell = memo(function RoundsCell({ rounds }: { rounds: number }) {
   return (
     <td
       style={{
@@ -157,7 +184,15 @@ const RoundsCell = memo(function RoundsCell({ rounds }) {
   )
 })
 
-const ViewCell = memo(function ViewCell({ player, selectedRound, onViewPredictions }) {
+const ViewCell = memo(function ViewCell({
+  player,
+  selectedRound,
+  onViewPredictions,
+}: {
+  player: LeaderboardEntry
+  selectedRound?: LeaderboardSelection
+  onViewPredictions?: (request: ViewPredictionsRequest) => void
+}) {
   const handleClick = () => {
     if (!onViewPredictions || !selectedRound) return
     onViewPredictions({ userId: player.id, roundNumber: selectedRound })

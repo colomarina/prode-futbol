@@ -6,20 +6,25 @@ import {
   getRoundStatus,
   getFinishability,
 } from '../roundStatus'
+import type { Round } from '../../../types/domain'
+import type { MatchCount } from '../roundStatus'
 import styles from './RoundCard.module.css'
 
 /**
  * Una fecha en la lista de administración: su estado, cuántos partidos tiene
  * cargados y las acciones disponibles.
- *
- * @param {{
- *   round: object,
- *   matchCount: {total: number, finished: number}|undefined,
- *   onChangeStatus: (status: string) => void,
- *   onFinish: () => void,
- * }} props
  */
-export default function RoundCard({ round, matchCount, onChangeStatus, onFinish }) {
+export default function RoundCard({
+  round,
+  matchCount,
+  onChangeStatus,
+  onFinish,
+}: {
+  round: Round
+  matchCount: MatchCount | undefined
+  onChangeStatus: (status: string) => void
+  onFinish: () => void
+}) {
   const status = getRoundStatus(round.status)
   const isFinished = round.status === 'finished'
   const isLocked = round.status === 'locked'

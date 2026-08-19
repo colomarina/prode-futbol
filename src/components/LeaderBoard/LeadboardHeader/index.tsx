@@ -1,6 +1,32 @@
 import { memo } from 'react'
 import SelectDropdown from '../../Common/SelectDropdown'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
+import type { LeaderboardRoundOption } from '../../../utils/leaderboardRounds'
+
+/**
+ * La fecha elegida: `null` es la general y `'playoffs'` la tabla agregada de la
+ * llave. Es el mismo dominio que acepta `useLeaderboard`.
+ */
+export type LeaderboardSelection = number | 'playoffs' | null
+
+/**
+ * Una opción del selector. Las dos primeras son sintéticas —General y Playoffs— y
+ * de ahí que `round_number` y `name` sean más laxos que en una fecha real.
+ */
+interface RoundOption {
+  id: LeaderboardSelection
+  round_number: LeaderboardSelection
+  name?: string | null
+}
+
+interface LeaderboardHeaderProps {
+  selectedRound: LeaderboardSelection
+  setSelectedRound: (round: LeaderboardSelection) => void
+  rounds?: LeaderboardRoundOption[]
+  roundsLoading?: boolean
+  showPlayoffs?: boolean
+  isWorldCupTournament?: boolean
+}
 
 /**
  * `rounds` ya viene filtrado y ordenado por `getLeaderboardRounds`: acá no se
@@ -13,18 +39,26 @@ const LeaderboardHeader = memo(function LeaderboardHeader({
   roundsLoading,
   showPlayoffs = false,
   isWorldCupTournament = false,
-}) {
+}: LeaderboardHeaderProps) {
   const playoffLabel = isWorldCupTournament ? '🥊 Cuartos a Final' : '🥊 Playoffs'
-  const roundOptions = [
+  const roundOptions: RoundOption[] = [
     { id: null, round_number: null, name: '🏆 General' },
-    ...(showPlayoffs ? [{ id: 'playoffs', round_number: 'playoffs', name: playoffLabel }] : []),
+    // Los `as const` mantienen `'playoffs'` como literal: dentro del spread
+    // condicional el tipo del array no alcanza a acotarlo y se ensancha a `string`.
+    ...(showPlayoffs
+      ? [{ id: 'playoffs' as const, round_number: 'playoffs' as const, name: playoffLabel }]
+      : []),
     ...rounds,
   ]
 
-  const renderRoundLabel = round => {
+  const renderRoundLabel = (round: RoundOption): string => {
     if (round.round_number === null) return '🏆 General'
     if (round.round_number === 'playoffs') return playoffLabel
-    return `📅 ${getRoundDisplayName(round)}`
+
+    // Se le pasa la fecha ya acotada en vez del objeto entero: `RoundOption` admite
+    // `'playoffs'` en `round_number` por las dos opciones sintéticas, y
+    // `getRoundDisplayName` pide un número. Los dos guards de arriba lo garantizan.
+    return `📅 ${getRoundDisplayName({ name: round.name ?? null, round_number: round.round_number })}`
   }
 
   return (

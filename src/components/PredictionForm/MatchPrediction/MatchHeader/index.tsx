@@ -1,9 +1,11 @@
 import InfoButton from '../../../Common/InfoButton'
 import { getGroupBadgeColors } from '../../../../utils/groupBadgeStyles'
 import { formatMatchDateShort, formatMatchTime } from '../../../../utils/matchDate'
+import type { MatchWithTeams } from '../../../../types/domain'
+import type { MatchStatus } from '../matchWarnings'
 import styles from './MatchHeader.module.css'
 
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<MatchStatus, string> = {
   finished: 'Finalizado',
   playing: '⚽ En Juego',
 }
@@ -11,15 +13,18 @@ const STATUS_LABELS = {
 /**
  * Encabezado de la tarjeta de pronóstico: número de partido, estado, grupo y
  * fecha.
- *
- * @param {{
- *   match: object,
- *   status: 'finished'|'playing'|null,
- *   isGameOfTheRound: boolean,
- *   tournamentSlug: string|undefined,
- * }} props
  */
-export default function MatchHeader({ match, status, isGameOfTheRound, tournamentSlug }) {
+export default function MatchHeader({
+  match,
+  status,
+  isGameOfTheRound,
+  tournamentSlug,
+}: {
+  match: MatchWithTeams
+  status: MatchStatus | null
+  isGameOfTheRound?: boolean
+  tournamentSlug?: string
+}) {
   const groupLabel = typeof match.group_label === 'string' ? match.group_label.trim() : ''
   const groupColors = getGroupBadgeColors(groupLabel, tournamentSlug)
 

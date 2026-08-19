@@ -1,5 +1,6 @@
 import Button from '../../Common/Button'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../../utils/roundLabels'
+import type { Round } from '../../../types/domain'
 import styles from './ActiveRoundShortcut.module.css'
 
 /**
@@ -9,7 +10,15 @@ import styles from './ActiveRoundShortcut.module.css'
  * de si el torneo admite escrituras, y en modo consulta no hay ninguna fecha
  * abierta a la que ir.
  */
-export default function ActiveRoundShortcut({ activeRound, rounds, onGo }) {
+export default function ActiveRoundShortcut({
+  activeRound,
+  rounds,
+  onGo,
+}: {
+  activeRound: Round
+  rounds?: Round[]
+  onGo: () => void
+}) {
   return (
     <div className={styles.box}>
       <p className={styles.text}>

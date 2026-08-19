@@ -8,9 +8,15 @@ import LeaderboardHeader from './LeadboardHeader'
 import LeaderboardTable from './LeaderboardTable'
 import LoadingState from '../Common/LoadingState'
 import ErrorMessage from './ErrorMessage'
+import type { LeaderboardSelection } from './LeadboardHeader'
+import type { ViewPredictionsRequest } from './LeaderboardRow'
 
-export default function Leaderboard({ onViewPredictions }) {
-  const [selectedRound, setSelectedRound] = useState(null)
+export default function Leaderboard({
+  onViewPredictions,
+}: {
+  onViewPredictions?: (request: ViewPredictionsRequest) => void
+}) {
+  const [selectedRound, setSelectedRound] = useState<LeaderboardSelection>(null)
   const { activeTournament } = useTournament()
   const isWorldCupTournament = activeTournament?.type === 'world_cup'
   const { leaderboard, loading, error, fetchLeaderboard } = useLeaderboard(

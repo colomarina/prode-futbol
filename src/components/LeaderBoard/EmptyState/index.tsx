@@ -1,11 +1,18 @@
 import { memo } from 'react'
+import type { ReactNode } from 'react'
 import CommonEmptyState from '../../Common/EmptyState'
+
+interface EmptyStateProps {
+  title?: ReactNode
+  subtitle?: ReactNode
+  icon?: ReactNode
+}
 
 const EmptyState = memo(function EmptyState({
   title = 'No hay datos disponibles',
   subtitle = 'Los puntos se calculan al cargar resultados',
   icon = '📊',
-}) {
+}: EmptyStateProps) {
   return (
     <CommonEmptyState
       icon={icon}

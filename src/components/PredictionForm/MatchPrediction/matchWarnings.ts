@@ -7,6 +7,13 @@
  * entre ellas y sin forma de testearlas sin renderizar la tarjeta.
  */
 import { canLoadResult, canPredictMatch, hasMatchStarted } from '../../../utils/matchTiming'
+import type { IsoDate } from '../../../types/domain'
+
+/** Los dos avisos que puede llevar una tarjeta sin pronóstico. */
+export type MatchWarning = 'missed' | 'locked'
+
+/** Lo que se muestra en la esquina de la tarjeta. */
+export type MatchStatus = 'finished' | 'playing'
 
 /**
  * El aviso para un partido que ya empezó y quedó sin pronóstico.
@@ -21,9 +28,16 @@ import { canLoadResult, canPredictMatch, hasMatchStarted } from '../../../utils/
  * Un partido finalizado no lleva aviso: lleva el resultado y los puntos. Uno con
  * pronóstico cargado tampoco, no hay nada que avisar.
  *
- * @returns {'missed'|'locked'|null}
  */
-export const getMatchWarning = ({ matchDate, isFinished, hasPrediction }) => {
+export const getMatchWarning = ({
+  matchDate,
+  isFinished,
+  hasPrediction,
+}: {
+  matchDate: IsoDate
+  isFinished?: boolean | null
+  hasPrediction?: boolean
+}): MatchWarning | null => {
   if (isFinished || hasPrediction) return null
   if (!hasMatchStarted(matchDate)) return null
 
@@ -41,9 +55,16 @@ export const getMatchWarning = ({ matchDate, isFinished, hasPrediction }) => {
  * partido que arrancó y no terminó se muestra en juego igual — que es
  * exactamente lo que es.
  *
- * @returns {'finished'|'playing'|null}
  */
-export const getMatchStatus = ({ matchDate, isFinished, isReadOnly = false }) => {
+export const getMatchStatus = ({
+  matchDate,
+  isFinished,
+  isReadOnly = false,
+}: {
+  matchDate: IsoDate
+  isFinished?: boolean | null
+  isReadOnly?: boolean
+}): MatchStatus | null => {
   if (isFinished) return 'finished'
 
   const canPredict = !isReadOnly && canPredictMatch(matchDate)

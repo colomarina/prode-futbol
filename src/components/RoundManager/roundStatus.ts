@@ -9,7 +9,17 @@
  * Los valores tienen que coincidir con el CHECK de `rounds.status` en Supabase
  * (`pending|open|locked|finished`). Ver `docs/supabase-schema.md`.
  */
-export const ROUND_STATUSES = {
+import type { PlayerProgress } from '../../hooks/useRoundProgress'
+import type { RoundStatus } from '../../types/domain'
+
+/** Cómo se muestra un estado de fecha. */
+export interface RoundStatusConfig {
+  key: RoundStatus
+  label: string
+  icon: string
+}
+
+export const ROUND_STATUSES: Record<RoundStatus, RoundStatusConfig> = {
   pending: { key: 'pending', label: 'Pendiente', icon: '⏳' },
   open: { key: 'open', label: 'Abierta', icon: '🟢' },
   locked: { key: 'locked', label: 'Bloqueada', icon: '🔒' },
@@ -17,7 +27,7 @@ export const ROUND_STATUSES = {
 }
 
 /** Orden en que se ofrecen en el selector: es el ciclo de vida de una fecha. */
-export const ROUND_STATUS_ORDER = ['pending', 'open', 'locked', 'finished']
+export const ROUND_STATUS_ORDER: RoundStatus[] = ['pending', 'open', 'locked', 'finished']
 
 /**
  * Un status desconocido cae en `pending`, que es el estado más inocuo: no
@@ -26,7 +36,8 @@ export const ROUND_STATUS_ORDER = ['pending', 'open', 'locked', 'finished']
  * Hace falta porque el default de la columna en la base es `'closed'`, un valor
  * que no está en su propio CHECK (ver la deuda de esquema en el plan).
  */
-export const getRoundStatus = status => ROUND_STATUSES[status] ?? ROUND_STATUSES.pending
+export const getRoundStatus = (status: string | null | undefined): RoundStatusConfig =>
+  ROUND_STATUSES[status as RoundStatus] ?? ROUND_STATUSES.pending
 
 /**
  * Si una fecha se puede finalizar, y el motivo para mostrar.
@@ -37,10 +48,18 @@ export const getRoundStatus = status => ROUND_STATUSES[status] ?? ROUND_STATUSES
  * El `reason` sirve para las dos cosas: es el `title` del botón deshabilitado y
  * es el texto del toast si alguien igual lo dispara.
  *
- * @param {{total: number, finished: number}|undefined} roundMatches
+ * @param roundMatches cuántos partidos tiene la fecha y cuántos terminaron
  * @returns {{canFinish: boolean, reason: string}}
  */
-export const getFinishability = roundMatches => {
+/** Cuántos partidos tiene una fecha y cuántos ya terminaron. */
+export interface MatchCount {
+  total: number
+  finished: number
+}
+
+export const getFinishability = (
+  roundMatches: MatchCount | undefined
+): { canFinish: boolean; reason: string } => {
   if (!roundMatches || roundMatches.total === 0) {
     return { canFinish: false, reason: 'Esta fecha no tiene partidos cargados' }
   }
@@ -64,14 +83,17 @@ export const getFinishability = roundMatches => {
  * `=== 0`. Con eso, los tres contadores no eran exhaustivos y un progreso raro
  * no aparecía en ninguno mientras la fila sí lo pintaba.
  */
-export const getProgressLevel = progress => {
+/** Los tres niveles de progreso que muestra el panel. */
+export type ProgressLevel = 'complete' | 'partial' | 'none'
+
+export const getProgressLevel = (progress: number): ProgressLevel => {
   if (progress === 100) return 'complete'
   if (progress > 0) return 'partial'
   return 'none'
 }
 
 /** Cuántos jugadores hay en cada nivel. Alimenta las tres tarjetas del resumen. */
-export const countByProgressLevel = players => {
+export const countByProgressLevel = (players: PlayerProgress[]): Record<ProgressLevel, number> => {
   const counts = { complete: 0, partial: 0, none: 0 }
   players.forEach(player => {
     counts[getProgressLevel(player.progress)] += 1

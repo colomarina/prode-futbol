@@ -9,6 +9,8 @@ import ActiveRoundCard from './ActiveRoundCard'
 import RoundCard from './RoundCard'
 import { ROUND_STATUSES, getFinishability } from './roundStatus'
 import { getRoundDisplayName, getRoundDisplayNameByNumber } from '../../utils/roundLabels'
+import type { MatchCount } from './roundStatus'
+import type { ToastType } from '../Common/Toast'
 import styles from './RoundManager.module.css'
 
 /**
@@ -30,17 +32,17 @@ export default function RoundManager() {
     activeTournament?.id,
     activeRound?.round_number ?? null
   )
-  const [toast, setToast] = useState(null)
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   const formatRoundLabel = useCallback(
-    roundNumber => getRoundDisplayNameByNumber(roundNumber, rounds),
+    (roundNumber: number): string => getRoundDisplayNameByNumber(roundNumber, rounds),
     [rounds]
   )
 
   // Cuántos partidos tiene cada fecha y cuántos ya terminaron. Sale de la misma
   // query compartida que usa useRounds, no de una consulta propia.
   const matchesByRound = useMemo(() => {
-    const byRound = {}
+    const byRound: Record<number, MatchCount> = {}
 
     matchesMeta.forEach(match => {
       if (!byRound[match.round_number]) {
@@ -65,7 +67,7 @@ export default function RoundManager() {
   }, [progressError])
 
   const handleFinishRound = useCallback(
-    async roundNumber => {
+    async (roundNumber: number) => {
       const { canFinish, reason } = getFinishability(matchesByRound[roundNumber])
 
       if (!canFinish) {

@@ -1,3 +1,4 @@
+import type { TeamSummary, Uuid } from '../../../../types/domain'
 import styles from './QualifierPicker.module.css'
 
 /**
@@ -6,15 +7,20 @@ import styles from './QualifierPicker.module.css'
  * Se muestra solo cuando el marcador pronosticado es un empate; las reglas de
  * cuándo y con qué seleccionado están en `../qualifier.js`.
  *
- * @param {{
- *   teams: Array<{id: string, name: string}>,
- *   selectedTeamId: string|null,
- *   isLocked: boolean,
- *   canPredict: boolean,
- *   onSelect: (teamId: string) => void,
- * }} props
  */
-export default function QualifierPicker({ teams, selectedTeamId, isLocked, canPredict, onSelect }) {
+export default function QualifierPicker({
+  teams,
+  selectedTeamId,
+  isLocked,
+  canPredict,
+  onSelect,
+}: {
+  teams: TeamSummary[]
+  selectedTeamId: Uuid | null
+  isLocked?: boolean
+  canPredict?: boolean
+  onSelect: (teamId: Uuid) => void
+}) {
   const disabled = !canPredict || isLocked
 
   return (

@@ -8,7 +8,17 @@ import QualifierPicker from './QualifierPicker'
 import MatchOutcome from './MatchOutcome'
 import { resolveQualifier, getQualifierToSync } from './qualifier'
 import { getMatchWarning, getMatchStatus } from './matchWarnings'
+import type { MatchWithTeams, Prediction, TeamSummary, Uuid } from '../../../types/domain'
+import type { MatchPredictionValues } from '../savePredictions'
 import styles from './MatchPrediction.module.css'
+
+interface MatchPredictionProps {
+  match: MatchWithTeams
+  existingPrediction?: Prediction | null
+  /** Lo que el usuario tiene tipeado, que vive en el formulario padre. */
+  predictionValue?: MatchPredictionValues
+  onValueChange: (matchId: Uuid, field: 'home' | 'away' | 'qualifier', value: string) => void
+}
 
 const WARNING_MESSAGES = {
   missed: '🔒 No cargaste pronóstico para este partido',
@@ -22,7 +32,12 @@ const WARNING_MESSAGES = {
  * encabezado se fueron a subcomponentes, y las reglas —qué aviso mostrar, quién
  * clasifica— a `matchWarnings.js` y `qualifier.js`, que son puras y tienen tests.
  */
-const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueChange }) => {
+const MatchPrediction = ({
+  match,
+  existingPrediction,
+  predictionValue,
+  onValueChange,
+}: MatchPredictionProps) => {
   const { activeTournament, isReadOnly } = useTournament()
   const awayInputRef = useRef(null)
 
@@ -160,7 +175,12 @@ const MatchPrediction = ({ match, existingPrediction, predictionValue, onValueCh
 
       {qualifier.shouldShowPicker && (
         <QualifierPicker
-          teams={[match.home_team, match.away_team]}
+          // Los equipos embebidos son nullables (un cruce de playoff puede existir
+          // antes de saber quién lo juega), así que se filtran: el selector los
+          // dereferencia para mostrar nombre e id.
+          teams={[match.home_team, match.away_team].filter(
+            (team): team is TeamSummary => team !== null
+          )}
           selectedTeamId={qualifier.selectedTeamId}
           isLocked={qualifier.isLocked}
           canPredict={canPredict}

@@ -2,6 +2,11 @@ import { memo } from 'react'
 import Button from '../../Common/Button'
 import { tint } from '../../../utils/tint'
 
+interface ErrorMessageProps {
+  error?: string | null
+  onRetry?: () => void
+}
+
 /**
  * El aviso de error de la tabla de posiciones.
  *
@@ -15,7 +20,7 @@ import { tint } from '../../../utils/tint'
  * sobre rojo, 1.4:1 de contraste. Ahora es un tinte del error, como los demás
  * avisos de la app.
  */
-const ErrorMessage = memo(function ErrorMessage({ error, onRetry }) {
+const ErrorMessage = memo(function ErrorMessage({ error, onRetry }: ErrorMessageProps) {
   return (
     <div
       style={{

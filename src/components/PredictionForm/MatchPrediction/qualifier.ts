@@ -17,23 +17,42 @@
  *      lo que el usuario tocó; mirando manda lo que quedó guardado.
  */
 import { parseScoreValue, getWinnerTeamId } from '../../../utils/score'
+import type { MatchWithTeams, Prediction, Uuid } from '../../../types/domain'
+import type { MatchPredictionValues } from '../savePredictions'
 
-/**
- * @param {object} params
- * @param {object} params.match
- * @param {object|null} params.existingPrediction
- * @param {{home?: string, away?: string, qualifier?: string}|undefined} params.predictionValue
- * @param {boolean} params.canPredict
- * @returns {{
- *   homeScoreNumber: number|null,
- *   awayScoreNumber: number|null,
- *   autoWinnerTeamId: string|null,
- *   isLocked: boolean,
- *   shouldShowPicker: boolean,
- *   selectedTeamId: string|null,
- * }}
- */
-export const resolveQualifier = ({ match, existingPrediction, predictionValue, canPredict }) => {
+/** Lo que se necesita del partido para resolver el clasificado. */
+type PartidoDePlayoff = Pick<
+  MatchWithTeams,
+  'is_playoff' | 'home_team_id' | 'away_team_id' | 'home_team' | 'away_team'
+>
+
+/** El pronóstico ya guardado, si hay. */
+type PronosticoGuardado = Pick<
+  Prediction,
+  'home_prediction' | 'away_prediction' | 'qualifier_prediction_id'
+>
+
+/** Las tres decisiones que toma `resolveQualifier`. */
+export interface QualifierResolution {
+  homeScoreNumber: number | null
+  awayScoreNumber: number | null
+  autoWinnerTeamId: Uuid | null
+  isLocked: boolean
+  shouldShowPicker: boolean
+  selectedTeamId: Uuid | null
+}
+
+export const resolveQualifier = ({
+  match,
+  existingPrediction,
+  predictionValue,
+  canPredict,
+}: {
+  match: PartidoDePlayoff
+  existingPrediction?: PronosticoGuardado | null
+  predictionValue?: MatchPredictionValues
+  canPredict?: boolean
+}): QualifierResolution => {
   // Editando se lee lo que el usuario tiene tipeado; si ya no se puede editar, lo
   // que quedó guardado. Sin esta distinción, un partido cerrado mostraba el
   // selector según un marcador vacío.
@@ -82,7 +101,17 @@ export const resolveQualifier = ({ match, existingPrediction, predictionValue, c
  * (caerse por el final sin llamar a `onValueChange`). Acá es explícita y se puede
  * testear sin renderizar.
  */
-export const getQualifierToSync = ({ match, existingPrediction, predictionValue, canPredict }) => {
+export const getQualifierToSync = ({
+  match,
+  existingPrediction,
+  predictionValue,
+  canPredict,
+}: {
+  match: PartidoDePlayoff
+  existingPrediction?: PronosticoGuardado | null
+  predictionValue?: MatchPredictionValues
+  canPredict?: boolean
+}): Uuid | null => {
   if (!match.is_playoff || !canPredict) return null
 
   const { autoWinnerTeamId } = resolveQualifier({

@@ -2,12 +2,21 @@ import { memo, useMemo } from 'react'
 import LeaderboardRow from '../LeaderboardRow'
 import EmptyState from '../EmptyState'
 import { TABLE_COLUMNS } from '../leaderboard.config'
+import type { LeaderboardEntry } from '../../../hooks/useLeaderboard'
+import type { LeaderboardSelection } from '../LeadboardHeader'
+import type { ViewPredictionsRequest } from '../LeaderboardRow'
+
+interface LeaderboardTableProps {
+  leaderboard: LeaderboardEntry[]
+  selectedRound?: LeaderboardSelection
+  onViewPredictions?: (request: ViewPredictionsRequest) => void
+}
 
 const LeaderboardTable = memo(function LeaderboardTable({
   leaderboard,
   selectedRound,
   onViewPredictions,
-}) {
+}: LeaderboardTableProps) {
   const columns = useMemo(() => {
     if (selectedRound === 'playoffs') return TABLE_COLUMNS.playoffs
     return TABLE_COLUMNS[selectedRound ? 'round' : 'general']
@@ -46,7 +55,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
   )
 })
 
-const TableHeader = memo(function TableHeader({ columns }) {
+const TableHeader = memo(function TableHeader({ columns }: { columns: string[] }) {
   return (
     <thead>
       <tr

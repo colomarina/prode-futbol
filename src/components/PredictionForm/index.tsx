@@ -16,6 +16,9 @@ import EmptyState from '../Common/EmptyState'
 import { canPredictMatch } from '../../utils/matchTiming'
 import { getFormPlaceholder } from './formPlaceholder'
 import { collectPredictionsToSave, findExpiredPredictions, getSaveToast } from './savePredictions'
+import type { PredictionFormValues } from './savePredictions'
+import type { ToastType } from '../Common/Toast'
+import type { Uuid } from '../../types/domain'
 import styles from './PredictionForm.module.css'
 
 /**
@@ -44,9 +47,9 @@ export default function PredictionForm() {
     activeTournament?.id
   )
 
-  const [predictionValues, setPredictionValues] = useState({})
+  const [predictionValues, setPredictionValues] = useState<PredictionFormValues>({})
   const [saving, setSaving] = useState(false)
-  const [toast, setToast] = useState(null)
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   // Los valores tipeados se indexan por match_id, así que al cambiar de torneo son
   // de partidos que ya no están en pantalla.
@@ -84,18 +87,21 @@ export default function PredictionForm() {
     [matches, predictionValues]
   )
 
-  const handleValueChange = useCallback((matchId, field, value) => {
-    setPredictionValues(prev => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [field]: value,
-      },
-    }))
-  }, [])
+  const handleValueChange = useCallback(
+    (matchId: Uuid, field: 'home' | 'away' | 'qualifier', value: string) => {
+      setPredictionValues(prev => ({
+        ...prev,
+        [matchId]: {
+          ...prev[matchId],
+          [field]: value,
+        },
+      }))
+    },
+    []
+  )
 
   const handleRoundSelect = useCallback(
-    roundNumber => {
+    (roundNumber: number | null) => {
       selectRound(roundNumber)
       setPredictionValues({}) // Limpiar valores al cambiar de fecha
     },

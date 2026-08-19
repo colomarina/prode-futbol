@@ -1,5 +1,7 @@
 import RoundProgress from '../RoundProgress'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
+import type { Round } from '../../../types/domain'
+import type { PlayerProgress } from '../../../hooks/useRoundProgress'
 import styles from './ActiveRoundCard.module.css'
 
 /**
@@ -8,10 +10,14 @@ import styles from './ActiveRoundCard.module.css'
  * "Activa" no quiere decir `status === 'open'`: se deriva del partido más próximo
  * que todavía no empezó (`utils/matchTiming.ts`). `rounds.status` se actualiza a
  * mano y queda desincronizado, así que no sirve para esto.
- *
- * @param {{ round: object, players: Array<object> }} props
  */
-export default function ActiveRoundCard({ round, players }) {
+export default function ActiveRoundCard({
+  round,
+  players,
+}: {
+  round: Round
+  players: PlayerProgress[]
+}) {
   return (
     <div className={styles.card}>
       <div className={styles.stripe} aria-hidden="true" />
