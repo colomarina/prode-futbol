@@ -1,16 +1,28 @@
 import { useState } from 'react'
 import { getRoundDisplayNameByNumber } from '../../../utils/roundLabels'
+import type { Round } from '../../../types/domain'
+import type { RoundPoints } from '../../../utils/stats'
 import styles from './LineChart.module.css'
 
-export const LineChart = ({
+interface LineChartProps {
+  /** Una serie por fecha. El campo `points` lleva puntos o posición, según el uso. */
+  data?: RoundPoints[] | null
+  rounds?: Round[]
+  yLabel?: string
+  unit?: string
+  /** La posición 1 va arriba: en ese gráfico el eje se invierte. */
+  invertYAxis?: boolean
+}
+
+const LineChart = ({
   data,
   rounds = [],
   yLabel = 'Puntos',
   unit = 'pts',
   invertYAxis = false,
-}) => {
-  const [hoveredRound, setHoveredRound] = useState(null)
-  const [selectedRound, setSelectedRound] = useState(null)
+}: LineChartProps) => {
+  const [hoveredRound, setHoveredRound] = useState<number | null>(null)
+  const [selectedRound, setSelectedRound] = useState<number | null>(null)
 
   if (!data || data.length === 0) return null
 
@@ -33,12 +45,12 @@ export const LineChart = ({
   const maxY = maxPoints + paddingValue
   const minY = Math.min(0, minPoints - paddingValue)
 
-  const getX = index => {
+  const getX = (index: number): number => {
     if (data.length === 1) return padding.left + chartWidth / 2
     return padding.left + (index / (data.length - 1)) * chartWidth
   }
 
-  const getY = points => {
+  const getY = (points: number): number => {
     const ratio = (points - minY) / (maxY - minY)
     if (invertYAxis) {
       return padding.top + ratio * chartHeight
@@ -48,7 +60,7 @@ export const LineChart = ({
 
   const activeRound = selectedRound ?? hoveredRound
 
-  const getTooltipX = x => {
+  const getTooltipX = (x: number): number => {
     const tooltipWidth = 100
     const minX = padding.left + 4
     const maxX = width - padding.right - tooltipWidth - 4
@@ -65,7 +77,7 @@ export const LineChart = ({
     .join(' ')
 
   // Generar ticks de ejes
-  const yTicks = []
+  const yTicks: { value: number; y: number }[] = []
   const tickCount = 5
   for (let i = 0; i <= tickCount; i++) {
     const value = minY + ((maxY - minY) / tickCount) * i
@@ -227,3 +239,5 @@ export const LineChart = ({
     </div>
   )
 }
+
+export default LineChart

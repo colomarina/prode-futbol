@@ -1,6 +1,15 @@
+import type { AccuracyBreakdown as AccuracyBreakdownData } from '../../../utils/stats'
 import styles from './AccuracyBreakdown.module.css'
 
-export const AccuracyBreakdown = ({ breakdown }) => {
+/**
+ * El desglose llega **parcial** a proposito: cuando sale de la RPC puede venir sin
+ * campos, y de ahi los `??` de abajo. Ver `normalizeStats`.
+ */
+interface AccuracyBreakdownProps {
+  breakdown?: Partial<AccuracyBreakdownData> | null
+}
+
+const AccuracyBreakdown = ({ breakdown }: AccuracyBreakdownProps) => {
   const exactScores = Number(breakdown?.exactScores ?? 0)
   const winnerHits = Number(
     breakdown?.winnerHits ??
@@ -88,3 +97,5 @@ export const AccuracyBreakdown = ({ breakdown }) => {
     </div>
   )
 }
+
+export default AccuracyBreakdown

@@ -1,8 +1,9 @@
 import { getRoundDisplayNameByNumber } from '../../../utils/roundLabels'
-import { StatCard } from '../StatCard'
+import StatCard from '../StatCard'
+import type { StatsHistory } from '../../../utils/stats'
 import styles from './HistoryStats.module.css'
 
-export const HistoryStats = ({ history }) => {
+const HistoryStats = ({ history }: { history: StatsHistory }) => {
   return (
     <div className={styles.container}>
       <StatCard
@@ -40,3 +41,5 @@ export const HistoryStats = ({ history }) => {
     </div>
   )
 }
+
+export default HistoryStats

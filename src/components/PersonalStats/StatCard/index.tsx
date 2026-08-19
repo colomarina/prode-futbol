@@ -1,5 +1,19 @@
 import { tint } from '../../../utils/tint'
+import type { CSSProperties, ReactNode } from 'react'
 import styles from './StatCard.module.css'
+
+interface StatCardProps {
+  icon?: ReactNode
+  /** El fondo del ícono se deriva de este color con `tint()`. */
+  iconColor?: string
+  title?: ReactNode
+  value?: ReactNode
+  unit?: string
+  subtext?: ReactNode
+  children?: ReactNode
+  className?: string
+  style?: CSSProperties
+}
 
 /**
  * El fondo del ícono ya no es una prop: es el tinte de `iconColor`.
@@ -10,7 +24,7 @@ import styles from './StatCard.module.css'
  * fondo violeta con el ícono verde, y el valor por defecto era fondo celeste con
  * ícono verde. Derivarlo de un solo color hace imposible que vuelvan a separarse.
  */
-export const StatCard = ({
+const StatCard = ({
   icon,
   iconColor = 'var(--color-primary)',
   title,
@@ -20,7 +34,7 @@ export const StatCard = ({
   children,
   className = '',
   style = {},
-}) => {
+}: StatCardProps) => {
   return (
     <div className={`${styles.card} ${className}`} style={style}>
       <div className={styles.header}>
@@ -43,3 +57,5 @@ export const StatCard = ({
     </div>
   )
 }
+
+export default StatCard

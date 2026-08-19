@@ -1,7 +1,14 @@
 import InfoButton from '../../Common/InfoButton'
+import type { ReactNode } from 'react'
 import styles from './StatSection.module.css'
 
-export default function StatSection({ title, tooltip, children }) {
+interface StatSectionProps {
+  title: string
+  tooltip?: ReactNode
+  children?: ReactNode
+}
+
+export default function StatSection({ title, tooltip, children }: StatSectionProps) {
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>

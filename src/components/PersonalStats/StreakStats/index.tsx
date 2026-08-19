@@ -1,7 +1,8 @@
-import { StatCard } from '../StatCard'
+import StatCard from '../StatCard'
+import type { Streaks } from '../../../utils/stats'
 import styles from './StreakStats.module.css'
 
-export const StreakStats = ({ streaks }) => {
+const StreakStats = ({ streaks }: { streaks: Streaks }) => {
   return (
     <div className={styles.container}>
       <div className={styles.cards}>
@@ -33,3 +34,5 @@ export const StreakStats = ({ streaks }) => {
     </div>
   )
 }
+
+export default StreakStats

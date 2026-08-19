@@ -1,8 +1,22 @@
 import { getRoundDisplayNameByNumber } from '../../../utils/roundLabels'
-import { StatCard } from '../StatCard'
+import StatCard from '../StatCard'
+import type { Round } from '../../../types/domain'
+import type { BestMatchRecord, RoundPoints, RoundPrecision } from '../../../utils/stats'
 import styles from './PersonalRecords.module.css'
 
-const iconStyles = {
+/**
+ * Lo que recibe esta tarjeta **no** es `stats.personalRecords` tal cual: el padre
+ * arma un objeto mezclando la mejor y la peor fecha, que viven un nivel más arriba
+ * en el contrato. El tipo lo deja escrito.
+ */
+export interface PersonalRecordsData {
+  bestRound: RoundPoints
+  worstRound: RoundPoints
+  bestMatch: BestMatchRecord | null
+  mostPreciseRound: RoundPrecision | null
+}
+
+const iconStyles: Record<string, { emoji: string; color: string }> = {
   'Mejor Fecha': { emoji: '🏅', color: 'var(--color-warning)' },
   'Peor Fecha': { emoji: '⚠️', color: 'var(--color-error)' },
   'Partido Más Acertado': {
@@ -15,7 +29,13 @@ const iconStyles = {
   },
 }
 
-export const PersonalRecords = ({ records, rounds }) => {
+const PersonalRecords = ({
+  records,
+  rounds,
+}: {
+  records: PersonalRecordsData
+  rounds?: Round[]
+}) => {
   return (
     <div className={styles.container}>
       <StatCard
@@ -72,3 +92,5 @@ export const PersonalRecords = ({ records, rounds }) => {
     </div>
   )
 }
+
+export default PersonalRecords

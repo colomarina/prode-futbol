@@ -1,7 +1,8 @@
-import { StatCard } from '../StatCard'
+import StatCard from '../StatCard'
+import type { TournamentStats } from '../../../utils/stats'
 import styles from './PerformanceOverview.module.css'
 
-export const PerformanceOverview = ({ metrics }) => {
+const PerformanceOverview = ({ metrics }: { metrics: TournamentStats['metrics'] }) => {
   return (
     <div className={styles.container}>
       <div className={styles.cards}>
@@ -30,3 +31,5 @@ export const PerformanceOverview = ({ metrics }) => {
     </div>
   )
 }
+
+export default PerformanceOverview

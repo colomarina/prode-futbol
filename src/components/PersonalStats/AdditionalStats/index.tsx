@@ -1,6 +1,7 @@
+import type { TournamentStats } from '../../../utils/stats'
 import styles from './AdditionalStats.module.css'
 
-export const AdditionalStats = ({ stats }) => {
+const AdditionalStats = ({ stats }: { stats: TournamentStats['additionalStats'] }) => {
   const items = [
     {
       label: 'Total de Pronósticos Cargados',
@@ -35,3 +36,5 @@ export const AdditionalStats = ({ stats }) => {
     </div>
   )
 }
+
+export default AdditionalStats
