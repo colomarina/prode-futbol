@@ -3,6 +3,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { useAuth } from '../contexts/AuthContext'
+import type {
+  ArgentinaStage,
+  Fn,
+  Tables,
+  TeamSummary,
+  Uuid,
+  WorldCupPrediction,
+} from '../types/domain'
+import type { MutationError } from './types'
 
 /**
  * TODO(mundial): la migración a react query de este hook NO se validó contra la
@@ -26,8 +35,49 @@ import { useAuth } from '../contexts/AuthContext'
  * = 'active'` y su fila en `world_cup_bonus_config`.
  */
 
-/** Mapea los 14 campos del formulario a los parámetros de las RPC. */
-const toRpcParams = (tournamentId, values) => ({
+/**
+ * Las 14 respuestas tal como las maneja el formulario, sin el prefijo `p_`.
+ *
+ * Es el mismo conjunto que la fila de `world_cup_predictions` menos las columnas de
+ * auditoría, y sirve para las dos cosas: el pronóstico de un usuario y los
+ * resultados oficiales que carga el admin.
+ */
+export type WorldCupBonusValues = Partial<{
+  champion_team_id: Uuid | ''
+  runner_up_team_id: Uuid | ''
+  third_place_team_id: Uuid | ''
+  top_scorer_text: string
+  best_player_text: string
+  best_goalkeeper_text: string
+  least_goals_conceded_team_id: Uuid | ''
+  revelation_team_id: Uuid | ''
+  most_assists_text: string
+  most_cards_team_id: Uuid | ''
+  will_there_be_hat_trick: boolean | null
+  argentina_stage: ArgentinaStage | ''
+  final_goals: number | ''
+  best_debutant_team_id: Uuid | ''
+}>
+
+/**
+ * Mapea los 14 campos del formulario a los parámetros de las RPC.
+ *
+ * Las dos RPC que lo reciben —`upsert_world_cup_prediction` y
+ * `admin_upsert_world_cup_official_results`— declaran **exactamente los mismos 15
+ * argumentos**, lo que confirma que compartir este mapa es correcto y no una
+ * casualidad. El tipo sale del esquema generado, así que si una de las dos cambia
+ * su firma, esto deja de compilar.
+ *
+ * Ojo con una imprecisión del esquema: los argumentos figuran como `string` no
+ * nullable, pero acá se mandan `null` para las preguntas sin responder. En SQL eso
+ * se acepta (la columna es `text`); el tipo generado es más estricto que la función
+ * real, y cuando se prenda `strict` va a haber que resolverlo (probablemente
+ * declarando los parámetros con `default null` en la base).
+ */
+const toRpcParams = (
+  tournamentId: Uuid | null,
+  values: WorldCupBonusValues
+): Fn<'upsert_world_cup_prediction'>['Args'] => ({
   p_tournament_id: tournamentId,
   p_champion_team_id: values.champion_team_id || null,
   p_runner_up_team_id: values.runner_up_team_id || null,
@@ -45,7 +95,18 @@ const toRpcParams = (tournamentId, values) => ({
   p_best_debutant_team_id: values.best_debutant_team_id || null,
 })
 
-const EMPTY_DATA = {
+/** Todo lo que la pantalla del bonus necesita, en una sola query. */
+export interface WorldCupBonusData {
+  config: Tables<'world_cup_bonus_config'> | null
+  teams: TeamSummary[]
+  prediction: WorldCupPrediction | null
+  officialResults: Tables<'world_cup_official_results'> | null
+  bonusScore: Tables<'world_cup_bonus_scores'> | null
+  stats: { totalPredictions: number }
+}
+
+/** Referencia estable para el estado vacío: ver el comentario de `useMatches`. */
+const EMPTY_DATA: WorldCupBonusData = {
   config: null,
   teams: [],
   prediction: null,
@@ -54,58 +115,73 @@ const EMPTY_DATA = {
   stats: { totalPredictions: 0 },
 }
 
-export const useWorldCupBonus = tournamentId => {
+/** Las cinco RPC del bonus. El tipo de sus argumentos sale del esquema generado. */
+type WorldCupRpcName =
+  | 'upsert_world_cup_prediction'
+  | 'admin_set_world_cup_lock'
+  | 'admin_lock_world_cup_predictions'
+  | 'admin_upsert_world_cup_official_results'
+  | 'recalculate_world_cup_bonus'
+
+export const useWorldCupBonus = (tournamentId: Uuid | null) => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const userId = user?.id ?? null
+  const userId: Uuid | null = user?.id ?? null
 
   const { data, isPending, error } = useQuery({
     queryKey: queryKeys.worldCupBonus(tournamentId, userId),
     enabled: Boolean(tournamentId),
-    queryFn: async () => {
-      const requests = [
-        supabase
-          .from('world_cup_bonus_config')
-          .select('*')
-          .eq('tournament_id', tournamentId)
-          .maybeSingle(),
-        supabase
-          .from('world_cup_teams')
-          .select('team_id, teams:teams!world_cup_teams_team_id_fkey(id, name, slug, logo_url)')
-          .eq('tournament_id', tournamentId)
-          .order('created_at', { ascending: true }),
-        supabase
-          .from('world_cup_official_results')
-          .select('*')
-          .eq('tournament_id', tournamentId)
-          .maybeSingle(),
-        // El contador entra en el mismo Promise.all: antes iba en un await
-        // suelto al final, sin depender de nada de lo anterior.
-        supabase
-          .from('world_cup_predictions')
-          .select('id', { count: 'exact', head: true })
-          .eq('tournament_id', tournamentId),
-      ]
-
-      if (userId) {
-        requests.push(
+    queryFn: async (): Promise<WorldCupBonusData> => {
+      /**
+       * Las seis consultas van en un solo `Promise.all`, y las dos que dependen del
+       * usuario entran como `null` cuando no hay sesión.
+       *
+       * Antes era un array al que se le hacía `push`, y eso obligaba a destructurar
+       * seis posiciones de un array de largo variable: TypeScript no puede seguir
+       * eso (el tipo de cada elemento queda como la unión de todos). Con la tupla
+       * cada respuesta conserva su tipo, y el paralelismo es el mismo: sin usuario
+       * no se construyen las dos consultas de más.
+       */
+      const [configRes, teamsRes, officialRes, countRes, predictionRes, bonusRes] =
+        await Promise.all([
           supabase
-            .from('world_cup_predictions')
+            .from('world_cup_bonus_config')
             .select('*')
             .eq('tournament_id', tournamentId)
-            .eq('user_id', userId)
             .maybeSingle(),
           supabase
-            .from('world_cup_bonus_scores')
+            .from('world_cup_teams')
+            .select('team_id, teams:teams!world_cup_teams_team_id_fkey(id, name, slug, logo_url)')
+            .eq('tournament_id', tournamentId)
+            .order('created_at', { ascending: true }),
+          supabase
+            .from('world_cup_official_results')
             .select('*')
             .eq('tournament_id', tournamentId)
-            .eq('user_id', userId)
-            .maybeSingle()
-        )
-      }
-
-      const [configRes, teamsRes, officialRes, countRes, predictionRes, bonusRes] =
-        await Promise.all(requests)
+            .maybeSingle(),
+          // El contador entra en el mismo Promise.all: antes iba en un await
+          // suelto al final, sin depender de nada de lo anterior.
+          supabase
+            .from('world_cup_predictions')
+            .select('id', { count: 'exact', head: true })
+            .eq('tournament_id', tournamentId),
+          userId
+            ? supabase
+                .from('world_cup_predictions')
+                .select('*')
+                .eq('tournament_id', tournamentId)
+                .eq('user_id', userId)
+                .maybeSingle()
+            : null,
+          userId
+            ? supabase
+                .from('world_cup_bonus_scores')
+                .select('*')
+                .eq('tournament_id', tournamentId)
+                .eq('user_id', userId)
+                .maybeSingle()
+            : null,
+        ])
 
       const failed = [configRes, teamsRes, officialRes, countRes, predictionRes, bonusRes].find(
         response => response?.error
@@ -116,7 +192,7 @@ export const useWorldCupBonus = tournamentId => {
         config: configRes.data,
         teams: (teamsRes.data || [])
           .map(item => item.teams)
-          .filter(Boolean)
+          .filter((team): team is TeamSummary => Boolean(team))
           .sort((a, b) => a.name.localeCompare(b.name, 'es')),
         officialResults: officialRes.data,
         prediction: predictionRes?.data || null,
@@ -135,7 +211,11 @@ export const useWorldCupBonus = tournamentId => {
   )
 
   const runRpc = useCallback(
-    async (name, params, { alsoInvalidateLeaderboard = false } = {}) => {
+    async <N extends WorldCupRpcName>(
+      name: N,
+      params: Fn<N>['Args'],
+      { alsoInvalidateLeaderboard = false }: { alsoInvalidateLeaderboard?: boolean } = {}
+    ): Promise<{ data: unknown; error: MutationError | null }> => {
       const { data: rpcData, error: rpcError } = await supabase.rpc(name, params)
 
       if (rpcError) return { data: null, error: rpcError }
@@ -155,12 +235,13 @@ export const useWorldCupBonus = tournamentId => {
   )
 
   const upsertPrediction = useCallback(
-    values => runRpc('upsert_world_cup_prediction', toRpcParams(tournamentId, values)),
+    (values: WorldCupBonusValues) =>
+      runRpc('upsert_world_cup_prediction', toRpcParams(tournamentId, values)),
     [runRpc, tournamentId]
   )
 
   const adminSetLock = useCallback(
-    ({ enabled, lockAt }) =>
+    ({ enabled, lockAt }: { enabled: boolean; lockAt: string }) =>
       runRpc('admin_set_world_cup_lock', {
         p_tournament_id: tournamentId,
         p_enabled: enabled,
@@ -175,7 +256,7 @@ export const useWorldCupBonus = tournamentId => {
   )
 
   const adminUpsertOfficialResults = useCallback(
-    values =>
+    (values: WorldCupBonusValues) =>
       runRpc('admin_upsert_world_cup_official_results', toRpcParams(tournamentId, values), {
         alsoInvalidateLeaderboard: true,
       }),

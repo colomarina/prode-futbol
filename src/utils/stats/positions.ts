@@ -10,12 +10,12 @@
  * Las filas que llegan acá ya vienen sin jugadores ocultos (lo filtra el hook),
  * salvo el usuario propio, que nunca se descarta.
  */
-import type { RoundScore, Uuid } from '../../types/domain'
+import type { Uuid } from '../../types/domain'
 import { compareByPoints, assignPositions } from '../ranking'
-import type { PositionHistoryEntry, RankingEntry, StatsHistory } from './types'
+import type { PositionHistoryEntry, RankingEntry, StatsHistory, StatsRoundScore } from './types'
 
-/** De `round_scores` solo se usan estas tres columnas. */
-type Puntaje = Pick<RoundScore, 'user_id' | 'round_number' | 'total_points'>
+/** El tipo vive en `types.ts` porque lo comparten este módulo y la firma pública. */
+type Puntaje = StatsRoundScore
 
 const rankScores = (scores: Puntaje[]): RankingEntry[] =>
   assignPositions(

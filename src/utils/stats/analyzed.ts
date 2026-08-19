@@ -12,13 +12,12 @@
  * cuando una fecha se juega desfasada — y en el Mundial los partidos de una
  * misma ronda se reparten en varios días.
  */
-import type { MatchWithTeams, Prediction } from '../../types/domain'
-import type { AnalyzedPrediction } from './types'
+import type { AnalyzedPrediction, StatsMatch, StatsPrediction } from './types'
 
 export const collectAnalyzedPredictions = (
-  matches: MatchWithTeams[] | null | undefined,
-  predictions: Prediction[] | null | undefined
-): { analyzedPredictions: AnalyzedPrediction[]; finishedMatches: MatchWithTeams[] } => {
+  matches: StatsMatch[] | null | undefined,
+  predictions: StatsPrediction[] | null | undefined
+): { analyzedPredictions: AnalyzedPrediction[]; finishedMatches: StatsMatch[] } => {
   const predictionsByMatchId = new Map((predictions || []).map(pred => [pred.match_id, pred]))
 
   const finishedMatches = (matches || []).filter(match => match.is_finished)

@@ -8,9 +8,9 @@
  * ese equipo le dieron puntos. Un equipo puede aparecer en la primera sin
  * aparecer en las otras dos (ver el comentario de `matches` más abajo).
  */
-import type { TeamSummary, Uuid } from '../../types/domain'
+import type { Uuid } from '../../types/domain'
 import { classifyPrediction } from './accuracy'
-import type { AnalyzedPrediction, TeamRead, TeamStats } from './types'
+import type { AnalyzedPrediction, StatsTeam, TeamRead, TeamStats } from './types'
 
 /**
  * Debajo de esta cantidad de partidos el porcentaje de acierto no dice nada: con
@@ -20,7 +20,7 @@ export const MIN_TEAM_PREDICTIONS = 3
 
 /** Lo que se acumula por equipo mientras se recorren los pronósticos. */
 interface TeamRecord {
-  team: TeamSummary
+  team: StatsTeam
   matches: number
   correctMatches: number
   predictedWinnerCount: number
@@ -28,7 +28,7 @@ interface TeamRecord {
 
 const getTeamRecord = (
   records: Map<Uuid, TeamRecord>,
-  team: TeamSummary | null | undefined
+  team: StatsTeam | null | undefined
 ): TeamRecord | null => {
   if (!team?.id) return null
 

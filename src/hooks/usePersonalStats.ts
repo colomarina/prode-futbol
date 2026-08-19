@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { isHiddenPlayer } from '../constants/hiddenPlayers'
 import { buildTournamentStats, emptyStats, normalizeStats } from '../utils/stats'
+import type { TournamentStats } from '../utils/stats'
+import type { Uuid } from '../types/domain'
 
 /**
  * Trae todo lo necesario para las estadísticas del torneo.
@@ -10,8 +12,11 @@ import { buildTournamentStats, emptyStats, normalizeStats } from '../utils/stats
  * `round_scores` no depende de los partidos —le alcanza con el torneo—, así que
  * corre en paralelo con ellos. Solo los pronósticos tienen que esperar, porque
  * necesitan los ids de los partidos. Antes eran tres consultas encadenadas.
+ *
+ * Los selects traen **exactamente** lo que declara `StatsMatch` / `StatsPrediction`
+ * en `utils/stats/types.ts`: si acá se saca una columna, los cálculos no compilan.
  */
-const fetchTournamentStats = async (userId, tournamentId) => {
+const fetchTournamentStats = async (userId: Uuid, tournamentId: Uuid): Promise<TournamentStats> => {
   const [matchesResult, roundScoresResult] = await Promise.all([
     supabase
       .from('matches')
@@ -61,17 +66,20 @@ const fetchTournamentStats = async (userId, tournamentId) => {
   return buildTournamentStats(tournamentMatches, predictionsData || [], visibleRoundScores, userId)
 }
 
-export const usePersonalStats = (userId, tournamentId = null) => {
+export const usePersonalStats = (userId: Uuid | null, tournamentId: Uuid | null = null) => {
   const { data, isPending, error } = useQuery({
     queryKey: queryKeys.personalStats(tournamentId, userId),
     enabled: Boolean(userId),
-    queryFn: async () => {
+    queryFn: async (): Promise<TournamentStats> => {
       if (tournamentId) return fetchTournamentStats(userId, tournamentId)
 
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_personal_stats')
 
       if (rpcError) throw rpcError
-      return normalizeStats(rpcData || {})
+      // La RPC devuelve `Json`: no hay forma de que el esquema generado diga más que
+      // eso, así que `normalizeStats` es lo único que garantiza la forma. De ahí que
+      // sea el único lugar con un cast en toda la cadena de estadísticas.
+      return normalizeStats((rpcData ?? {}) as Partial<TournamentStats>)
     },
   })
 

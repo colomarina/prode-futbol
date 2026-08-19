@@ -10,15 +10,46 @@
  * salen de la base ni llegan a la pantalla, viven entre los módulos de esta
  * carpeta.
  */
-import type { MatchWithTeams, Prediction } from '../../types/domain'
+import type { Match, Prediction, RoundScore, Team } from '../../types/domain'
+
+/** Del equipo alcanza con el id (para agrupar) y el nombre (para mostrar). */
+export type StatsTeam = Pick<Team, 'id' | 'name'>
+
+/**
+ * El partido, con **exactamente** las columnas que usan los cálculos de esta
+ * carpeta: el select de `usePersonalStats` trae eso y nada más.
+ *
+ * Estaba tipado como `MatchWithTeams` (la fila entera con los tres equipos), que
+ * era más de lo que el único llamador manda: obligaba a traer columnas al servidor
+ * para satisfacer un tipo, que es al revés de como tiene que ser.
+ */
+export interface StatsMatch extends Pick<
+  Match,
+  'id' | 'round_number' | 'match_date' | 'home_score' | 'away_score' | 'is_finished'
+> {
+  home_team: StatsTeam | null
+  away_team: StatsTeam | null
+}
+
+/**
+ * De `round_scores`, las tres columnas que se usan. El select embebe además el
+ * perfil, para descartar jugadores ocultos; los campos de más no molestan.
+ */
+export type StatsRoundScore = Pick<RoundScore, 'user_id' | 'round_number' | 'total_points'>
+
+/** Del pronóstico, solo lo que hace falta para clasificarlo y sumarlo. */
+export type StatsPrediction = Pick<
+  Prediction,
+  'match_id' | 'home_prediction' | 'away_prediction' | 'points'
+>
 
 /**
  * Un partido terminado junto con el pronóstico que el usuario cargó para él. Es
  * la entrada de **todos** los cálculos de esta carpeta.
  */
 export interface AnalyzedPrediction {
-  match: MatchWithTeams
-  prediction: Prediction
+  match: StatsMatch
+  prediction: StatsPrediction
 }
 
 /** Resultado visto desde el local: 1 gana local, -1 gana visitante, 0 empate. */
@@ -106,8 +137,8 @@ export interface TeamStats {
 
 /** El mejor pronóstico del torneo, con el partido para poder mostrarlo. */
 export interface BestMatchRecord {
-  match: MatchWithTeams
-  prediction: Prediction
+  match: StatsMatch
+  prediction: StatsPrediction
   points: number
 }
 

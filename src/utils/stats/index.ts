@@ -11,7 +11,7 @@
  * arma la forma final. Que ahora sean varias pasadas sobre el mismo array no
  * cambia nada: son decenas de partidos, no miles.
  */
-import type { MatchWithTeams, Prediction, RoundScore, Uuid } from '../../types/domain'
+import type { Uuid } from '../../types/domain'
 import { collectAnalyzedPredictions } from './analyzed'
 import { buildAccuracyBreakdown, countScoringPredictions, sumPoints } from './accuracy'
 import { buildRoundTotals } from './rounds'
@@ -19,7 +19,7 @@ import { buildTeamStats } from './teamReads'
 import { buildPositionHistory, buildOverallRanking, buildHistory } from './positions'
 import { buildStreaks } from './streaks'
 import { findBestMatch } from './records'
-import type { TournamentStats } from './types'
+import type { StatsMatch, StatsPrediction, StatsRoundScore, TournamentStats } from './types'
 
 export { emptyStats, normalizeStats } from './emptyStats'
 export type * from './types'
@@ -30,9 +30,9 @@ export type * from './types'
  * @param roundScores filas de `round_scores` del torneo, ya sin jugadores ocultos
  */
 export const buildTournamentStats = (
-  matches: MatchWithTeams[] | null | undefined,
-  predictions: Prediction[] | null | undefined,
-  roundScores: RoundScore[] | null | undefined,
+  matches: StatsMatch[] | null | undefined,
+  predictions: StatsPrediction[] | null | undefined,
+  roundScores: StatsRoundScore[] | null | undefined,
   userId: Uuid
 ): TournamentStats => {
   const { analyzedPredictions, finishedMatches } = collectAnalyzedPredictions(matches, predictions)

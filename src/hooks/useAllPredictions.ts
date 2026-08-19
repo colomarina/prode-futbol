@@ -8,30 +8,46 @@ import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 import { hasMatchStarted } from '../utils/matchTiming'
+import type { Prediction, Profile, Uuid } from '../types/domain'
+
+/** Las dos formas de mirar los pronósticos ajenos. */
+export type AllPredictionsViewMode = 'by-match' | 'by-user'
+
+/** El jugador tal como lo trae el selector: sin el resto del perfil. */
+export type PredictionsUser = Pick<Profile, 'id' | 'username' | 'full_name'>
+
+/** Pronósticos indexados por una de sus columnas, para buscar en O(1). */
+export type PredictionsByKey = Record<string, Prediction>
 
 /** Mapa vacío compartido, para no devolver un `{}` nuevo en cada render. */
-const EMPTY_MAP = {}
+const EMPTY_MAP: PredictionsByKey = {}
 
 /** Convierte una lista de pronósticos en un mapa por la clave indicada. */
-const indexBy = (predictions, key) =>
+const indexBy = (
+  predictions: Prediction[] | null | undefined,
+  key: 'match_id' | 'user_id'
+): PredictionsByKey =>
   Object.fromEntries((predictions || []).map(prediction => [prediction[key], prediction]))
 
-export function useAllPredictions({ initialRound = null, initialUser = '' } = {}) {
+export function useAllPredictions({
+  initialRound = null,
+  initialUser = '',
+}: { initialRound?: number | null; initialUser?: Uuid | '' } = {}) {
   const { activeTournament } = useTournament()
-  const tournamentId = activeTournament?.id
+  const tournamentId = activeTournament?.id ?? null
   const { rounds, loading: roundsLoading } = useRounds(tournamentId)
   const { matchesMeta } = useMatchesMeta(tournamentId)
 
-  const [selectedRound, setSelectedRound] = useState(initialRound || null)
-  const [selectedUser, setSelectedUser] = useState('')
-  const [selectedMatchId, setSelectedMatchId] = useState(null)
-  const [viewMode, setViewMode] = useState('by-match')
+  const [selectedRound, setSelectedRound] = useState<number | null>(initialRound || null)
+  const [selectedUser, setSelectedUser] = useState<Uuid | ''>('')
+  const [selectedMatchId, setSelectedMatchId] = useState<Uuid | null>(null)
+  const [viewMode, setViewMode] = useState<AllPredictionsViewMode>('by-match')
 
   const { matches, loading: matchesLoading } = useMatches(selectedRound, tournamentId)
 
   const { data: users } = useQuery({
     queryKey: queryKeys.profiles(),
-    queryFn: async () => {
+    queryFn: async (): Promise<PredictionsUser[]> => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, full_name')
@@ -113,7 +129,7 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
   const roundPredictionsQuery = useQuery({
     queryKey: queryKeys.predictionsOfUserInRound(tournamentId, selectedRound, selectedUser),
     enabled: roundPredictionsEnabled,
-    queryFn: async () => {
+    queryFn: async (): Promise<PredictionsByKey> => {
       const { data, error } = await supabase
         .from('predictions')
         .select('*')
@@ -134,7 +150,7 @@ export function useAllPredictions({ initialRound = null, initialUser = '' } = {}
   const matchPredictionsQuery = useQuery({
     queryKey: queryKeys.predictionsByMatch(tournamentId, selectedMatchId),
     enabled: matchPredictionsEnabled,
-    queryFn: async () => {
+    queryFn: async (): Promise<PredictionsByKey> => {
       const { data, error } = await supabase
         .from('predictions')
         .select('*')

@@ -3,9 +3,21 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
+import type { Fn, Uuid } from '../types/domain'
+
+/** Cuánto pronosticó un jugador en una fecha, ya normalizado para la UI. */
+export interface PlayerProgress {
+  id: Uuid
+  name: string
+  totalMatches: number
+  predictedCount: number
+  missingMatches: number[]
+  progress: number
+  roundNumber: number
+}
 
 /** Referencia estable: `data ?? []` crea un array nuevo en cada render. */
-const EMPTY_PROGRESS = []
+const EMPTY_PROGRESS: PlayerProgress[] = []
 
 /**
  * Las dos variantes con scope de torneo, en orden de preferencia.
@@ -19,9 +31,22 @@ const EMPTY_PROGRESS = []
 export const SCOPED_RPC_NAMES = [
   'get_round_predictions_summary_by_tournament_v2',
   'get_round_predictions_summary_by_tournament',
-]
+] as const
 
-const fetchScopedProgress = async (tournamentId, roundNumber) => {
+/**
+ * Lo que devuelven las dos RPC, **derivado del esquema generado** en vez de escrito
+ * a mano: las dos declaran la misma forma.
+ *
+ * Escribirlo a mano ya salió mal una vez: se había tipado `missing_matches` como
+ * un número cuando es `number[]` —los números de los partidos que faltan, que es
+ * lo que `PlayerProgressRow` lista— y el compilador lo marcó.
+ */
+type ProgressRow = Fn<'get_round_predictions_summary_by_tournament_v2'>['Returns'][number]
+
+const fetchScopedProgress = async (
+  tournamentId: Uuid,
+  roundNumber: number
+): Promise<ProgressRow[]> => {
   let lastError = null
 
   for (const rpcName of SCOPED_RPC_NAMES) {
@@ -41,7 +66,7 @@ const fetchScopedProgress = async (tournamentId, roundNumber) => {
   throw lastError || new Error('No se pudo consultar el progreso de la fecha')
 }
 
-const toPlayerProgress = (rows, roundNumber) =>
+const toPlayerProgress = (rows: ProgressRow[], roundNumber: number): PlayerProgress[] =>
   filterHiddenPlayers(
     rows.map(row => ({
       id: row.user_id,
@@ -49,7 +74,9 @@ const toPlayerProgress = (rows, roundNumber) =>
       totalMatches: row.total_matches,
       predictedCount: row.predicted_count,
       missingMatches: row.missing_matches,
-      progress: parseFloat(row.progress),
+      // El esquema dice `number`, pero PostgREST serializa `numeric` como string
+      // según la versión: el `parseFloat` es la defensa que ya estaba y se queda.
+      progress: parseFloat(String(row.progress)),
       roundNumber: row.round_number ?? roundNumber,
     }))
   )
@@ -64,26 +91,28 @@ const toPlayerProgress = (rows, roundNumber) =>
  * Sin `roundNumber` la query queda deshabilitada: no hay fecha activa que
  * consultar.
  *
- * @param {string|null} tournamentId
- * @param {number|null} roundNumber
+ * **Sin torneo tampoco se consulta.** Antes esta rama llamaba a
+ * `get_round_predictions_summary` (la variante sin scope), y el esquema generado
+ * mostró que **esa función no existe en la base**: la llamada habría fallado con un
+ * 404 de PostgREST. El comentario original ya decía que en la práctica no se llega
+ * —la UI siempre tiene un torneo activo—, así que ahora falla explícito en vez de
+ * pedirle a la base algo que no está.
  */
-export const useRoundProgress = (tournamentId = null, roundNumber = null) => {
+export const useRoundProgress = (
+  tournamentId: Uuid | null = null,
+  roundNumber: number | null = null
+) => {
   const enabled = roundNumber !== null && roundNumber !== undefined
 
   const { data, isPending, error } = useQuery({
     queryKey: queryKeys.roundProgress(tournamentId, roundNumber),
     enabled,
-    queryFn: async () => {
-      if (tournamentId) return fetchScopedProgress(tournamentId, roundNumber)
+    queryFn: async (): Promise<ProgressRow[]> => {
+      if (!tournamentId) {
+        throw new Error('El progreso de la fecha necesita un torneo: no hay variante sin scope')
+      }
 
-      // Sin torneo no hay nada que mezclar, así que acá sí sirve la variante sin
-      // scope. En la práctica no se llega: la UI siempre tiene un torneo activo.
-      const { data: rows, error: rpcError } = await supabase.rpc('get_round_predictions_summary', {
-        round_num: roundNumber,
-      })
-
-      if (rpcError) throw rpcError
-      return rows || []
+      return fetchScopedProgress(tournamentId, roundNumber)
     },
   })
 

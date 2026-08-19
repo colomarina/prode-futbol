@@ -5,9 +5,50 @@ import { queryKeys } from '../lib/queryKeys'
 import { filterHiddenPlayers } from '../constants/hiddenPlayers'
 import { compareByPoints } from '../utils/ranking'
 import { WORLD_CUP_STANDALONE_ROUNDS } from '../utils/leaderboardRounds'
+import type { Profile, Uuid } from '../types/domain'
 
-const buildLeaderboardFromRoundScores = roundScoresData => {
-  const totalsByUser = new Map()
+/**
+ * Una fila de la tabla de posiciones.
+ *
+ * Sale de **tres fuentes distintas** que la UI trata igual: la agregación de
+ * `round_scores` que se hace acá, la vista `general_leaderboard`, y la RPC
+ * `get_tournament_leaderboard_with_bonus`. Este tipo es el mínimo común de las
+ * tres, y escribirlo sirvió para ver en qué se diferencian:
+ *
+ * - `bonus_points` **solo** viene de la RPC, o sea solo en la general del Mundial.
+ * - `round_number` solo aparece en la tabla de una fecha y en la de playoffs.
+ * - `id` puede ser null y eso es real: en la vista `general_leaderboard` todas las
+ *   columnas son nullables. La agregación de acá descarta las filas sin
+ *   `profiles.id`, así que por ese camino nunca es null. La rama de la vista es la
+ *   que `App.jsx` prácticamente no deja alcanzar y que el plan propone borrar en la
+ *   fase 9; cuando se prenda `strict` conviene resolver las dos cosas juntas.
+ */
+export interface LeaderboardEntry {
+  id: Uuid | null
+  username: string | null
+  full_name: string | null
+  avatar_url: string | null
+  total_points: number
+  rounds_played: number
+  bonus_points?: number
+  round_number?: number | 'playoffs'
+}
+
+/** El perfil embebido en `round_scores`, que es de donde salen nombre y avatar. */
+type PerfilEmbebido = Pick<Profile, 'id' | 'username' | 'full_name' | 'avatar_url'>
+
+/** Una fila de `round_scores` tal como la piden los selects de abajo. */
+interface RoundScoreRow {
+  user_id: Uuid
+  total_points: number | null
+  round_number?: number
+  profiles: PerfilEmbebido | null
+}
+
+const buildLeaderboardFromRoundScores = (
+  roundScoresData: RoundScoreRow[] | null | undefined
+): LeaderboardEntry[] => {
+  const totalsByUser = new Map<Uuid, LeaderboardEntry>()
 
   ;(roundScoresData || []).forEach(item => {
     if (!item?.profiles?.id) return
@@ -38,7 +79,7 @@ const buildLeaderboardFromRoundScores = roundScoresData => {
   )
 }
 
-const fetchTournamentRoundNumbers = async tournamentId => {
+const fetchTournamentRoundNumbers = async (tournamentId: Uuid | null): Promise<number[] | null> => {
   if (!tournamentId) return null
 
   const { data, error } = await supabase
@@ -66,8 +107,18 @@ const PROFILE_FIELDS = `
  * Los `round_number` se repiten entre torneos, así que una consulta sin
  * `tournament_id` no falla: suma los puntos de todos. Nunca agregar un fallback
  * que quite ese filtro.
+ *
+ * El select se arma con una condición, así que supabase-js no puede inferir la
+ * forma —para eso el string tiene que ser literal— y el tipo de acá es una
+ * declaración y no una verificación. Es el único lugar de la capa de datos donde
+ * pasa: el resto de los hooks tienen selects literales y ahí el tipo sí se chequea
+ * contra el esquema.
  */
-const fetchRoundScoresByRounds = async (tournamentId, roundNumbers, includeRoundInSelect) => {
+const fetchRoundScoresByRounds = async (
+  tournamentId: Uuid | null,
+  roundNumbers: number[] | null | undefined,
+  includeRoundInSelect: boolean
+): Promise<RoundScoreRow[]> => {
   if (!roundNumbers?.length) return []
 
   const baseSelect = includeRoundInSelect
@@ -83,7 +134,7 @@ const fetchRoundScoresByRounds = async (tournamentId, roundNumbers, includeRound
   const { data, error } = await query
 
   if (error) throw error
-  return data || []
+  return (data as unknown as RoundScoreRow[]) || []
 }
 
 /**
@@ -94,8 +145,16 @@ const fetchRoundScoresByRounds = async (tournamentId, roundNumbers, includeRound
  * 16avos y octavos quedan afuera de la tabla agregada de playoffs porque tienen
  * tabla propia.
  */
-export const fetchLeaderboardData = async ({ roundNumber, tournamentId, isWorldCupTournament }) => {
-  const tournamentRoundNumbers = await fetchTournamentRoundNumbers(tournamentId)
+export const fetchLeaderboardData = async ({
+  roundNumber,
+  tournamentId,
+  isWorldCupTournament,
+}: {
+  roundNumber?: number | 'playoffs' | null
+  tournamentId?: Uuid | null
+  isWorldCupTournament?: boolean
+}): Promise<LeaderboardEntry[]> => {
+  const tournamentRoundNumbers = await fetchTournamentRoundNumbers(tournamentId ?? null)
 
   const normalizedRoundNumber =
     roundNumber !== null && roundNumber !== undefined && roundNumber !== 'playoffs'
@@ -132,26 +191,24 @@ export const fetchLeaderboardData = async ({ roundNumber, tournamentId, isWorldC
     return filterHiddenPlayers(
       buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
         ...item,
-        round_number: 'playoffs',
+        round_number: 'playoffs' as const,
       }))
     )
   }
 
   if (normalizedRoundNumber) {
-    if (tournamentId && !tournamentRoundNumbers.includes(normalizedRoundNumber)) {
+    const roundToFetch = Number(normalizedRoundNumber)
+
+    if (tournamentId && !tournamentRoundNumbers.includes(roundToFetch)) {
       return []
     }
 
-    const roundScoresData = await fetchRoundScoresByRounds(
-      tournamentId,
-      [normalizedRoundNumber],
-      false
-    )
+    const roundScoresData = await fetchRoundScoresByRounds(tournamentId, [roundToFetch], false)
 
     return filterHiddenPlayers(
       buildLeaderboardFromRoundScores(roundScoresData).map(item => ({
         ...item,
-        round_number: normalizedRoundNumber,
+        round_number: roundToFetch,
       }))
     )
   }
@@ -179,8 +236,8 @@ export const fetchLeaderboardData = async ({ roundNumber, tournamentId, isWorldC
 }
 
 export const useLeaderboard = (
-  roundNumber = null,
-  tournamentId = null,
+  roundNumber: number | 'playoffs' | null = null,
+  tournamentId: Uuid | null = null,
   isWorldCupTournament = false
 ) => {
   const queryClient = useQueryClient()

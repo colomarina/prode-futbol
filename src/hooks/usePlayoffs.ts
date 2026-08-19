@@ -3,28 +3,59 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { useAuth } from '../contexts/AuthContext'
+import type { MatchWithTeams, PlayoffStage, Prediction, Uuid } from '../types/domain'
 
-const STAGES = ['32avos', '16avos', 'octavos', 'cuartos', 'semifinal', 'final']
+/**
+ * Las seis rondas de playoff. Es el mismo conjunto que el CHECK de
+ * `matches.playoff_stage`, y el tipo lo garantiza: si la unión de `domain.ts` cambia,
+ * este array deja de compilar.
+ */
+const STAGES: PlayoffStage[] = ['32avos', '16avos', 'octavos', 'cuartos', 'semifinal', 'final']
 
-const emptyMatchesByStage = {
+/**
+ * `matches.playoff_stage` es `string | null` en el esquema —es un CHECK, no un enum—,
+ * así que hace falta estrechar. El único cast de la cadena vive acá, en un predicado
+ * con nombre, en vez de repetirse en cada uso.
+ */
+const isPlayoffStage = (value: string | null): value is PlayoffStage =>
+  value !== null && (STAGES as string[]).includes(value)
+
+/** El bracket: los partidos de cada ronda, siempre con las seis claves presentes. */
+export type MatchesByStage = Record<PlayoffStage, MatchWithTeams[]>
+
+/**
+ * Un objeto **nuevo** en cada llamada, y eso es lo importante: si los arrays se
+ * compartieran entre llamadas, el `push` de abajo acumularía los partidos de todas.
+ * Antes esto era una constante de módulo más un segundo spread que la sobrescribía
+ * con arrays frescos; el segundo spread parecía redundante y era lo único que
+ * evitaba el bug.
+ */
+const emptyMatchesByStage = (): MatchesByStage => ({
   '32avos': [],
   '16avos': [],
   octavos: [],
   cuartos: [],
   semifinal: [],
   final: [],
-}
+})
 
-const groupByStage = matches => {
-  const grouped = { ...emptyMatchesByStage, ...Object.fromEntries(STAGES.map(s => [s, []])) }
+const groupByStage = (matches: MatchWithTeams[] | null | undefined): MatchesByStage => {
+  const grouped = emptyMatchesByStage()
 
   ;(matches || []).forEach(match => {
-    if (!STAGES.includes(match.playoff_stage)) return
-    grouped[match.playoff_stage].push(match)
+    const stage = match.playoff_stage
+    if (!isPlayoffStage(stage)) return
+    grouped[stage].push(match)
   })
 
   return grouped
 }
+
+/** Del pronóstico de un playoff se lee el marcador, los puntos y el clasificado. */
+export type PlayoffPrediction = Pick<
+  Prediction,
+  'match_id' | 'home_prediction' | 'away_prediction' | 'points' | 'qualifier_prediction_id'
+>
 
 /**
  * Bracket de playoffs y los pronósticos del usuario para esos partidos.
@@ -32,16 +63,14 @@ const groupByStage = matches => {
  * Los pronósticos siguen dependiendo de los partidos (necesitan sus ids), así
  * que el encadenamiento acá es real y se modela con `enabled`, no con un await
  * dentro del mismo fetch.
- *
- * @param {string|null} tournamentId
  */
-export function usePlayoffs(tournamentId = null) {
+export function usePlayoffs(tournamentId: Uuid | null = null) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
   const matchesQuery = useQuery({
     queryKey: queryKeys.playoffMatches(tournamentId),
-    queryFn: async () => {
+    queryFn: async (): Promise<MatchWithTeams[]> => {
       let query = supabase
         .from('matches')
         .select(
@@ -76,7 +105,7 @@ export function usePlayoffs(tournamentId = null) {
   const predictionsQuery = useQuery({
     queryKey: queryKeys.playoffPredictions(tournamentId, user?.id),
     enabled: Boolean(user?.id) && playoffMatchIds.length > 0,
-    queryFn: async () => {
+    queryFn: async (): Promise<PlayoffPrediction[]> => {
       const { data, error } = await supabase
         .from('predictions')
         .select('match_id, home_prediction, away_prediction, points, qualifier_prediction_id')

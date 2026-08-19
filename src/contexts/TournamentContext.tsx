@@ -1,12 +1,33 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { applyTournamentTheme } from '../config/tournaments.config.js'
+import type { Tournament } from '../types/domain'
 
-const TournamentContext = createContext()
+export interface TournamentContextValue {
+  tournaments: Tournament[]
+  activeTournament: Tournament | null
+  setActiveTournament: (tournament: Tournament | null) => void
+  applyTheme: (slug: string, isDark: boolean) => void
+  loading: boolean
+  /** Torneo cerrado a escrituras. Es la única definición de "modo consulta". */
+  isReadOnly: boolean
+}
 
-export const TournamentProvider = ({ children }) => {
-  const [tournaments, setTournaments] = useState([])
-  const [activeTournament, setActiveTournamentState] = useState(null)
+/**
+ * El default es `null` y está tipado.
+ *
+ * Antes era `createContext()` sin argumento, y eso tipaba el contexto como
+ * `undefined`: después del `if (!context) throw` de abajo el tipo quedaba en
+ * `never`, así que **cualquier** propiedad que se le pidiera compilaba. No era una
+ * falta de tipos, era un tipo que aceptaba todo, que es peor: `useHomePath` leía
+ * `isReadOnly` sin que nada lo verificara.
+ */
+const TournamentContext = createContext<TournamentContextValue | null>(null)
+
+export const TournamentProvider = ({ children }: { children: ReactNode }) => {
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [activeTournament, setActiveTournamentState] = useState<Tournament | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Fetch tournaments from Supabase on mount
@@ -46,11 +67,8 @@ export const TournamentProvider = ({ children }) => {
     fetchTournaments()
   }, [])
 
-  /**
-   * Set active tournament and apply its theme
-   * @param {Object|null} tournament - Tournament object or null to clear
-   */
-  const setActiveTournament = useCallback(tournament => {
+  /** Elige el torneo activo y aplica su tema. `null` lo limpia. */
+  const setActiveTournament = useCallback((tournament: Tournament | null): void => {
     if (!tournament) {
       setActiveTournamentState(null)
       localStorage.removeItem('active_tournament_slug')
@@ -65,12 +83,8 @@ export const TournamentProvider = ({ children }) => {
     applyTournamentTheme(tournament.slug, isDark)
   }, [])
 
-  /**
-   * Apply tournament theme to document root
-   * @param {string} slug - Tournament slug
-   * @param {boolean} isDark - Whether to apply dark theme
-   */
-  const applyTheme = useCallback((slug, isDark) => {
+  /** Aplica el tema del torneo en el root del documento. */
+  const applyTheme = useCallback((slug: string, isDark: boolean): void => {
     applyTournamentTheme(slug, isDark)
   }, [])
 
@@ -96,12 +110,8 @@ export const TournamentProvider = ({ children }) => {
   return <TournamentContext.Provider value={value}>{children}</TournamentContext.Provider>
 }
 
-/**
- * Hook to use Tournament context
- * @returns {Object} Tournament context value
- */
 // eslint-disable-next-line react-refresh/only-export-components
-export const useTournament = () => {
+export const useTournament = (): TournamentContextValue => {
   const context = useContext(TournamentContext)
   if (!context) {
     throw new Error('useTournament must be used within TournamentProvider')

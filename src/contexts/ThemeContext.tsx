@@ -1,9 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { applyTournamentTheme } from '../config/tournaments.config.js'
 
-const ThemeContext = createContext({})
+export interface ThemeContextValue {
+  isDark: boolean
+  toggleTheme: () => void
+}
 
-export function ThemeProvider({ children }) {
+/** Tipado y en `null`, por el mismo motivo que en `TournamentContext`. */
+const ThemeContext = createContext<ThemeContextValue | null>(null)
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(() => {
     // Obtener preferencia guardada o usar preferencia del sistema
     const saved = localStorage.getItem('theme')
@@ -26,7 +33,7 @@ export function ThemeProvider({ children }) {
     }
   }, [isDark])
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = useCallback((): void => {
     setIsDark(prev => !prev)
   }, [])
 
@@ -38,7 +45,7 @@ export function ThemeProvider({ children }) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function useTheme() {
+export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext)
   if (!context) {
     throw new Error('useTheme debe ser usado dentro de ThemeProvider')

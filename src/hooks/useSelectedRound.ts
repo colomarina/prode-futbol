@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Round, Uuid } from '../types/domain'
 
 /**
  * Qué fecha está mirando el usuario, y cuál se elige sola cuando no eligió nada.
@@ -14,16 +15,24 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
  *   3. Cambiar de torneo borra la selección: los `round_number` se repiten entre
  *      torneos, así que conservarla mostraría la fecha equivocada.
  *
- * @param {{ tournamentId?: string|null, rounds?: Array, activeRound?: object|null, loading?: boolean }} params
- * @returns {{ selectedRound: number|null, availableRounds: Array, selectRound: (roundNumber: number) => void, followActiveRound: () => void }}
  */
-export const useSelectedRound = ({ tournamentId, rounds, activeRound, loading = false }) => {
+export const useSelectedRound = ({
+  tournamentId,
+  rounds,
+  activeRound,
+  loading = false,
+}: {
+  tournamentId?: Uuid | null
+  rounds?: Round[] | null
+  activeRound?: Round | null
+  loading?: boolean
+}) => {
   /**
    * Arranca en null a propósito, incluso si `activeRound` ya vino del cache: la
    * auto-selección de abajo la resuelve igual, y sembrarla acá pedía los partidos
    * de una fecha que el efecto de reset volvía a poner en null en el mismo commit.
    */
-  const [selectedRound, setSelectedRound] = useState(null)
+  const [selectedRound, setSelectedRound] = useState<number | null>(null)
   const hasManualSelection = useRef(false)
 
   /** Descendente: la fecha más nueva primero, que es la que el usuario busca. */
@@ -32,7 +41,7 @@ export const useSelectedRound = ({ tournamentId, rounds, activeRound, loading = 
     [rounds]
   )
 
-  const selectRound = useCallback(roundNumber => {
+  const selectRound = useCallback((roundNumber: number): void => {
     hasManualSelection.current = true
     setSelectedRound(roundNumber)
   }, [])
@@ -44,7 +53,7 @@ export const useSelectedRound = ({ tournamentId, rounds, activeRound, loading = 
    * selección apaga la marca de manual, así que si mientras la pantalla está
    * abierta se abre la fecha siguiente, el usuario la sigue.
    */
-  const followActiveRound = useCallback(() => {
+  const followActiveRound = useCallback((): void => {
     if (!activeRound) return
 
     hasManualSelection.current = false
