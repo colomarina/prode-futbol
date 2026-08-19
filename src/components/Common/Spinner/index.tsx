@@ -1,4 +1,18 @@
+import type { CSSProperties } from 'react'
 import styles from './Spinner.module.css'
+
+interface SpinnerProps {
+  size?: number
+  borderWidth?: number
+  color?: string
+  trackColor?: string
+}
+
+/**
+ * React no tipa las custom properties dentro de `style`, y el spinner se configura
+ * entero con ellas. Declararlas asi evita el cast que haria falta si no.
+ */
+type EstiloConVariables = CSSProperties & Record<`--${string}`, string>
 
 /**
  * El único spinner de la app.
@@ -16,23 +30,18 @@ export default function Spinner({
   borderWidth = 4,
   color = 'var(--color-primary)',
   trackColor,
-}) {
+}: SpinnerProps) {
   // La pista es el mismo color pero apenas visible, así que se deriva en vez de
   // pedirla: quien pasa `color="var(--color-error)"` no tiene que acordarse de
   // pasar también el rojo transparente.
   const track = trackColor ?? `color-mix(in srgb, ${color} 12%, transparent)`
 
-  return (
-    <div
-      role="status"
-      aria-label="Cargando"
-      className={styles.spinner}
-      style={{
-        '--spinner-size': `${size}px`,
-        '--spinner-border': `${borderWidth}px`,
-        '--spinner-color': color,
-        '--spinner-track': track,
-      }}
-    />
-  )
+  const estilo: EstiloConVariables = {
+    '--spinner-size': `${size}px`,
+    '--spinner-border': `${borderWidth}px`,
+    '--spinner-color': color,
+    '--spinner-track': track,
+  }
+
+  return <div role="status" aria-label="Cargando" className={styles.spinner} style={estilo} />
 }

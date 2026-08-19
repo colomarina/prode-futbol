@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import TextInput from '../TextInput'
 import IconButton from '../IconButton'
+import type { ComponentProps } from 'react'
 import styles from './PasswordInput.module.css'
 
 /**
@@ -14,7 +15,7 @@ import styles from './PasswordInput.module.css'
  * propio ojo y ningún consumidor necesitaba leerlo. Para reiniciarlo desde afuera
  * —por ejemplo al cambiar de vista— alcanza con cambiarle la `key`.
  */
-export default function PasswordInput({ className = '', ...props }) {
+export default function PasswordInput({ className = '', ...props }: ComponentProps<'input'>) {
   const [visible, setVisible] = useState(false)
 
   return (

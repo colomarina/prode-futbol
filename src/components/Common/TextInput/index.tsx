@@ -1,4 +1,13 @@
+import type { ComponentProps, HTMLAttributes } from 'react'
 import styles from './TextInput.module.css'
+
+/** El teclado que se pide en mobile: `false` lo suprime, un string elige uno. */
+type MobileKeyboard = false | HTMLAttributes<HTMLInputElement>['inputMode']
+
+interface TextInputProps extends ComponentProps<'input'> {
+  numeric?: boolean
+  mobileKeyboard?: MobileKeyboard
+}
 
 export default function TextInput({
   className = '',
@@ -7,7 +16,7 @@ export default function TextInput({
   inputMode,
   pattern,
   ...props
-}) {
+}: TextInputProps) {
   const inputClassName = className ? `${styles.input} ${className}` : styles.input
 
   const resolvedInputMode =

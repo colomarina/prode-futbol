@@ -1,4 +1,13 @@
+import type { ComponentProps } from 'react'
 import styles from './Badge.module.css'
+
+export type BadgeTone = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'neutral'
+
+interface BadgeProps extends ComponentProps<'span'> {
+  tone?: BadgeTone
+  shape?: 'rounded' | 'pill'
+  size?: 'sm' | 'md'
+}
 
 /**
  * La píldora de una palabra: el número de partido, el estado, el grupo.
@@ -6,10 +15,6 @@ import styles from './Badge.module.css'
  * `style` queda abierto porque el badge de grupo del Mundial recibe sus colores
  * de `getGroupBadgeColors`, que devuelve un par distinto por grupo y no se puede
  * expresar como una variante fija.
- *
- * @param {'primary'|'success'|'error'|'warning'|'info'|'neutral'} tone
- * @param {'rounded'|'pill'} shape
- * @param {'sm'|'md'} size
  */
 export default function Badge({
   tone = 'primary',
@@ -18,7 +23,7 @@ export default function Badge({
   className = '',
   children,
   ...props
-}) {
+}: BadgeProps) {
   const clases = [
     styles.badge,
     styles[tone],

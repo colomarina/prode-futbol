@@ -1,4 +1,5 @@
 import { cloneElement, isValidElement, useId } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import styles from './FormField.module.css'
 
 /**
@@ -18,42 +19,57 @@ import styles from './FormField.module.css'
  * 3. Varios controles bajo una etiqueta —una fecha y una hora—: no hay un `for`
  *    posible, así que va `group`, con `role="group"` + `aria-labelledby`.
  *
- * @param {string} label
- * @param {string} [error]
- * @param {boolean} [group] - La etiqueta nombra a varios controles, no a uno.
  */
-export default function FormField({
-  label,
-  error,
-  group = false,
-  className = '',
-  style,
-  children,
-}) {
+interface FormFieldBase {
+  label: ReactNode
+  error?: ReactNode
+  className?: string
+  style?: CSSProperties
+}
+
+/**
+ * El tipo distingue los dos modos, y eso no es un detalle de tipado: en modo grupo
+ * **no hay un `id` unico** que inyectar —es el motivo por el que ese modo existe—,
+ * asi que un hijo funcion no tendria a que aplicarse. Antes los dos casos
+ * compartian la firma y pasar una funcion con `group` reventaba en runtime con
+ * "Functions are not valid as a React child".
+ */
+type FormFieldProps = FormFieldBase &
+  (
+    | { group: true; children?: ReactNode }
+    | { group?: false; children?: ReactNode | ((id: string) => ReactNode) }
+  )
+export default function FormField(props: FormFieldProps) {
+  const { label, error, className = '', style } = props
   const id = useId()
   const labelId = `${id}-label`
   const errorId = `${id}-error`
 
   const clases = [styles.field, className].filter(Boolean).join(' ')
 
-  if (group) {
+  if (props.group) {
     return (
       <div className={clases} style={style}>
         <span id={labelId} className={styles.label}>
           {label}
         </span>
         <div role="group" aria-labelledby={labelId} className={styles.group}>
-          {children}
+          {props.children}
         </div>
         {error && <div className={styles.error}>{error}</div>}
       </div>
     )
   }
 
+  const { children } = props
+
   const control =
     typeof children === 'function'
       ? children(id)
-      : isValidElement(children)
+      : // El parametro de tipo es lo que permite clonar con props extra sin un cast:
+        // sin el, `children` queda como `ReactElement<unknown>` y `cloneElement` no
+        // acepta `id` ni los `aria-*`.
+        isValidElement<Record<string, unknown>>(children)
         ? cloneElement(children, {
             id,
             'aria-invalid': error ? true : undefined,

@@ -2,14 +2,30 @@ import { useEffect } from 'react'
 import IconButton from '../IconButton'
 import styles from './Toast.module.css'
 
-const ICONOS = {
+/** Los cuatro tonos del aviso. Cada uno tiene su clase en el modulo CSS. */
+export type ToastType = 'success' | 'error' | 'warning' | 'info'
+
+interface ToastProps {
+  message: string
+  type?: ToastType
+  onClose: () => void
+  /** Cuanto queda en pantalla antes de cerrarse solo. */
+  duration?: number
+}
+
+const ICONOS: Record<ToastType, string> = {
   success: '✅',
   error: '❌',
   warning: '⚠️',
   info: 'ℹ️',
 }
 
-export default function Toast({ message, type = 'success', onClose, duration = 30000 }) {
+export default function Toast({
+  message,
+  type = 'success',
+  onClose,
+  duration = 30000,
+}: ToastProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose()

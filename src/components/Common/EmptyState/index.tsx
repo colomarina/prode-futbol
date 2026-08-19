@@ -1,9 +1,26 @@
-const TITLE_STYLE = {
+import type { CSSProperties, ReactNode } from 'react'
+
+/** El tag del titulo: la pantalla decide si es h2, h3 o un span. */
+type TitleTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span'
+
+interface EmptyStateProps {
+  icon?: ReactNode
+  title?: ReactNode
+  description?: ReactNode
+  style?: CSSProperties
+  showIcon?: boolean
+  titleTag?: TitleTag
+  iconStyle?: CSSProperties
+  titleStyle?: CSSProperties
+  descriptionStyle?: CSSProperties
+}
+
+const TITLE_STYLE: CSSProperties = {
   color: 'var(--color-text-primary)',
   marginBottom: 'var(--space-sm)',
 }
 
-const DESCRIPTION_STYLE = {
+const DESCRIPTION_STYLE: CSSProperties = {
   color: 'var(--color-text-secondary)',
 }
 
@@ -17,7 +34,7 @@ export default function EmptyState({
   iconStyle,
   titleStyle,
   descriptionStyle,
-}) {
+}: EmptyStateProps) {
   const TitleTag = titleTag
 
   return (

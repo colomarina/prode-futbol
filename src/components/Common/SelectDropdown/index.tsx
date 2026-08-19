@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useLayoutEffect, useId } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import LoadingState from '../LoadingState'
 import styles from './SelectDropdown.module.css'
 
-const SELECT_STYLE = {
+const SELECT_STYLE: CSSProperties = {
   width: '100%',
   padding: 'var(--space-md) var(--space-lg)',
   fontSize: 'var(--font-size-base)',
@@ -21,7 +22,27 @@ const SELECT_STYLE = {
  * un combobox de verdad (`role="listbox"`, navegación por flechas): eso es la
  * fase 8, acá solo se cubre el nombre y el estado.
  */
-const SelectDropdown = ({
+/**
+ * Lo que identifica a una opcion. No es solo un uuid: la tabla de posiciones usa
+ * numeros de fecha, `null` para la general y el literal `'playoffs'`.
+ */
+export type OptionId = string | number | null
+
+interface SelectDropdownProps<T> {
+  items?: T[]
+  selectedId?: OptionId
+  onSelect: (id: OptionId) => void
+  label?: ReactNode
+  disabled?: boolean
+  isLoading?: boolean
+  renderButton?: (item: T) => ReactNode
+  renderOption?: (item: T) => ReactNode
+  placeholder?: string
+  /** La propiedad de `item` que hace de id. */
+  valueKey?: keyof T & string
+}
+
+const SelectDropdown = <T extends object>({
   items = [],
   selectedId,
   onSelect,
@@ -31,14 +52,20 @@ const SelectDropdown = ({
   renderButton,
   renderOption,
   placeholder = 'Seleccionar...',
-  valueKey = 'id',
-}) => {
+  valueKey = 'id' as keyof T & string,
+}: SelectDropdownProps<T>) => {
   const labelId = useId()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
   const listRef = useRef(null)
   const selectedOptionRef = useRef(null)
-  const selectedItem = items.find(item => item[valueKey] === selectedId)
+  /**
+   * El unico cast del componente, y esta acotado a un lugar: `item[valueKey]` es
+   * `T[keyof T]` para TypeScript, pero por construccion siempre es un id.
+   */
+  const idDe = (item: T): OptionId => item[valueKey] as OptionId
+
+  const selectedItem = items.find(item => idDe(item) === selectedId)
 
   // Cerrar dropdown cuando se clickea afuera
   useEffect(() => {
@@ -70,7 +97,7 @@ const SelectDropdown = ({
     list.scrollTop = Math.max(0, Math.min(centeredTop, list.scrollHeight - list.clientHeight))
   }, [isOpen])
 
-  const handleSelect = id => {
+  const handleSelect = (id: OptionId): void => {
     onSelect(id)
     setIsOpen(false)
   }
@@ -139,9 +166,9 @@ const SelectDropdown = ({
         >
           {items.map(item => (
             <button
-              key={item[valueKey]}
-              ref={selectedId === item[valueKey] ? selectedOptionRef : null}
-              onClick={() => handleSelect(item[valueKey])}
+              key={String(idDe(item))}
+              ref={selectedId === idDe(item) ? selectedOptionRef : null}
+              onClick={() => handleSelect(idDe(item))}
               style={{
                 width: '100%',
                 padding: 'var(--space-md) var(--space-lg)',
@@ -149,9 +176,9 @@ const SelectDropdown = ({
                 alignItems: 'center',
                 gap: 'var(--space-sm)',
                 border: 'none',
-                background: selectedId === item[valueKey] ? 'var(--color-primary)' : 'transparent',
+                background: selectedId === idDe(item) ? 'var(--color-primary)' : 'transparent',
                 color:
-                  selectedId === item[valueKey]
+                  selectedId === idDe(item)
                     ? 'var(--color-text-on-primary)'
                     : 'var(--color-text-primary)',
                 cursor: 'pointer',
@@ -161,12 +188,12 @@ const SelectDropdown = ({
                 fontSize: 'var(--font-size-base)',
               }}
               onMouseEnter={e => {
-                if (selectedId !== item[valueKey]) {
+                if (selectedId !== idDe(item)) {
                   e.currentTarget.style.background = 'var(--color-surface-variant)'
                 }
               }}
               onMouseLeave={e => {
-                if (selectedId !== item[valueKey]) {
+                if (selectedId !== idDe(item)) {
                   e.currentTarget.style.background = 'transparent'
                 }
               }}

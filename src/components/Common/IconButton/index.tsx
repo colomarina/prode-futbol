@@ -1,4 +1,11 @@
+import type { ComponentProps } from 'react'
 import styles from './IconButton.module.css'
+
+interface IconButtonProps extends ComponentProps<'button'> {
+  /** Va a `aria-label`. Obligatorio: sin el, el boton es anonimo. */
+  label: string
+  size?: 'md' | 'sm'
+}
 
 /**
  * Acción representada por un ícono, sin texto visible.
@@ -9,8 +16,6 @@ import styles from './IconButton.module.css'
  * suelto no le dice nada a un lector de pantalla, y eso no es hipotético: el
  * botón de cerrar del `Toast` no tenía ninguno hasta esta migración.
  *
- * @param {string} label - Va a `aria-label`. Obligatorio.
- * @param {'md'|'sm'} size
  */
 export default function IconButton({
   label,
@@ -19,7 +24,7 @@ export default function IconButton({
   className = '',
   children,
   ...props
-}) {
+}: IconButtonProps) {
   if (import.meta.env.DEV && !label) {
     // eslint-disable-next-line no-console
     console.error(

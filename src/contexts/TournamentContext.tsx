@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
-import { applyTournamentTheme } from '../config/tournaments.config.js'
+import { applyTournamentTheme } from '../config/tournaments.config'
 import type { Tournament } from '../types/domain'
 
 export interface TournamentContextValue {

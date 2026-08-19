@@ -1,4 +1,13 @@
+import type { ComponentProps, Ref } from 'react'
 import styles from './ScoreInput.module.css'
+
+interface ScoreInputProps extends ComponentProps<'input'> {
+  /** Verde para el resultado ya cargado, gris para lo que no se puede editar. */
+  tone?: 'primary' | 'success' | 'muted'
+  /** Muestra el valor sin input: cuando el partido empezo no hay nada que editar. */
+  readOnly?: boolean
+  inputRef?: Ref<HTMLInputElement>
+}
 
 /**
  * La cajita donde se carga un gol.
@@ -12,9 +21,6 @@ import styles from './ScoreInput.module.css'
  * `tone` —el admin ve en verde el resultado ya cargado— y `readOnly`, que en
  * pronósticos muestra un `div` en vez de un input deshabilitado, porque cuando
  * el partido ya empezó no hay nada que editar.
- *
- * @param {'primary'|'success'|'muted'} tone
- * @param {boolean} readOnly - Muestra el valor sin input.
  */
 export default function ScoreInput({
   value,
@@ -23,7 +29,7 @@ export default function ScoreInput({
   readOnly = false,
   inputRef,
   ...props
-}) {
+}: ScoreInputProps) {
   const clases = [styles.box, styles[tone], readOnly ? styles.readOnly : styles.input].join(' ')
 
   if (readOnly) {

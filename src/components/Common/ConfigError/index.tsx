@@ -3,10 +3,8 @@ import styles from './ConfigError.module.css'
 /**
  * Pantalla de error de configuración. Reemplaza a la pantalla en blanco que
  * aparecía cuando el deploy no tenía cargadas las variables de entorno.
- *
- * @param {{ missingVars: string[] }} props
  */
-export default function ConfigError({ missingVars }) {
+export default function ConfigError({ missingVars }: { missingVars: string[] }) {
   return (
     <div className={styles.container} role="alert">
       <div className={styles.card}>

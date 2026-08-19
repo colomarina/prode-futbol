@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 // eslint-disable-next-line import-x/no-named-as-default
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { es } from 'date-fns/locale'
@@ -6,6 +7,27 @@ import 'react-datepicker/dist/react-datepicker.css'
 import '../../../styles/datepicker-theme.css'
 
 registerLocale('es', es)
+
+/**
+ * El `onChange` recibe un **evento falso** (`{ target: { value } }`) y no el `Date`
+ * que da react-datepicker: es para que los consumidores lo traten igual que a un
+ * `<input>`, que es como estaban escritos antes de que este componente existiera.
+ * El tipo lo deja explicito en vez de que se descubra leyendo el handler.
+ */
+export interface DateTimeChangeEvent {
+  target: { value: string }
+}
+
+interface DateTimeInputProps {
+  id?: string
+  label?: ReactNode
+  /** Un ISO string, o vacio. */
+  value?: string | null
+  onChange?: (event: DateTimeChangeEvent) => void
+  disabled?: boolean
+  placeholder?: string
+  style?: CSSProperties
+}
 
 export default function DateTimeInput({
   id,
@@ -15,13 +37,13 @@ export default function DateTimeInput({
   disabled = false,
   placeholder = 'Seleccionar fecha y hora',
   style,
-}) {
+}: DateTimeInputProps) {
   const generatedId = useId()
   const inputId = id || generatedId
 
   const selectedValue = value ? new Date(value) : null
 
-  const handleChange = date => {
+  const handleChange = (date: Date | null): void => {
     if (!onChange) return
 
     const currentValue = date ? date.toISOString() : ''
@@ -60,6 +82,13 @@ export default function DateTimeInput({
         >
           📅
         </span>
+        {/*
+          Aca habia un `style={{ width: '100%' }}` que **no hacia nada**:
+          react-datepicker no acepta `style` (lo marco el tipado al migrar). O sea que
+          el ancho completo que se buscaba nunca se aplico al input. Si se lo quiere de
+          verdad, va por `className` o `wrapperClassName`, que hoy se pasan vacios —
+          pero eso es un cambio visual y se decide aparte.
+        */}
         <DatePicker
           id={inputId}
           selected={selectedValue}
@@ -76,7 +105,6 @@ export default function DateTimeInput({
           popperPlacement="bottom-end"
           wrapperClassName=""
           className=""
-          style={{ width: '100%' }}
         />
       </div>
     </div>

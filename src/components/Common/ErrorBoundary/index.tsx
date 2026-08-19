@@ -1,11 +1,12 @@
 import { Component } from 'react'
+import type { ReactNode } from 'react'
 import styles from './ErrorBoundary.module.css'
 
 /**
  * Un chunk que falla al cargar (deploy nuevo con una pestaña vieja abierta)
  * tira un error distinto al de un bug de render: se arregla recargando.
  */
-const isChunkLoadError = error => {
+const isChunkLoadError = (error: Error | null): boolean => {
   const message = `${error?.name || ''} ${error?.message || ''}`
   return /ChunkLoadError|Loading chunk|dynamically imported module|Failed to fetch/i.test(message)
 }
@@ -14,13 +15,23 @@ const isChunkLoadError = error => {
  * Error boundary. Sin esto, cualquier error de render deja la pantalla en blanco:
  * Suspense captura la carga de los lazy, pero no los errores.
  */
-class ErrorBoundary extends Component {
-  constructor(props) {
+interface ErrorBoundaryProps {
+  children?: ReactNode
+  /** Titulo para el error de render. El de version nueva tiene el suyo. */
+  fallbackTitle?: string
+}
+
+interface ErrorBoundaryState {
+  error: Error | null
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { error: null }
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { error }
   }
 

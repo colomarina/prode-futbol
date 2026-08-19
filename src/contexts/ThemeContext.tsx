@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { applyTournamentTheme } from '../config/tournaments.config.js'
+import { applyTournamentTheme } from '../config/tournaments.config'
 
 export interface ThemeContextValue {
   isDark: boolean

@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import Spinner from '../Spinner'
 
 /**
@@ -11,16 +12,38 @@ import Spinner from '../Spinner'
  * `style` queda como escape hatch para el `padding` del contenedor, que sí
  * depende de dónde se monta (una pantalla entera pide aire; un dropdown, no).
  *
- * @param {'xs'|'sm'|'md'|'lg'} size
  */
-const SIZES = {
+
+/** Los cuatro tamanios, que salen de agrupar los valores que habia sueltos. */
+export type LoadingSize = 'xs' | 'sm' | 'md' | 'lg'
+
+interface LoadingStateProps {
+  message?: string
+  size?: LoadingSize
+  color?: string
+  style?: CSSProperties
+}
+
+interface SizeConfig {
+  spinner: number
+  border: number
+  spacing: string
+  fontSize: string
+}
+
+const SIZES: Record<LoadingSize, SizeConfig> = {
   xs: { spinner: 16, border: 2, spacing: '8px', fontSize: 'var(--font-size-md)' },
   sm: { spinner: 24, border: 3, spacing: '10px', fontSize: 'var(--font-size-md)' },
   md: { spinner: 48, border: 4, spacing: '16px', fontSize: 'var(--font-size-base)' },
   lg: { spinner: 56, border: 4, spacing: '20px', fontSize: 'var(--font-size-base)' },
 }
 
-export default function LoadingState({ message = 'Cargando...', size = 'lg', color, style }) {
+export default function LoadingState({
+  message = 'Cargando...',
+  size = 'lg',
+  color,
+  style,
+}: LoadingStateProps) {
   const config = SIZES[size] ?? SIZES.lg
 
   return (

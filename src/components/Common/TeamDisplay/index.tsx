@@ -1,12 +1,30 @@
-export default function TeamDisplay({ team, size = 'md', showNameBelow = false }) {
-  const sizes = {
+import type { CSSProperties } from 'react'
+import type { TeamSummary } from '../../../types/domain'
+
+/** Los cuatro tamanios del escudo. */
+export type TeamDisplaySize = 'sm' | 'md' | 'lg' | 'xl'
+
+interface TeamDisplayProps {
+  /** `null` cuando el cruce de playoff todavia no tiene equipos: muestra un guion. */
+  team?: TeamSummary | null
+  size?: TeamDisplaySize
+  /** El nombre debajo del escudo, en vez de al costado. */
+  showNameBelow?: boolean
+}
+
+export default function TeamDisplay({
+  team,
+  size = 'md',
+  showNameBelow = false,
+}: TeamDisplayProps) {
+  const sizes: Record<TeamDisplaySize, CSSProperties> = {
     sm: { width: '24px', height: '24px' },
     md: { width: '32px', height: '32px' },
     lg: { width: '48px', height: '48px' },
     xl: { width: '64px', height: '64px' },
   }
 
-  const textSizes = {
+  const textSizes: Record<TeamDisplaySize, string> = {
     sm: '0.75rem',
     md: '0.875rem',
     lg: '1rem',
@@ -34,8 +52,8 @@ export default function TeamDisplay({ team, size = 'md', showNameBelow = false }
               objectFit: 'contain',
             }}
             onError={e => {
-              // console.error('Error loading image:', team.logo_url, 'for team:', team.name)
-              e.target.style.display = 'none'
+              // Si el escudo no carga, se esconde y queda solo el nombre.
+              e.currentTarget.style.display = 'none'
             }}
           />
         )}
@@ -72,8 +90,7 @@ export default function TeamDisplay({ team, size = 'md', showNameBelow = false }
           }}
           onError={e => {
             // Fallback si la imagen no carga
-            // console.error('Error loading image:', team.logo_url, 'for team:', team.name)
-            e.target.style.display = 'none'
+            e.currentTarget.style.display = 'none'
           }}
         />
       )}

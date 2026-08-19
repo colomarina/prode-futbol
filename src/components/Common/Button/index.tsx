@@ -1,4 +1,21 @@
+import type { ComponentProps } from 'react'
 import styles from './Button.module.css'
+
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'success'
+  | 'danger'
+  | 'info'
+  | 'outline'
+  | 'text'
+  | 'link'
+
+interface ButtonProps extends ComponentProps<'button'> {
+  variant?: ButtonVariant
+  size?: 'md' | 'sm' | 'lg'
+  fullWidth?: boolean
+}
 
 /**
  * El botón de la app.
@@ -11,9 +28,6 @@ import styles from './Button.module.css'
  * eso hace que cualquier botón adentro de un `<form>` lo envíe sin querer. Los
  * que sí tienen que enviar el formulario lo declaran.
  *
- * @param {'primary'|'secondary'|'success'|'danger'|'info'|'outline'|'text'|'link'} variant
- * @param {'md'|'sm'|'lg'} size
- * @param {boolean} fullWidth
  */
 export default function Button({
   variant = 'primary',
@@ -23,7 +37,7 @@ export default function Button({
   className = '',
   children,
   ...props
-}) {
+}: ButtonProps) {
   const clases = [
     styles.button,
     styles[variant],

@@ -4,7 +4,25 @@
  * Keys must match tournament.slug in Supabase
  */
 
-export const TOURNAMENT_CONFIG = {
+/** Las custom properties que se inyectan en `document.documentElement`. */
+export type CssVars = Record<string, string>
+
+/** El tema de un torneo: cómo se llama, con qué emoji y sus dos paletas. */
+export interface TournamentConfig {
+  label: string
+  prodeName: string
+  emoji: string
+  cssVars: {
+    light: CssVars
+    dark: CssVars
+  }
+}
+
+/**
+ * Las claves son los `slug` de la tabla `tournaments`. Un slug nuevo en la base sin
+ * entrada acá se renderiza con la paleta base de `src/index.css`.
+ */
+export const TOURNAMENT_CONFIG: Record<string, TournamentConfig> = {
   'apertura-2026': {
     label: 'Apertura 2026',
     prodeName: 'Prode Chiqui Tapia',
@@ -311,12 +329,8 @@ export const TOURNAMENT_CONFIG = {
   },
 }
 
-/**
- * Apply tournament theme to document root
- * @param {string} slug - Tournament slug (must exist in TOURNAMENT_CONFIG)
- * @param {boolean} isDark - Whether to apply dark theme colors
- */
-export const applyTournamentTheme = (slug, isDark) => {
+/** Inyecta la paleta del torneo en el root del documento. */
+export const applyTournamentTheme = (slug: string | null | undefined, isDark: boolean): void => {
   if (!slug || !TOURNAMENT_CONFIG[slug]) {
     // console.warn(`Tournament theme not found for slug: ${slug}`)
     return
@@ -332,19 +346,10 @@ export const applyTournamentTheme = (slug, isDark) => {
   document.documentElement.setAttribute('data-tournament', slug)
 }
 
-/**
- * Get tournament config by slug
- * @param {string} slug - Tournament slug
- * @returns {Object|null} Tournament config or null if not found
- */
-export const getTournamentConfig = slug => {
-  return TOURNAMENT_CONFIG[slug] || null
+export const getTournamentConfig = (slug: string | null | undefined): TournamentConfig | null => {
+  return (slug && TOURNAMENT_CONFIG[slug]) || null
 }
 
-/**
- * Get all tournament slugs
- * @returns {Array<string>} Array of tournament slugs
- */
-export const getTournamentSlugs = () => {
+export const getTournamentSlugs = (): string[] => {
   return Object.keys(TOURNAMENT_CONFIG)
 }
