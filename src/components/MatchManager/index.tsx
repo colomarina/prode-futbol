@@ -24,7 +24,10 @@ export default function MatchManager() {
     loading: matchesLoading,
     updateMatch,
   } = useMatches(selectedRound, activeTournament?.id)
-  const [resultValues, setResultValues] = useState({})
+  /** Lo que el admin tiene tipeado, por id de partido. Todo string, como en el form. */
+  const [resultValues, setResultValues] = useState<
+    Record<string, { home?: string; away?: string; qualifier?: string } | undefined>
+  >({})
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
 

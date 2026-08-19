@@ -7,8 +7,15 @@ import { filterVisibleTournaments } from '../../../utils/tournamentAccess'
 import HamburgerButton from './HamburgerButton'
 import TournamentDrawer from './TournamentDrawer'
 import MainMenuView from './Views/MainMenuView'
+import type { MenuItem } from './menu.config'
 
-export default function Sidebar({ onNavigate, onSignOut }) {
+export default function Sidebar({
+  onNavigate,
+  onSignOut,
+}: {
+  onNavigate?: (viewType: string) => void
+  onSignOut?: () => void | Promise<unknown>
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { isAdmin } = useAuth()
@@ -34,7 +41,7 @@ export default function Sidebar({ onNavigate, onSignOut }) {
       return visibleMenuItems
     }
 
-    const changeTournamentItem = {
+    const changeTournamentItem: MenuItem = {
       id: 'change-tournament',
       type: 'change_tournament',
       label: 'Cambiar torneo',

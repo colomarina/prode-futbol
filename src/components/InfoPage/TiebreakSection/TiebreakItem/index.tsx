@@ -1,6 +1,16 @@
 import { tint } from '../../../../utils/tint'
 
-const TiebreakItem = ({ order, title, description }) => {
+import type { ReactNode } from 'react'
+
+const TiebreakItem = ({
+  order,
+  title,
+  description,
+}: {
+  order: string
+  title: ReactNode
+  description?: ReactNode
+}) => {
   return (
     <div
       style={{

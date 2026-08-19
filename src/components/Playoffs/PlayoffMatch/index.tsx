@@ -2,8 +2,16 @@ import { memo } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
 import { resolveTeamName } from '../../../utils/teams'
 import { formatMatchDateNumeric, formatMatchTime } from '../../../utils/matchDate'
+import type { MatchWithTeams } from '../../../types/domain'
+import type { PlayoffPrediction } from '../../../hooks/usePlayoffs'
 
-const PlayoffMatch = memo(function PlayoffMatch({ match, prediction = null }) {
+const PlayoffMatch = memo(function PlayoffMatch({
+  match,
+  prediction = null,
+}: {
+  match: MatchWithTeams
+  prediction?: PlayoffPrediction | null
+}) {
   const isTie = match.home_score === match.away_score
   const hasStarted = new Date() >= new Date(match.match_date)
   const qualifierName = resolveTeamName(match.qualifier_team_id, match)

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { tint } from '../../../utils/tint'
 
 /**
@@ -7,10 +8,15 @@ import { tint } from '../../../utils/tint'
  * (`borderColor` y `backgroundColor`) y las tres secciones pasaban lo mismo: el
  * token en el borde y su tinte al 5% en el fondo, pero el tinte escrito a mano
  * como `rgba(30, 127, 67, 0.05)`, o sea el verde literal en vez de la variable.
- *
- * @param {string} color - Un token, tipo `var(--color-primary)`.
  */
-const Card = ({ color, children }) => {
+const Card = ({
+  color,
+  children,
+}: {
+  /** Un token, tipo `var(--color-primary)`. */
+  color: string
+  children?: ReactNode
+}) => {
   return (
     <div
       className="card"

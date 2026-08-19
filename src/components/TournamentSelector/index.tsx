@@ -2,13 +2,25 @@ import { useEffect } from 'react'
 import styles from './TournamentSelector.module.css'
 import TournamentCard from './TournamentCard'
 import LoadingState from '../Common/LoadingState'
+import type { Tournament } from '../../types/domain'
+
+interface TournamentSelectorProps {
+  tournaments: Tournament[]
+  loading?: boolean
+  onSelect: (tournament: Tournament) => void
+  /**
+   * Los torneos a los que este usuario no puede entrar se muestran deshabilitados.
+   * El default ignora el argumento a propósito: sin la prop, ninguno se bloquea.
+   */
+  isTournamentDisabled?: (tournament: Tournament) => boolean
+}
 
 export default function TournamentSelector({
   tournaments,
   loading,
   onSelect,
   isTournamentDisabled = () => false,
-}) {
+}: TournamentSelectorProps) {
   //   Auto-select if only one active tournament
   useEffect(() => {
     if (!loading && tournaments.length > 0) {
@@ -38,7 +50,7 @@ export default function TournamentSelector({
 
   // El torneo en curso va primero, después el resto de los accesibles (finalizados) y
   // al final los bloqueados. Dentro de cada grupo se respeta el orden de creación.
-  const getSortPriority = tournament => {
+  const getSortPriority = (tournament: Tournament): number => {
     if (tournament.status === 'active') return 0
     return isTournamentDisabled(tournament) ? 2 : 1
   }

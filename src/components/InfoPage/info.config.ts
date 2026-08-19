@@ -1,5 +1,27 @@
 // Datos del torneo - separados de la UI para fácil mantenimiento
-export const pointsSystemData = [
+
+/** Una sub-regla del PLENO: bajo qué condición y cuántos puntos da. */
+export interface PointRule {
+  condition: string
+  points: string
+}
+
+/**
+ * Una entrada del sistema de puntos.
+ *
+ * `rules` y `points` son excluyentes en la práctica: el PLENO tiene sub-reglas y
+ * las otras dos un puntaje suelto. `PointSystemItem` decide cuál mostrar con
+ * `!!item.rules`.
+ */
+export interface PointSystemEntry {
+  id: string
+  icon: string
+  title: string
+  rules?: PointRule[]
+  points?: string
+}
+
+export const pointsSystemData: PointSystemEntry[] = [
   {
     id: 'pleno',
     icon: '🎯',
@@ -29,7 +51,14 @@ export const pointsSystemData = [
   },
 ]
 
-export const tiebreakCriteria = [
+/** Un criterio de desempate, en orden. */
+export interface TiebreakCriterion {
+  order: string
+  title: string
+  description?: string
+}
+
+export const tiebreakCriteria: TiebreakCriterion[] = [
   {
     order: '1️⃣',
     title: 'Partido de la fecha',
@@ -49,14 +78,22 @@ export const tiebreakCriteria = [
   },
 ]
 
-export const specialRule = {
+/** La regla especial de premios, que cambia entre el Mundial y los torneos locales. */
+export interface SpecialRule {
+  icon: string
+  title: string
+  description: string
+  note?: string
+}
+
+export const specialRule: SpecialRule = {
   icon: '🚫',
   title: 'Regla especial:',
   description: 'Nadie puede ganar más de 3 fechas, después de eso solo se compite por el trofeo 🏆',
   note: 'Si pasa, el premio de la fecha se entrega al jugador que quedó en segunda posición.',
 }
 
-export const mundialTiebreakCriteria = [
+export const mundialTiebreakCriteria: TiebreakCriterion[] = [
   {
     order: '1️⃣',
     title: 'Primer partido de cada fecha',
@@ -77,14 +114,16 @@ export const mundialTiebreakCriteria = [
   },
 ]
 
-export const mundialSpecialRule = {
+export const mundialSpecialRule: SpecialRule = {
   icon: '🚫',
   title: 'Regla especial:',
   description: 'Nadie puede ganar más de 2 fechas, después de eso solo se compite por el trofeo 🏆',
   note: 'Si pasa, el premio de la fecha se entrega al jugador que quedó en segunda posición.',
 }
 
-export const getTiebreakRules = tournamentSlug => {
+export const getTiebreakRules = (
+  tournamentSlug: string | null | undefined
+): { tiebreakCriteria: TiebreakCriterion[]; specialRule: SpecialRule } => {
   if (tournamentSlug === 'mundial-2026') {
     return {
       tiebreakCriteria: mundialTiebreakCriteria,

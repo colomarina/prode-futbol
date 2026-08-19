@@ -5,8 +5,17 @@ import styles from './NavHeader.module.css'
 import Sidebar from '../Sidebar'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getTournamentConfig } from '../../../config/tournaments.config'
+import type { Profile } from '../../../types/domain'
 
-function NavHeader({ profile, onNavigate, signOut }) {
+function NavHeader({
+  profile,
+  onNavigate,
+  signOut,
+}: {
+  profile?: Profile | null
+  onNavigate?: (viewType: string) => void
+  signOut?: () => void | Promise<unknown>
+}) {
   const { activeTournament, isReadOnly } = useTournament()
   const tournamentConfig = getTournamentConfig(activeTournament?.slug)
   const prodeName = tournamentConfig?.prodeName || 'Prode Chiqui Tapia'

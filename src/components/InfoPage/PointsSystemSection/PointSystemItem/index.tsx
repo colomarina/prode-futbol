@@ -1,4 +1,6 @@
-const PointsSystemItem = ({ item }) => {
+import type { PointSystemEntry } from '../../info.config'
+
+const PointsSystemItem = ({ item }: { item: PointSystemEntry }) => {
   const isComplexRule = !!item.rules
 
   return (

@@ -179,7 +179,12 @@ export default function AppRoutes() {
         path="/estadisticas"
         element={
           <Page>
-            <PersonalStats activeSection="personal" />
+            {/*
+              Acá iba un `activeSection="personal"` que **PersonalStats no recibe**:
+              esa pantalla no tiene secciones internas (la única de STATS_SECTIONS es
+              justamente "personal"). Lo marcó el tipado y se saca, porque no hacía nada.
+            */}
+            <PersonalStats />
           </Page>
         }
       />

@@ -52,7 +52,7 @@ export default function Navigation() {
   }, [viewId, isMundial2026, showPlayoffsTab])
 
   const handleNavigationFromMenu = useCallback(
-    targetViewId => {
+    (targetViewId: string) => {
       const path = getViewDefaultPath(targetViewId)
       if (path) navigate(path)
     },
@@ -60,7 +60,7 @@ export default function Navigation() {
   )
 
   const handleTabChange = useCallback(
-    tabId => {
+    (tabId: string) => {
       const path = getSectionPath(tabId)
       if (path) navigate(path)
     },

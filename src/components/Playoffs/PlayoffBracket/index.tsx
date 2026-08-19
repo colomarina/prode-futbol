@@ -17,13 +17,20 @@ const BRACKET_SLOT_HEIGHT = 66
 const BRACKET_BASE_GAP = 12
 const BRACKET_UNIT = BRACKET_SLOT_HEIGHT + BRACKET_BASE_GAP
 
-const getColumnStyle = () => ({
+import type { CSSProperties } from 'react'
+import type { MatchesByStage, PlayoffPrediction } from '../../../hooks/usePlayoffs'
+
+/**
+ * La columna de una ronda. No depende del índice: hubo una versión que sí, y la
+ * llamada seguía pasándoselo aunque la función ya no lo usara.
+ */
+const getColumnStyle = (): CSSProperties => ({
   minWidth: '220px',
   flex: '0 0 220px',
   paddingTop: '0',
 })
 
-const getStackStyle = stageIndex => {
+const getStackStyle = (stageIndex: number): CSSProperties => {
   const step = Math.pow(2, stageIndex) * BRACKET_UNIT
   const gap = Math.max(8, step - BRACKET_SLOT_HEIGHT)
   const marginTop = stageIndex === 0 ? 0 : ((Math.pow(2, stageIndex) - 1) * BRACKET_UNIT) / 2
@@ -36,7 +43,7 @@ const getStackStyle = stageIndex => {
   }
 }
 
-const teamNameStyle = {
+const teamNameStyle: CSSProperties = {
   margin: 0,
   color: 'var(--color-text-primary)',
   fontSize: 'var(--font-size-sm)',
@@ -46,14 +53,14 @@ const teamNameStyle = {
   textOverflow: 'ellipsis',
 }
 
-const teamRowStyle = {
+const teamRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--space-sm)',
   minWidth: 0,
 }
 
-const logoStyle = {
+const logoStyle: CSSProperties = {
   width: '14px',
   height: '14px',
   objectFit: 'contain',
@@ -82,7 +89,14 @@ const buildStageSlots = stageList => {
   return slotsByStage
 }
 
-const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, predictionsByMatch }) {
+const PlayoffBracket = memo(function PlayoffBracket({
+  matchesByStage,
+  predictionsByMatch,
+}: {
+  matchesByStage: MatchesByStage
+  /** Pronósticos del usuario indexados por id de partido. */
+  predictionsByMatch: Record<string, PlayoffPrediction>
+}) {
   const firstPopulatedStageIndex = STAGE_ORDER.findIndex(
     stage => (matchesByStage[stage] || []).length > 0
   )
@@ -164,7 +178,7 @@ const PlayoffBracket = memo(function PlayoffBracket({ matchesByStage, prediction
             }}
           >
             {stageDescriptors.map((stage, stageIndex) => (
-              <section key={stage.id} style={getColumnStyle(stageIndex)}>
+              <section key={stage.id} style={getColumnStyle()}>
                 <h3
                   style={{
                     margin: '0 0 var(--space-md) 0',

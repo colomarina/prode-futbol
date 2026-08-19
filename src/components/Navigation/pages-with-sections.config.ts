@@ -6,7 +6,27 @@
  * entrada acá y su `<Route>` en `src/routes.jsx`.
  */
 
-export const TOURNAMENT_SECTIONS = [
+/**
+ * Una sección: su id, su ruta y cómo se muestra en el tab.
+ *
+ * `mobileLabel` solo lo tienen las de torneo, que son las que no entran en
+ * pantalla chica con el nombre completo.
+ */
+export interface NavSection {
+  id: string
+  path: string
+  label: string
+  mobileLabel?: string
+  icon: string
+}
+
+/** Una vista con secciones: sus tabs y con cuál entra. */
+export interface NavView {
+  sections: NavSection[]
+  defaultSection: string
+}
+
+export const TOURNAMENT_SECTIONS: NavSection[] = [
   {
     id: 'predictions',
     path: '/pronosticos',
@@ -38,17 +58,17 @@ export const TOURNAMENT_SECTIONS = [
   { id: 'playoffs', path: '/playoffs', label: 'Playoffs', mobileLabel: 'Playoffs', icon: '🥊' },
 ]
 
-export const INFO_SECTIONS = [
+export const INFO_SECTIONS: NavSection[] = [
   { id: 'points', path: '/reglas/puntos', label: 'Sistema de Puntos', icon: '🎯' },
   { id: 'tiebreaks', path: '/reglas/desempates', label: 'Desempates', icon: '⚖️' },
   { id: 'match-status', path: '/reglas/estado-partidos', label: 'Estado de Partidos', icon: '📋' },
 ]
 
-export const STATS_SECTIONS = [
+export const STATS_SECTIONS: NavSection[] = [
   { id: 'personal', path: '/estadisticas', label: 'Estadísticas Personales', icon: '📈' },
 ]
 
-export const ADMIN_SECTIONS = [
+export const ADMIN_SECTIONS: NavSection[] = [
   {
     id: 'admin-matches',
     path: '/admin/partidos',
@@ -90,7 +110,7 @@ export const PROFILE_PATH = '/perfil'
  */
 export const LEGACY_PROFILE_PATH = '/profile'
 
-export const PAGES_WITH_SECTIONS = {
+export const PAGES_WITH_SECTIONS: Record<string, NavView> = {
   tournament: {
     sections: TOURNAMENT_SECTIONS,
     defaultSection: 'predictions',
@@ -111,15 +131,15 @@ export const PAGES_WITH_SECTIONS = {
 
 const ALL_SECTIONS = Object.values(PAGES_WITH_SECTIONS).flatMap(page => page.sections)
 
-export function hasViewSections(viewId) {
+export function hasViewSections(viewId: string): boolean {
   return viewId in PAGES_WITH_SECTIONS
 }
 
-export function getViewSections(viewId) {
+export function getViewSections(viewId: string): NavSection[] | null {
   return PAGES_WITH_SECTIONS[viewId]?.sections || null
 }
 
-export function getDefaultSection(viewId) {
+export function getDefaultSection(viewId: string): string | null {
   return PAGES_WITH_SECTIONS[viewId]?.defaultSection || null
 }
 
@@ -127,21 +147,20 @@ export function getDefaultSection(viewId) {
  * Path de una sección. Es lo que usa `Navigation` para navegar cuando se toca
  * un tab.
  */
-export function getSectionPath(sectionId) {
+export function getSectionPath(sectionId: string | null): string | null {
   return ALL_SECTIONS.find(section => section.id === sectionId)?.path || null
 }
 
 /** Path por defecto de una vista, para las redirecciones. */
-export function getViewDefaultPath(viewId) {
+export function getViewDefaultPath(viewId: string): string | null {
   if (viewId === 'profile') return PROFILE_PATH
   return getSectionPath(getDefaultSection(viewId))
 }
 
 /**
  * Qué vista y qué sección corresponden a una URL.
- * @returns {{viewId: string, sectionId: string|null}}
  */
-export function resolveRoute(pathname) {
+export function resolveRoute(pathname: string): { viewId: string; sectionId: string | null } {
   if (pathname.startsWith(PROFILE_PATH)) {
     return { viewId: 'profile', sectionId: null }
   }

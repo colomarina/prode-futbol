@@ -86,7 +86,9 @@ export default function UserProfile() {
       })
 
       if (updateError) {
-        if (updateError.code === '23505') {
+        // `code` solo existe en el error de PostgREST, no en un `Error` propio: el
+        // `in` es lo que permite leerlo sin castear. 23505 es unique_violation.
+        if ('code' in updateError && updateError.code === '23505') {
           throw new Error('Ese nombre de equipo ya está en uso.')
         }
 

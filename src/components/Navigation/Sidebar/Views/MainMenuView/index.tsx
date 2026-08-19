@@ -1,8 +1,17 @@
 import logOut from '../../../../../assets/logout.svg'
 import Spinner from '../../../../Common/Spinner'
+import type { MenuItem } from '../../menu.config'
 import styles from './MainMenuView.module.css'
 
-export default function MainMenuView({ menuItems, onSelectItem, isLoggingOut = false }) {
+export default function MainMenuView({
+  menuItems,
+  onSelectItem,
+  isLoggingOut = false,
+}: {
+  menuItems: MenuItem[]
+  onSelectItem: (item: MenuItem) => void
+  isLoggingOut?: boolean
+}) {
   return (
     <div className={styles.container}>
       <div className={styles.menuList}>

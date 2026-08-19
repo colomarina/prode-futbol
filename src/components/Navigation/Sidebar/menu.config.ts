@@ -1,6 +1,27 @@
 // Configuración del menú hamburguesa - Navegación global
 
-export const MENU_ITEMS = [
+/**
+ * Una entrada del menú.
+ *
+ * Hay cuatro formas: las normales llevan a una vista (`viewType`), y las tres
+ * especiales se distinguen por `type` y no tienen destino. `MainMenuView` ramifica
+ * por ese campo.
+ *
+ * `change_tournament` **no está en este archivo**: lo arma `Sidebar` en runtime y
+ * solo cuando el usuario tiene más de un torneo visible. Escribir la unión completa
+ * acá es lo que lo deja documentado en un solo lugar.
+ */
+export interface MenuItem {
+  id: string
+  label: string
+  icon?: string
+  description?: string
+  adminOnly: boolean
+  viewType?: string
+  type?: 'divider' | 'logout' | 'change_tournament'
+}
+
+export const MENU_ITEMS: MenuItem[] = [
   {
     id: 'tournament',
     label: 'Pronósticos',

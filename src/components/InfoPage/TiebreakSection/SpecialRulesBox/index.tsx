@@ -1,6 +1,18 @@
 import { tint } from '../../../../utils/tint'
 
-const SpecialRulesBox = ({ icon, title, description, note }) => {
+import type { ReactNode } from 'react'
+
+const SpecialRulesBox = ({
+  icon,
+  title,
+  description,
+  note,
+}: {
+  icon?: ReactNode
+  title: ReactNode
+  description?: ReactNode
+  note?: ReactNode
+}) => {
   return (
     <div
       style={{

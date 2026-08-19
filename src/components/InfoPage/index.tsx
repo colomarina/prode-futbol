@@ -4,7 +4,14 @@ import MatchStatusSection from './MatchStatusSection'
 import PageHeader from './PageHeader'
 import styles from './InfoPage.module.css'
 
-export default function InfoPage({ activeSection = 'points' }) {
+/** Las tres secciones de Reglas. Salen de `pages-with-sections.config`. */
+export type InfoSection = 'points' | 'tiebreaks' | 'match-status'
+
+export default function InfoPage({
+  activeSection = 'points',
+}: {
+  activeSection?: InfoSection | string
+}) {
   const renderSection = () => {
     switch (activeSection) {
       case 'points':

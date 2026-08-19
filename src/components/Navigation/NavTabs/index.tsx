@@ -1,13 +1,20 @@
 import React, { useCallback, useEffect, useRef } from 'react'
 import TabButton from '../TabButton'
+import type { NavSection } from '../pages-with-sections.config'
 import styles from './NavTabs.module.css'
 
-function NavTabs({ tabs, activeTab, setActiveTab }) {
-  const tabsRef = useRef([])
+interface NavTabsProps {
+  tabs: NavSection[]
+  activeTab: string | null
+  setActiveTab: (tabId: string) => void
+}
+
+function NavTabs({ tabs, activeTab, setActiveTab }: NavTabsProps) {
+  const tabsRef = useRef<(HTMLButtonElement | null)[]>([])
   const isCompact = tabs.length > 3
 
   const handleKeyDown = useCallback(
-    e => {
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
       const currentIndex = tabs.findIndex(tab => tab.id === activeTab)
 
       if (e.key === 'ArrowRight') {

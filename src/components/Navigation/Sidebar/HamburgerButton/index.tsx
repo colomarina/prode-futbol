@@ -1,6 +1,12 @@
 import styles from './HamburgerButton.module.css'
 
-export default function HamburgerButton({ onClick, ariaLabel = 'Abrir información del torneo' }) {
+export default function HamburgerButton({
+  onClick,
+  ariaLabel = 'Abrir información del torneo',
+}: {
+  onClick: () => void
+  ariaLabel?: string
+}) {
   return (
     <button
       className={styles.hamburgerButton}

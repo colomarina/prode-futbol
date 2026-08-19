@@ -1,4 +1,17 @@
-const SectionHeader = ({ icon, title, color, centered = false }) => {
+import type { ReactNode } from 'react'
+
+const SectionHeader = ({
+  icon,
+  title,
+  color,
+  centered = false,
+}: {
+  icon?: ReactNode
+  title: ReactNode
+  color?: string
+  /** Centrado repite el ícono a los dos lados del título. */
+  centered?: boolean
+}) => {
   return (
     <h3
       style={{

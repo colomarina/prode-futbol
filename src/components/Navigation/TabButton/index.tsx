@@ -1,13 +1,25 @@
 import React, { forwardRef, useCallback } from 'react'
+import type { NavSection } from '../pages-with-sections.config'
 import styles from './TabButton.module.css'
 
-const TabButton = forwardRef(function TabButton({ tab, isActive, isCompact, onClick }, ref) {
+interface TabButtonProps {
+  tab: NavSection
+  isActive?: boolean
+  /** Con más de tres tabs se usan las etiquetas cortas. */
+  isCompact?: boolean
+  onClick: (tabId: string) => void
+}
+
+const TabButton = forwardRef<HTMLButtonElement, TabButtonProps>(function TabButton(
+  { tab, isActive, isCompact, onClick },
+  ref
+) {
   const handleClick = useCallback(() => {
     onClick(tab.id)
   }, [tab.id, onClick])
 
   const handleKeyDown = useCallback(
-    e => {
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
         onClick(tab.id)

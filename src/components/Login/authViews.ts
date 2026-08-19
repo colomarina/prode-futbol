@@ -54,9 +54,28 @@ export const EMPTY_FIELD_ERRORS = {
  * bloquea el vacío, así que lo único que llega hasta acá son los campos con solo
  * espacios.
  *
- * @returns {object} el mapa de errores; vacío si está todo bien
  */
-export const validateAuthForm = (view, { email, password, username, fullName } = {}) => {
+
+/** Los cuatro campos que puede tener el formulario, según la vista. */
+export interface AuthFormValues {
+  email?: string
+  password?: string
+  username?: string
+  fullName?: string
+}
+
+/**
+ * El mapa de errores por campo; vacío si está todo bien.
+ *
+ * Se deriva de `EMPTY_FIELD_ERRORS` en vez de escribirse aparte: así el formulario
+ * y la validación no pueden quedar con campos distintos.
+ */
+export type AuthFieldErrors = typeof EMPTY_FIELD_ERRORS
+
+export const validateAuthForm = (
+  view: string,
+  { email, password, username, fullName }: AuthFormValues = {}
+): AuthFieldErrors => {
   const config = getAuthView(view)
   const errors = { ...EMPTY_FIELD_ERRORS }
 

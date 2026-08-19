@@ -1,4 +1,14 @@
-export default function PageHeader({ icon, title, subtitle }) {
+import type { ReactNode } from 'react'
+
+export default function PageHeader({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon?: ReactNode
+  title: ReactNode
+  subtitle?: ReactNode
+}) {
   return (
     <div style={{ marginBottom: 'var(--space-xl)', textAlign: 'center' }}>
       <h2
