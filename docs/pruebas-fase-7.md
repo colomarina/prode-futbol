@@ -51,15 +51,38 @@ Es el único cambio de comportamiento de la fase, y está medido más abajo.
 | `PlayoffBracket` | `getColumnStyle(stageIndex)` | La función no tiene parámetros: hubo una versión que variaba por ronda y la llamada quedó |
 
 Las cinco se sacaron **sin cambiar comportamiento** (eran no-ops) y quedaron
-documentadas en el archivo. En tres de ellas la intención original se puede
-recuperar, pero eso mueve píxeles y es una decisión aparte:
+documentadas en el archivo.
 
-- el globito del suspendido arriba, con `placement="top"`
-- el input del datepicker al 100%, por `className`
-- **el emoji de cada torneo en el selector**: `TournamentCard` leía
-  `tournament.emoji`, y la tabla `tournaments` **no tiene esa columna** —el emoji
-  vive en `config/tournaments.config.ts`—, así que todas las tarjetas mostraron
-  siempre la pelota genérica. Sale de `getTournamentConfig(tournament.slug)?.emoji`.
+En tres la intención original se podía recuperar, y se decidió **tomarla ahora** en
+vez de dejarla para después. Dos se aplicaron y la tercera se descartó por un motivo
+mejor:
+
+**1. El emoji de cada torneo en el selector → aplicado.** `TournamentCard` leía
+`tournament.emoji` y la tabla `tournaments` **no tiene esa columna** —el emoji vive
+en `config/tournaments.config.ts`—, así que el `|| '⚽'` era el único camino y todas
+las tarjetas mostraron siempre la pelota genérica. Ahora sale de
+`getTournamentConfig(tournament.slug)?.emoji`, con la pelota como fallback para los
+torneos sin entrada en la config (los de prueba). **Medido**: las tres tarjetas pasan
+de `⚽ ⚽ ⚽` a `🏆 🏆 🌍`.
+
+**2. El ancho del datepicker → aplicado.** El input ya estaba al 100% dentro de su
+contenedor (`datepicker-theme.css`); lo que faltaba era que el wrapper que
+react-datepicker pone alrededor no se encogiera dentro del flex de `DateTimeInput`.
+Se resolvió con `.react-datepicker-wrapper { flex: 1; min-width: 0 }` en el mismo
+archivo de tema, que es donde vive el resto. `flex` es inerte fuera de un contenedor
+flex, así que la regla solo actúa donde se la quiere. **No verificado en el
+navegador**: la única pantalla que lo usa es `/admin/horarios` y la corrida se hizo
+con la cuenta de prueba, que no es admin.
+
+**3. El globito del suspendido arriba → descartado, y el hallazgo es mejor que el
+arreglo.** `SUSPENDED_PLAYERS` son "Geronimo Andres Garcia" y "Ezequiel Cordoba", y
+esos dos nombres son **dos de los cinco grupos de `constants/hiddenPlayers`**.
+`useLeaderboard` filtra los ocultos en todas sus ramas, así que esas filas nunca
+llegan a `LeaderboardRow`: `isSuspended` es siempre falso y **todo el bloque del
+jugador suspendido es inalcanzable**. Reposicionar un globito que no se muestra no
+arregla nada. Quedó documentado en el componente: si algún día se los quiere mostrar
+suspendidos en vez de ocultos, primero hay que sacarlos de
+`HIDDEN_PLAYER_TOKEN_GROUPS`.
 
 ### Siete tipos escritos a mano que estaban mal
 
@@ -165,6 +188,14 @@ Y el único caso donde se esperaba una diferencia:
 | `/rivales` → **por jugador** | **15 diferencias, todas `opacity: 0.6 → 1`** sobre nodos con clase `_card_ _noEmpezado_`. Cero cambios de geometría, de texto y de estructura (732 nodos en las dos versiones) |
 
 O sea: el arreglo hace exactamente lo que tenía que hacer y nada más.
+
+Después de esa corrida se aplicaron las dos mejoras visuales, y se midieron aparte
+contra el commit anterior:
+
+| Mejora | Resultado |
+|---|---|
+| Emoji del torneo en el selector | `⚽ ⚽ ⚽` → `🏆 🏆 🌍` (Clausura, Apertura, Mundial) |
+| Ancho del datepicker | sin medir: `/admin/horarios` redirige con la cuenta de prueba |
 
 ### Lo que no se verificó en el navegador
 

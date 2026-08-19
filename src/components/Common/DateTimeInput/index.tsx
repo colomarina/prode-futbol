@@ -83,11 +83,10 @@ export default function DateTimeInput({
           📅
         </span>
         {/*
-          Aca habia un `style={{ width: '100%' }}` que **no hacia nada**:
-          react-datepicker no acepta `style` (lo marco el tipado al migrar). O sea que
-          el ancho completo que se buscaba nunca se aplico al input. Si se lo quiere de
-          verdad, va por `className` o `wrapperClassName`, que hoy se pasan vacios —
-          pero eso es un cambio visual y se decide aparte.
+          Aca habia un `style={{ width: '100%' }}` que no hacia nada: react-datepicker
+          no acepta `style`, asi que el ancho completo nunca se aplico. Lo marco el
+          tipado al migrar. El ancho ahora sale de `.react-datepicker-wrapper` en
+          `styles/datepicker-theme.css`, que es donde vive el resto del tema.
         */}
         <DatePicker
           id={inputId}

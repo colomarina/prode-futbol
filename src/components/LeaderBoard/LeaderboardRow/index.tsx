@@ -127,8 +127,15 @@ const PlayerCell = memo(function PlayerCell({ player }: { player: LeaderboardEnt
         {/*
           Acá había un `position="top"` que **no existe** en `InfoButton` (la prop se
           llama `placement`), así que el globito nunca se mostró arriba: quedaba en el
-          default, a la derecha. Lo marcó el tipado. Se saca en vez de traducirlo a
-          `placement` porque eso movería el globito, y eso es una decisión visual.
+          default, a la derecha. Se sacó, y no se tradujo a `placement="top"` por algo
+          más de fondo: **este bloque no se renderiza nunca**.
+
+          `SUSPENDED_PLAYERS` son "Geronimo Andres Garcia" y "Ezequiel Cordoba", y esos
+          dos nombres son también dos de los cinco grupos de `constants/hiddenPlayers`.
+          `useLeaderboard` filtra los ocultos en todas sus ramas, así que esas filas no
+          llegan hasta acá y `isSuspended` es siempre falso. Si algún día se los quiere
+          mostrar como suspendidos en vez de ocultarlos, primero hay que sacarlos de
+          `HIDDEN_PLAYER_TOKEN_GROUPS`.
         */}
         {isSuspended && (
           <InfoButton message="Jugador suspendido" type="error" ariaLabel="Jugador suspendido" />

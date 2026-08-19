@@ -114,18 +114,22 @@ estricto que la función real; se arregla en la base (fase 9), no en el cliente.
 **Los tests siguen en `.js`**, y conviene migrarlos junto con `strictNullChecks`: es
 trabajo de fixtures, no de tipos.
 
-### Tres intenciones que se pueden recuperar (mueven píxeles)
+### Las tres intenciones que se recuperaron (o no)
 
-Las cinco props que no hacían nada se sacaron sin cambiar comportamiento, pero en
-tres la intención original está clara y recuperarla es un cambio visual, así que
-queda a decisión:
+De las cinco props muertas, tres tenían una intención clara. Se resolvieron dentro de
+la fase 7:
 
-- El globito del jugador suspendido arriba en vez de a la derecha (`placement="top"`).
-- El input del datepicker al 100% de ancho, por `className`.
-- **El emoji de cada torneo en el selector**: `TournamentCard` leía
-  `tournament.emoji` y esa columna no existe en la tabla —el emoji vive en
-  `config/tournaments.config.ts`—, así que todas las tarjetas mostraron siempre la
-  pelota genérica.
+- **Emoji del torneo en el selector: aplicado.** Sale de
+  `getTournamentConfig(tournament.slug)?.emoji` con la pelota como fallback. Medido:
+  `⚽ ⚽ ⚽` → `🏆 🏆 🌍`.
+- **Ancho del datepicker: aplicado**, con `.react-datepicker-wrapper { flex: 1 }` en
+  `styles/datepicker-theme.css`. **Falta verlo en el navegador**: la única pantalla
+  que lo usa es `/admin/horarios` y hace falta una sesión de admin.
+- **Globito del suspendido: descartado.** `SUSPENDED_PLAYERS` son los mismos dos
+  nombres que dos de los cinco grupos de `constants/hiddenPlayers`, y
+  `useLeaderboard` filtra los ocultos en todas sus ramas: **ese bloque no se
+  renderiza nunca**. Para que sirva hay que decidir antes si esos jugadores van
+  ocultos o suspendidos, que es una decisión de producto.
 
 ### Convenciones: lo que se unificó y lo que no
 
