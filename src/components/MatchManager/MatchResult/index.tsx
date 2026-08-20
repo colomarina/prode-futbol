@@ -107,23 +107,23 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         background:
           'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
         border: '1px solid var(--color-border)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radius-xl)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        padding: '8px',
+        padding: 'var(--space-sm)',
       }}
     >
       {/* Match Number */}
       <div
         style={{
           position: 'absolute',
-          top: '12px',
-          left: '12px',
+          top: 'var(--space-md)',
+          left: 'var(--space-md)',
           backgroundColor: 'var(--color-primary)',
           color: 'var(--color-text-on-primary)',
-          padding: '6px 12px',
-          borderRadius: '12px',
-          fontSize: '0.8rem',
+          padding: 'var(--space-xs) var(--space-md)',
+          borderRadius: 'var(--radius-lg)',
+          fontSize: 'var(--font-size-sm)',
           fontWeight: '700',
         }}
       >
@@ -135,13 +135,13 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         <div
           style={{
             position: 'absolute',
-            top: '12px',
-            right: '12px',
+            top: 'var(--space-md)',
+            right: 'var(--space-md)',
             backgroundColor: 'var(--color-success)',
             color: 'var(--color-text-on-primary)',
-            padding: '4px 12px',
-            borderRadius: '12px',
-            fontSize: '0.75rem',
+            padding: 'var(--space-2xs) var(--space-md)',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: 'var(--font-size-xs)',
             fontWeight: '600',
           }}
         >
@@ -152,14 +152,17 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       {/* Match Date and Time */}
       <div
         style={{
+          // No sale de la escala: es lo que hace falta para pasar por debajo de los dos
+          // badges absolutos de arriba (`top: var(--space-md)` + su alto). `--space-2xl`
+          // (32px) los pisa.
           marginTop: '36px',
-          marginBottom: '16px',
+          marginBottom: 'var(--space-lg)',
           textAlign: 'center',
         }}
       >
         <span
           style={{
-            fontSize: '0.9rem',
+            fontSize: 'var(--font-size-md)',
             fontWeight: '600',
             color: 'var(--color-text-secondary)',
           }}
@@ -169,11 +172,15 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       </div>
 
       {/* Teams and Score */}
+      {/* `20px` cae justo entre `--space-lg` (16) y `--space-xl` (24). */}
       <div style={{ marginBottom: '20px' }}>
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto auto auto 1fr',
+            // `10px` es el valor que `tokens.css` dejo afuera a proposito. Acá son 4
+            // gaps en una grilla de 5 columnas, así que moverlo a `sm` o a `md`
+            // cambia 8px el ancho total y hay que mirar el mobile antes.
             gap: '10px',
             alignItems: 'center',
           }}
@@ -212,17 +219,18 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       {match.is_playoff && (
         <div
           style={{
-            marginBottom: '16px',
+            marginBottom: 'var(--space-lg)',
             border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            padding: '12px',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-md)',
             backgroundColor: 'var(--color-surface-variant)',
           }}
         >
           <p
             style={{
+              // Mismo `10px` sin token que el gap de la grilla.
               margin: '0 0 10px 0',
-              fontSize: '0.9rem',
+              fontSize: 'var(--font-size-md)',
               fontWeight: '700',
               color: 'var(--color-text-primary)',
             }}
@@ -236,8 +244,8 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
+                gap: 'var(--space-sm)',
+                marginBottom: 'var(--space-sm)',
                 cursor: qualifierIsLocked ? 'default' : 'pointer',
               }}
             >
@@ -248,7 +256,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
                 disabled={qualifierIsLocked}
                 onChange={() => handleQualifierChange(team.id)}
               />
-              <span style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
+              <span style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)' }}>
                 {team.name}
               </span>
             </label>
@@ -257,9 +265,9 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           {qualifierIsLocked && (
             <p
               style={{
-                margin: '8px 0 0 0',
+                margin: 'var(--space-sm) 0 0 0',
                 color: 'var(--color-text-secondary)',
-                fontSize: '0.8rem',
+                fontSize: 'var(--font-size-sm)',
               }}
             >
               No hace falta elegir: con ese marcador hay ganador directo.
@@ -272,7 +280,9 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         <p
           style={{
             textAlign: 'center',
-            marginTop: '8px',
+            marginTop: 'var(--space-sm)',
+            // Justo en el medio de `--font-size-sm` (0.8) y `--font-size-md` (0.9): elegir
+            // uno cambia el tamaño del texto en el panel de admin.
             fontSize: '0.85rem',
             color: 'var(--color-text-secondary)',
             fontWeight: '600',
@@ -287,13 +297,15 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         <p
           style={{
             textAlign: 'center',
-            marginTop: '12px',
+            marginTop: 'var(--space-md)',
+            // Justo en el medio de `--font-size-sm` (0.8) y `--font-size-md` (0.9): elegir
+            // uno cambia el tamaño del texto en el panel de admin.
             fontSize: '0.85rem',
             color: 'var(--color-success)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px',
+            gap: 'var(--space-2xs)',
             fontWeight: '600',
           }}
         >
