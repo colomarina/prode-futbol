@@ -15,26 +15,52 @@ import cardStyles from '../MatchPrediction/MatchPrediction.module.css'
  * `MatchPrediction`: mismo padding, borde, radio, sombra y degradado. Eso es lo
  * que mas se ve.
  *
- * El alto **no** coincide exacto, y no puede: la tarjeta real cambia de alto segun
- * si el partido tiene aviso de cerrado, si es de playoff y muestra el selector de
- * penales, o si el pronostico ya esta cargado. El esqueleto reproduce la variante
- * mas simple —encabezado y marcador—, asi que en una fecha con avisos queda mas
- * corto que el contenido final. Sigue siendo mejor que un spinner de una linea,
- * pero no es cero salto y conviene no decir que lo es.
+ * **Cuantas tarjetas no se adivina**: lo dice `cantidad`, que sale de contar en
+ * `useMatchesMeta` los partidos de la fecha elegida. Esa es la consulta compartida
+ * de "todos los partidos del torneo": ya esta en cache y resuelve antes que la
+ * consulta pesada, asi que el numero es exacto y no cuesta una peticion.
  *
- * `CANTIDAD = 4` es el tamanio tipico de una fecha del prode.
+ * Al principio esto era una constante en 4. Medido en el navegador contra una fecha
+ * de 15 partidos, el documento pasaba de 1026 a 3610 px: el esqueleto reservaba una
+ * cuarta parte del alto final. No movia nada de lo que el usuario estaba mirando
+ * —el selector se queda quieto— pero reservar el alto es justamente para lo que
+ * existe.
+ *
+ * El alto de **cada** tarjeta sigue siendo aproximado, y no puede no serlo: la
+ * tarjeta real cambia de alto segun si el partido tiene aviso de cerrado, si es de
+ * playoff y muestra el selector de penales, o si el pronostico ya esta cargado. El
+ * esqueleto reproduce la variante mas simple, asi que en una fecha con avisos queda
+ * corto.
  */
-const CANTIDAD = 4
+
+/** Cuando todavia no se sabe cuantos partidos tiene la fecha. */
+const CANTIDAD_POR_DEFECTO = 4
 
 /**
- * El alto de la cajita del marcador. Sale de sumar los valores de `.box` en
- * `ScoreInput.module.css` —`font-size: 1.5rem`, `padding: var(--space-sm)` arriba
- * y abajo, `border: 3px`— en vez de elegir un numero: si esa cajita cambia, esto
- * queda desalineado y el comentario dice donde mirar.
+ * Los dos altos de adentro de la tarjeta, **medidos en el navegador** y no
+ * calculados. El primer intento los derivaba de los tokens y los dos daban corto:
+ *
+ * - La cajita del marcador da 52.8px, no los 50.8 que sale de
+ *   `1.5rem * 1.2 + var(--space-sm) * 2 + 6px`. El factor real no es 1.2: `.box`
+ *   usa `line-height: normal`, que a 24px son ~30.8px en esta tipografia. Ningun
+ *   token expresa eso.
+ * - El bloque de fecha da 25.6px. La linea es `--font-size-md` con el line-height
+ *   global de 1.6 (23.04px) y los emojis del texto —📅 y 🕐— estiran la caja un
+ *   par de px mas.
+ *
+ * Si alguno de los dos componentes cambia de tamanio, esto queda desalineado: los
+ * numeros salen de `ScoreInput.module.css` (`.box`) y de
+ * `MatchHeader.module.css` (`.meta` / `.datetime`).
  */
-const ALTO_DEL_MARCADOR = 'calc(1.5rem * 1.2 + var(--space-sm) * 2 + 6px)'
+const ALTO_DEL_MARCADOR = '52.8px'
+const ALTO_DE_LA_FECHA = '25.6px'
 
-export default function MatchPredictionSkeleton() {
+export default function MatchPredictionSkeleton({ cantidad }: { cantidad?: number }) {
+  // `0` es un valor legítimo de `matchesMeta` (una fecha sin partidos cargados), pero
+  // no de acá: un esqueleto vacío no reserva nada. En ese caso la pantalla que
+  // corresponde es la de "no hay partidos", no esta.
+  const filas = cantidad && cantidad > 0 ? cantidad : CANTIDAD_POR_DEFECTO
+
   return (
     /*
      * `role="status"` en el contenedor porque los `Skeleton` son `aria-hidden`:
@@ -59,13 +85,22 @@ export default function MatchPredictionSkeleton() {
         Cargando los partidos de la fecha...
       </span>
 
-      {Array.from({ length: CANTIDAD }, (_, indice) => (
+      {Array.from({ length: filas }, (_, indice) => (
         <div key={indice} className={cardStyles.card}>
           {/* El bloque de fecha y hora: los mismos margenes que `.meta` de
               `MatchHeader`, incluido el `margin-top: 36px` que deja pasar por
               debajo de los badges absolutos. */}
-          <div style={{ marginTop: '36px', marginBottom: 'var(--space-lg)', textAlign: 'center' }}>
-            <Skeleton height="1.1rem" width="60%" style={{ marginInline: 'auto' }} />
+          <div
+            style={{
+              marginTop: '36px',
+              marginBottom: 'var(--space-lg)',
+              height: ALTO_DE_LA_FECHA,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Skeleton height="1.1rem" width="60%" />
           </div>
 
           {/* La misma grilla de 5 columnas que el marcador real. */}

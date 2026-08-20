@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { FormEvent } from 'react'
 import { useMatches } from '../../hooks/useMatches'
+import { useMatchesMeta } from '../../hooks/useMatchesMeta'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
 import { useSelectedRound } from '../../hooks/useSelectedRound'
@@ -44,6 +45,13 @@ export default function PredictionForm() {
   })
 
   const { matches, loading: matchesLoading } = useMatches(selectedRound, activeTournament?.id)
+  /*
+   * Solo para saber cuántas tarjetas de esqueleto dibujar. Es la consulta compartida
+   * de "todos los partidos del torneo", así que a esta altura ya está en cache y no
+   * agrega una petición: resuelve antes que la consulta pesada de `useMatches`, que
+   * es justo la que estamos esperando.
+   */
+  const { matchesMeta } = useMatchesMeta(activeTournament?.id)
   const { predictions, batchUpsertPredictions } = usePredictions(
     selectedRound,
     activeTournament?.id
@@ -156,6 +164,12 @@ export default function PredictionForm() {
     selectedRound,
   })
 
+  /** Cuántas tarjetas de esqueleto van, para reservar el alto real y no uno inventado. */
+  const cantidadDePartidos = useMemo(
+    () => matchesMeta.filter(match => match.round_number === selectedRound).length,
+    [matchesMeta, selectedRound]
+  )
+
   /*
    * El esqueleto no es un placeholder de pantalla completa: las fechas ya llegaron,
    * asi que el selector se dibuja igual y solo se reserva el lugar de las tarjetas.
@@ -171,7 +185,7 @@ export default function PredictionForm() {
             onSelect={handleRoundSelect}
           />
         </div>
-        <MatchPredictionSkeleton />
+        <MatchPredictionSkeleton cantidad={cantidadDePartidos} />
       </div>
     )
   }

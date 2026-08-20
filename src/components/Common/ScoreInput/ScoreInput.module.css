@@ -60,10 +60,16 @@
  * `outline` para que siga el `border-radius`, igual que `TextInput`, y con más
  * opacidad que ahí (35% contra 18%) justamente porque acá el borde puede ser del
  * mismo color.
+ *
+ * La sombra de elevación se repite en la lista: `box-shadow` no se acumula entre
+ * reglas, la de acá pisa la de `.box` entera. Medido en el navegador, sin esto la
+ * cajita perdía su elevación justo mientras estaba enfocada.
  */
 .input:focus-visible {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  box-shadow:
+    0 2px 8px rgb(0 0 0 / 8%),
+    0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .input:disabled {

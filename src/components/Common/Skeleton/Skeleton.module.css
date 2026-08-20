@@ -8,13 +8,21 @@
  *
  * Los dos colores salen de la paleta y no de un gris literal, para que el
  * skeleton siga al tema y al torneo igual que el resto.
+ *
+ * El brillo es `--color-border` y no `--color-surface`, y eso se decidió midiendo
+ * en el navegador. Con `--color-surface` el barrido daba 1.04 de contraste contra
+ * la base en tema claro (`#fafafa` sobre `#ffffff`: no se veía) y en oscuro iba
+ * para el lado contrario, porque ahí `--color-surface` (`#1a1a1a`) es más oscuro
+ * que `--color-surface-variant` (`#242424`). Con `--color-border` el barrido queda
+ * en 1.26 y 1.23: parecido en los dos temas, y en cada uno se mueve hacia el gris
+ * medio, así que se lee como una banda que pasa y no como un parche.
  */
 .skeleton {
   background-color: var(--color-surface-variant);
   background-image: linear-gradient(
     90deg,
     transparent 0%,
-    var(--color-surface) 50%,
+    var(--color-border) 50%,
     transparent 100%
   );
   background-size: 200% 100%;

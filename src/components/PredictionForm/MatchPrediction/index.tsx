@@ -151,11 +151,19 @@ const MatchPrediction = ({
           <TeamDisplay team={match.home_team} size="sm" showNameBelow />
         </div>
 
+        {/*
+         * El `aria-label` no es opcional: sin él el nombre accesible del input sale
+         * del placeholder, así que un lector de pantalla anuncia "-, editar" en las
+         * dos cajitas y no hay forma de saber cuál es el local. Se vio en el árbol
+         * de accesibilidad del navegador. El nombre del equipo lo sabe esta pantalla
+         * y no `ScoreInput`, así que va acá.
+         */}
         <ScoreInput
           value={homeValue}
           onChange={event => handleInputChange('home', event.target.value)}
           readOnly={!canPredict}
           tone={tone}
+          aria-label={`Goles de ${match.home_team?.name || 'el local'}`}
         />
 
         <ScoreSeparator />
@@ -166,6 +174,7 @@ const MatchPrediction = ({
           onChange={event => handleInputChange('away', event.target.value)}
           readOnly={!canPredict}
           tone={tone}
+          aria-label={`Goles de ${match.away_team?.name || 'la visita'}`}
         />
 
         <div className={styles.awayTeam}>

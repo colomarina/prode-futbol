@@ -191,11 +191,14 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           </div>
 
           {/* Home Score Input */}
+          {/* Sin `aria-label` el nombre accesible sale del placeholder y las dos
+              cajitas se anuncian "-": no hay forma de saber cual es el local. */}
           <ScoreInput
             value={displayHomeValue}
             onChange={e => handleInputChange('home', e.target.value)}
             disabled={match.is_finished || !canEditResult}
             tone={scoreTone}
+            aria-label={`Goles de ${match.home_team?.name || 'el local'}`}
           />
 
           <ScoreSeparator />
@@ -207,6 +210,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
             onChange={e => handleInputChange('away', e.target.value)}
             disabled={match.is_finished || !canEditResult}
             tone={scoreTone}
+            aria-label={`Goles de ${match.away_team?.name || 'la visita'}`}
           />
 
           {/* Away Team */}
