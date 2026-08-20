@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import type { FormEvent } from 'react'
 import { useMatches } from '../../hooks/useMatches'
 import { usePredictions } from '../../hooks/usePredictions'
 import { useRounds } from '../../hooks/useRounds'
@@ -132,6 +133,21 @@ export default function PredictionForm() {
     setToast(getSaveToast({ savedCount: toSave.length, expiredCount: expired.length, error }))
   }, [matches, predictionValues, predictionsByMatchId, batchUpsertPredictions, isReadOnly])
 
+  /**
+   * El `<form>` existe para que se pueda guardar con Enter desde cualquier input
+   * del marcador, que es como se completa una fecha entera sin soltar el teclado.
+   *
+   * `preventDefault` porque el guardado es una llamada a Supabase, no un submit
+   * HTTP: sin esto el navegador recarga la pagina y se pierde lo tipeado.
+   */
+  const handleSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      handleSaveAll()
+    },
+    [handleSaveAll]
+  )
+
   const placeholder = getFormPlaceholder({
     roundsLoading,
     rounds,
@@ -174,52 +190,54 @@ export default function PredictionForm() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.selectorCard}>
-        <RoundSelector
-          rounds={availableRounds}
-          selectedRound={selectedRound}
-          onSelect={handleRoundSelect}
-        />
-      </div>
-
-      <RoundSummary
-        round={currentRound}
-        isReadOnly={isReadOnly}
-        allMatchesLocked={allMatchesLocked}
-      />
-
-      {/* En modo consulta no hay fecha abierta a la que ir, se oculta */}
-      {!isReadOnly && activeRound && selectedRound !== activeRound.round_number && (
-        <ActiveRoundShortcut activeRound={activeRound} rounds={rounds} onGo={followActiveRound} />
-      )}
-
-      <div className={styles.matches}>
-        {matches.map(match => (
-          <MatchPrediction
-            key={`${match.round_number}-${match.match_number}-${match.id}`}
-            match={match}
-            predictionValue={predictionValues[match.id]}
-            existingPrediction={predictionsByMatchId.get(match.id)}
-            onValueChange={handleValueChange}
+      {/*
+       * El form envuelve todo menos el toast, y no solo la lista de partidos: asi
+       * su caja coincide con la del contenedor y el `position: sticky` de la barra
+       * de guardar sigue teniendo el mismo alto para pegarse.
+       */}
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.selectorCard}>
+          <RoundSelector
+            rounds={availableRounds}
+            selectedRound={selectedRound}
+            onSelect={handleRoundSelect}
           />
-        ))}
-      </div>
-
-      {hasEditableMatches && (
-        <div className={styles.saveBar}>
-          <Button
-            size="lg"
-            fullWidth
-            onClick={handleSaveAll}
-            disabled={saving || !hasPredictionsToSave}
-          >
-            <span className={styles.saveIcon}>{saving ? '⏳' : '💾'}</span>
-            <span>{saving ? 'Guardando...' : 'Guardar Todos los Pronósticos'}</span>
-          </Button>
         </div>
-      )}
 
-      {!isReadOnly && allMatchesLocked && <LockedRoundNotice />}
+        <RoundSummary
+          round={currentRound}
+          isReadOnly={isReadOnly}
+          allMatchesLocked={allMatchesLocked}
+        />
+
+        {/* En modo consulta no hay fecha abierta a la que ir, se oculta */}
+        {!isReadOnly && activeRound && selectedRound !== activeRound.round_number && (
+          <ActiveRoundShortcut activeRound={activeRound} rounds={rounds} onGo={followActiveRound} />
+        )}
+
+        <div className={styles.matches}>
+          {matches.map(match => (
+            <MatchPrediction
+              key={`${match.round_number}-${match.match_number}-${match.id}`}
+              match={match}
+              predictionValue={predictionValues[match.id]}
+              existingPrediction={predictionsByMatchId.get(match.id)}
+              onValueChange={handleValueChange}
+            />
+          ))}
+        </div>
+
+        {hasEditableMatches && (
+          <div className={styles.saveBar}>
+            <Button type="submit" size="lg" fullWidth disabled={saving || !hasPredictionsToSave}>
+              <span className={styles.saveIcon}>{saving ? '⏳' : '💾'}</span>
+              <span>{saving ? 'Guardando...' : 'Guardar Todos los Pronósticos'}</span>
+            </Button>
+          </div>
+        )}
+
+        {!isReadOnly && allMatchesLocked && <LockedRoundNotice />}
+      </form>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>

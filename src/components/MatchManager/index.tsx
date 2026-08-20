@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
+import type { FormEvent } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { useMatchesMeta } from '../../hooks/useMatchesMeta'
@@ -123,6 +124,16 @@ export default function MatchManager() {
     }
   }, [matches, resultValues, updateMatch])
 
+  // `preventDefault` porque el guardado va por Supabase, no por un submit HTTP:
+  // sin esto el navegador recarga y se pierde lo tipeado.
+  const handleSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      handleSaveAll()
+    },
+    [handleSaveAll]
+  )
+
   // Verificar si hay al menos un resultado para guardar
   const hasValidResults = useMemo(
     () =>
@@ -198,7 +209,12 @@ export default function MatchManager() {
             </p>
           </div>
         ) : (
-          <>
+          /*
+           * El `<form>` esta para poder guardar con Enter desde cualquier marcador,
+           * que es como se carga una fecha entera sin soltar el teclado. `margin: 0`
+           * porque es un envoltorio y algunos navegadores le ponen margen propio.
+           */
+          <form onSubmit={handleSubmit} style={{ margin: 0 }}>
             {/* Lista de partidos */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {matches.map(match => (
@@ -221,17 +237,17 @@ export default function MatchManager() {
               }}
             >
               <Button
+                type="submit"
                 variant="success"
                 size="lg"
                 fullWidth
-                onClick={handleSaveAll}
                 disabled={saving || !hasValidResults}
               >
                 <span style={{ fontSize: 'var(--font-size-2xl)' }}>{saving ? '⏳' : '💾'}</span>
                 <span>{saving ? 'Guardando...' : 'Guardar Todos los Resultados'}</span>
               </Button>
             </div>
-          </>
+          </form>
         )
       ) : (
         <div style={{ textAlign: 'center', padding: '48px 16px' }}>

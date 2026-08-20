@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { useTournament } from '../../contexts/TournamentContext'
 import { useWorldCupBonus } from '../../hooks/useWorldCupBonus'
 import Button from '../Common/Button'
 import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
+import FormField from '../Common/FormField'
 import Toast from '../Common/Toast'
 import LoadingState from '../Common/LoadingState'
 import TeamOption from '../Common/TeamOption'
@@ -104,6 +106,13 @@ export default function WorldCupPredictions() {
     fetchData()
   }
 
+  // `preventDefault` porque el guardado va por Supabase: sin esto Enter en una
+  // respuesta de texto recarga la pagina y se pierden las 13 respuestas.
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    handleSave()
+  }
+
   if (!isWorldCupTournament) {
     return (
       <div className="container" style={{ maxWidth: '900px' }}>
@@ -171,121 +180,145 @@ export default function WorldCupPredictions() {
         )}
       </div>
 
-      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          {WORLD_CUP_BONUS_QUESTIONS.map(question => (
-            <div
-              key={question.key}
-              style={{
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-md)',
-                backgroundColor: 'var(--color-surface-variant)',
-              }}
-            >
-              <label
-                className="form-label"
-                style={{ marginBottom: 'var(--space-sm)', display: 'block' }}
-              >
-                {question.label}
-                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                  {' '}
-                  ({question.points} pts)
-                </span>
-              </label>
+      {/* El form arranca en la tarjeta de preguntas: la de arriba es solo lectura. */}
+      <form onSubmit={handleSubmit} style={{ margin: 0 }}>
+        <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            {WORLD_CUP_BONUS_QUESTIONS.map(question => {
+              /*
+               * La etiqueta se arma una vez y se le pasa al control, en vez de quedar
+               * en un `<label>` al lado.
+               *
+               * El `<label className="form-label">` que habia no estaba asociado a
+               * nada: los 13 controles de esta pantalla quedaban sin nombre para un
+               * lector de pantalla. Los dropdowns no son un `<select>`, asi que un
+               * `htmlFor` no tiene a que apuntar; se nombran con su prop `label`. El
+               * campo de texto va con `FormField`, que genera el id y lo inyecta.
+               *
+               * Es un cambio visualmente neutro: el `.label` de `SelectDropdown` y el
+               * de `FormField` replican `.form-label`, y los 8px de separacion salen
+               * del `margin-bottom` en un caso y del `gap` en el otro.
+               */
+              const etiqueta = (
+                <>
+                  {question.label}
+                  <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                    {' '}
+                    ({question.points} pts)
+                  </span>
+                </>
+              )
 
-              {question.type === 'team' && (
-                <SelectDropdown
-                  items={question.key === 'best_debutant_team_id' ? debutantTeams : teams}
-                  selectedId={form[question.key]}
-                  onSelect={value => updateField(question.key, value)}
-                  valueKey="id"
-                  placeholder={
-                    question.key === 'best_debutant_team_id'
-                      ? 'Seleccionar seleccion debutante'
-                      : 'Seleccionar equipo'
-                  }
-                  disabled={isLocked}
-                  renderButton={team => <TeamOption team={team} />}
-                  renderOption={team => <TeamOption team={team} />}
-                />
-              )}
+              return (
+                <div
+                  key={question.key}
+                  style={{
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: 'var(--space-md)',
+                    backgroundColor: 'var(--color-surface-variant)',
+                  }}
+                >
+                  {question.type === 'team' && (
+                    <SelectDropdown
+                      label={etiqueta}
+                      items={question.key === 'best_debutant_team_id' ? debutantTeams : teams}
+                      selectedId={form[question.key]}
+                      onSelect={value => updateField(question.key, value)}
+                      valueKey="id"
+                      placeholder={
+                        question.key === 'best_debutant_team_id'
+                          ? 'Seleccionar seleccion debutante'
+                          : 'Seleccionar equipo'
+                      }
+                      disabled={isLocked}
+                      renderButton={team => <TeamOption team={team} />}
+                      renderOption={team => <TeamOption team={team} />}
+                    />
+                  )}
 
-              {question.type === 'text' && (
-                <TextInput
-                  value={form[question.key]}
-                  onChange={event => updateField(question.key, event.target.value)}
-                  placeholder="Respuesta"
-                  disabled={isLocked}
-                />
-              )}
+                  {question.type === 'text' && (
+                    <FormField label={etiqueta}>
+                      <TextInput
+                        value={form[question.key]}
+                        onChange={event => updateField(question.key, event.target.value)}
+                        placeholder="Respuesta"
+                        disabled={isLocked}
+                      />
+                    </FormField>
+                  )}
 
-              {question.type === 'number' && (
-                <SelectDropdown
-                  items={FINAL_GOALS_OPTIONS}
-                  selectedId={
-                    form[question.key] === '' || form[question.key] === null
-                      ? null
-                      : Number(form[question.key])
-                  }
-                  onSelect={value => updateField(question.key, value)}
-                  valueKey="id"
-                  placeholder="Seleccionar goles (0 a 10)"
-                  disabled={isLocked}
-                  renderButton={item => <span>{item.label}</span>}
-                  renderOption={item => <span>{item.label}</span>}
-                />
-              )}
+                  {question.type === 'number' && (
+                    <SelectDropdown
+                      label={etiqueta}
+                      items={FINAL_GOALS_OPTIONS}
+                      selectedId={
+                        form[question.key] === '' || form[question.key] === null
+                          ? null
+                          : Number(form[question.key])
+                      }
+                      onSelect={value => updateField(question.key, value)}
+                      valueKey="id"
+                      placeholder="Seleccionar goles (0 a 10)"
+                      disabled={isLocked}
+                      renderButton={item => <span>{item.label}</span>}
+                      renderOption={item => <span>{item.label}</span>}
+                    />
+                  )}
 
-              {question.type === 'boolean' && (
-                <SelectDropdown
-                  items={HAT_TRICK_OPTIONS}
-                  selectedId={
-                    form[question.key] === null || form[question.key] === undefined
-                      ? null
-                      : form[question.key]
-                  }
-                  onSelect={value => updateField(question.key, value)}
-                  valueKey="id"
-                  placeholder="Seleccionar opcion"
-                  disabled={isLocked}
-                  renderButton={item => <span>{item.label}</span>}
-                  renderOption={item => <span>{item.label}</span>}
-                />
-              )}
+                  {question.type === 'boolean' && (
+                    <SelectDropdown
+                      label={etiqueta}
+                      items={HAT_TRICK_OPTIONS}
+                      selectedId={
+                        form[question.key] === null || form[question.key] === undefined
+                          ? null
+                          : form[question.key]
+                      }
+                      onSelect={value => updateField(question.key, value)}
+                      valueKey="id"
+                      placeholder="Seleccionar opcion"
+                      disabled={isLocked}
+                      renderButton={item => <span>{item.label}</span>}
+                      renderOption={item => <span>{item.label}</span>}
+                    />
+                  )}
 
-              {question.type === 'stage' && (
-                <SelectDropdown
-                  items={ARGENTINA_STAGE_OPTIONS}
-                  selectedId={form[question.key]}
-                  onSelect={value => updateField(question.key, value)}
-                  valueKey="id"
-                  placeholder="Seleccionar instancia"
-                  disabled={isLocked}
-                  renderButton={item => <span>{item.label}</span>}
-                  renderOption={item => <span>{item.label}</span>}
-                />
-              )}
-            </div>
-          ))}
+                  {question.type === 'stage' && (
+                    <SelectDropdown
+                      label={etiqueta}
+                      items={ARGENTINA_STAGE_OPTIONS}
+                      selectedId={form[question.key]}
+                      onSelect={value => updateField(question.key, value)}
+                      valueKey="id"
+                      placeholder="Seleccionar instancia"
+                      disabled={isLocked}
+                      renderButton={item => <span>{item.label}</span>}
+                      renderOption={item => <span>{item.label}</span>}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
 
-      {!isLocked && (
-        <div
-          style={{
-            marginTop: 'var(--space-xl)',
-            position: 'sticky',
-            bottom: '20px',
-            zIndex: 'var(--z-sticky)',
-          }}
-        >
-          <Button size="lg" fullWidth onClick={handleSave} disabled={saving || !hasAnyAnswer}>
-            <span style={{ fontSize: 'var(--font-size-xl)' }}>{saving ? '⏳' : '💾'}</span>
-            <span>{saving ? 'Guardando...' : 'Guardar y completar despues'}</span>
-          </Button>
-        </div>
-      )}
+        {!isLocked && (
+          <div
+            style={{
+              marginTop: 'var(--space-xl)',
+              position: 'sticky',
+              bottom: '20px',
+              zIndex: 'var(--z-sticky)',
+            }}
+          >
+            <Button type="submit" size="lg" fullWidth disabled={saving || !hasAnyAnswer}>
+              <span style={{ fontSize: 'var(--font-size-xl)' }}>{saving ? '⏳' : '💾'}</span>
+              <span>{saving ? 'Guardando...' : 'Guardar y completar despues'}</span>
+            </Button>
+          </div>
+        )}
+      </form>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
