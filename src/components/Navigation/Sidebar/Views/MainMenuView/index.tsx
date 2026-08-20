@@ -34,10 +34,13 @@ export default function MainMenuView({
                 disabled={isLoggingOut}
               >
                 <span className={styles.menuIcon}>
+                  {/* El icono va con `alt=""`: el label del boton ya dice
+                      "Cerrar sesion", asi que un `alt` con el mismo texto lo
+                      haria anunciar dos veces. */}
                   {isLoggingOut ? (
                     <Spinner size={20} borderWidth={2.5} color="var(--color-error)" />
                   ) : (
-                    <img src={logOut} alt="Cerrar sesión" className={styles.logoutIcon} />
+                    <img src={logOut} alt="" className={styles.logoutIcon} />
                   )}
                 </span>
                 <div className={styles.menuContent}>
