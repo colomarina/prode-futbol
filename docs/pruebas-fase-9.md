@@ -141,6 +141,27 @@ corrida.
 
 ---
 
+## ✅ Aplicado y verificado (2026-08-20)
+
+Las dos migraciones de seguridad (entrega A del plan) ya están en producción,
+verificadas con `test-colo` desde la API:
+
+- **A1 — escalada de privilegios**: trigger `prevent_profile_role_change` en
+  `profiles`. `PATCH role=admin` ahora deja el rol en `user`; el cambio de
+  `full_name` sigue andando. **Cerrado.**
+- **A2 — `isReadOnly` era solo UI**: policies restrictive en `predictions`. Escribir
+  en un torneo `finished` ahora se rechaza (UPDATE 0 filas, INSERT `42501`); en un
+  torneo `active` todo sigue igual. **Cerrado.**
+
+Regresión OK: matches/rounds siguen rechazando a un no-admin, pronósticos ajenos dan
+`42501`, la lectura sigue pública. El SQL exacto y el rollback están en
+`docs/plan-fase-9.md`.
+
+Queda pendiente **A3** (cutoff en la base, opcional) y la **entrega B** (limpieza de
+esquema, sin urgencia).
+
+---
+
 ## Lo que queda para hacer (necesita migraciones)
 
 En orden de urgencia:

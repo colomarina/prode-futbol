@@ -55,32 +55,59 @@ después de que vos mires las dependencias en el panel.
 
 # Entrega A — Seguridad (urgente, bajo riesgo, verificable casi entera por el asistente)
 
-## A1 — 🔴 `profiles`: bloquear el cambio de `role`
+> **Estado: A1 y A2 aplicadas y verificadas el 2026-08-20.** Con eso la fase 9 está
+> resuelta en lo que importa (la vulnerabilidad y el agujero de `isReadOnly`). Lo que
+> queda —A3 y la entrega B— es limpieza sin urgencia. El SQL exacto que se aplicó está
+> abajo en cada sección; regresión de RLS confirmada (matches/rounds siguen rechazando
+> a un no-admin, pronósticos ajenos dan 42501, la lectura sigue pública).
+
+## A1 — 🔴 `profiles`: bloquear el cambio de `role` ✅ APLICADA
 
 **Arregla** la escalada de privilegios: hoy un usuario común se hace admin con
 `PATCH /profiles { role: 'admin' }`.
 
-**Idea del SQL** (a afinar contra las policies reales, que hay que leer primero):
+**Diagnóstico**: la policy de UPDATE de `profiles` tenía `with_check: null` y
+`qual: (auth.uid() = id)`. Eso protege el `id` (Postgres reusa el `USING` como
+`WITH CHECK`) pero **no** las columnas: el dueño podía cambiar cualquiera, incluida
+`role`.
+
+**SQL aplicado** — un trigger `BEFORE UPDATE`, no un cambio de policy. RLS no filtra
+por columna; el trigger sí, y de forma quirúrgica. El guard `auth.uid() IS NOT NULL`
+hace que no interfiera desde el panel (ahí `auth.uid()` es null), así que los roles se
+siguen gestionando desde la base.
 
 ```sql
--- Reemplaza la policy de UPDATE de profiles por una que fije las columnas
--- protegidas a su valor actual. El dueño sigue editando username y full_name.
-alter policy "<nombre-de-la-policy-de-update>" on public.profiles
-  using (auth.uid() = id)
-  with check (
-    auth.uid() = id
-    and role = (select role from public.profiles where id = auth.uid())
-    and id = auth.uid()
-  );
+create or replace function public.prevent_profile_role_change()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null and new.role is distinct from old.role then
+    new.role := old.role;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_prevent_profile_role_change
+  before update on public.profiles
+  for each row
+  execute function public.prevent_profile_role_change();
 ```
 
-> Ojo: el nombre exacto de la policy y su forma actual hay que sacarlos del panel
-> (`select * from pg_policies where tablename = 'profiles'`). El SQL de arriba es la
-> forma; el definitivo sale de eso. Una alternativa más robusta es un trigger
-> `before update` que haga `new.role := old.role`, que no depende de que el cliente
-> mande o no la columna.
+Revert silencioso (`new.role := old.role`) y no `raise`: un atacante ve un `200` con
+el rol intacto, sin la confirmación de que hay una defensa.
 
-**Rollback:** volver a la policy anterior (guardá el `pg_policies` de antes).
+**Rollback:**
+
+```sql
+drop trigger if exists trg_prevent_profile_role_change on public.profiles;
+drop function if exists public.prevent_profile_role_change();
+```
+
+**Resultado de la verificación** (con `test-colo`): `PATCH role=admin` → quedó en
+`user`; lectura independiente → `user`; `PATCH full_name` → sigue funcionando. ✅
 
 **Riesgo:** bajo. Es _más_ restrictiva; el cliente solo edita `username`/`full_name`
 (`AuthContext.updateProfile`), así que a un usuario normal no le cambia nada.
@@ -94,18 +121,20 @@ alter policy "<nombre-de-la-policy-de-update>" on public.profiles
 
 ---
 
-## A2 — `predictions`: rechazar escrituras en torneos no `active`
+## A2 — `predictions`: rechazar escrituras en torneos no `active` ✅ APLICADA
 
 **Arregla** que `isReadOnly` sea solo UI: hoy se puede escribir un pronóstico en un
 torneo `finished`.
 
-**Idea del SQL:**
+**SQL aplicado** — policies `RESTRICTIVE` (se combinan con AND con las existentes, sin
+tocarlas; el SELECT sigue público porque van solo en INSERT y UPDATE):
 
 ```sql
--- El insert/update de un pronóstico solo se permite si el torneo del partido
--- está 'active'. predictions no tiene tournament_id, así que se llega por join.
-create policy "predictions_solo_torneo_activo" on public.predictions
-  for insert to authenticated
+create policy "predictions_insert_torneo_activo"
+  on public.predictions
+  as restrictive
+  for insert
+  to authenticated
   with check (
     exists (
       select 1 from public.matches m
@@ -113,10 +142,42 @@ create policy "predictions_solo_torneo_activo" on public.predictions
       where m.id = predictions.match_id and t.status = 'active'
     )
   );
--- (y la equivalente para update)
+
+create policy "predictions_update_torneo_activo"
+  on public.predictions
+  as restrictive
+  for update
+  to authenticated
+  using (
+    exists (
+      select 1 from public.matches m
+      join public.tournaments t on t.id = m.tournament_id
+      where m.id = predictions.match_id and t.status = 'active'
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.matches m
+      join public.tournaments t on t.id = m.tournament_id
+      where m.id = predictions.match_id and t.status = 'active'
+    )
+  );
 ```
 
-**Rollback:** `drop policy "predictions_solo_torneo_activo" on public.predictions;`
+**Rollback:**
+
+```sql
+drop policy if exists "predictions_insert_torneo_activo" on public.predictions;
+drop policy if exists "predictions_update_torneo_activo" on public.predictions;
+```
+
+**Resultado de la verificación** (con `test-colo`, sobre el Mundial finished y el
+sandbox active): UPDATE en el Mundial → 0 filas; INSERT en el Mundial → `42501`;
+UPDATE e INSERT en el sandbox → funcionan. Regresión: matches/rounds siguen rechazando
+a un no-admin y los pronósticos ajenos dan `42501`. ✅
+
+**Alcance**: bloquea por estado del torneo, no por el cutoff del partido. En un torneo
+activo se puede seguir editando aunque el partido ya se jugó — eso es A3.
 
 **Riesgo:** medio. Si queda mal, **bloquea pronósticos legítimos** en torneos activos.
 Por eso el chequeo #2 de abajo (que en `active` sigue andando) es el crítico, no el #1.
