@@ -53,6 +53,21 @@
   width: 100%;
 }
 
+/*
+ * El wrapper que react-datepicker pone alrededor del input no tiene ancho propio,
+ * asi que dentro del flex de `DateTimeInput` se encogia al contenido y el campo
+ * quedaba chico al lado del icono. El input de adentro ya estaba al 100% (la regla
+ * de abajo), lo que faltaba era esto.
+ *
+ * Antes se intentaba con un `style={{ width: '100%' }}` en el <DatePicker>, pero ese
+ * componente **no acepta `style`**: la prop se ignoraba en silencio. Lo marco el
+ * tipado al migrar a TypeScript.
+ */
+.react-datepicker-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
 .react-datepicker__input-container input {
   width: 100%;
   border: none;

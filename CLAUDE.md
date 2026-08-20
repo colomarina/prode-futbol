@@ -15,15 +15,35 @@ pnpm test:watch
 pnpm test:coverage
 pnpm lint           # eslint src
 pnpm lint:fix
+pnpm typecheck      # tsc --noEmit
+pnpm types:db       # regenera src/types/database.ts desde Supabase (pide supabase login)
 pnpm format         # prettier --write sobre src/
 pnpm format:check
 ```
 
-**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.js` → `matchTiming.test.js`).
+**Testing**: Vitest + Testing Library + jsdom. Config en `vitest.config.js`, setup en `src/test/setup.js` (importa `jest-dom` y hace `cleanup()` después de cada test). Los tests van al lado del archivo que prueban (`matchTiming.ts` → `matchTiming.test.js`).
 
 Para testear un hook de datos: `src/test/supabaseMock.js` arma un mock del query builder encadenable de Supabase y cuenta consultas por tabla (útil para verificar que el cache deduplica). Ver `useRounds.test.jsx` como referencia — hay que mockear `../lib/supabase` con un getter y envolver el `renderHook` en un `QueryClientProvider` con `retry: false`.
 
-CI en `.github/workflows/ci.yml`: corre `lint`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
+CI en `.github/workflows/ci.yml`: corre `lint`, `typecheck`, `format:check`, `test` y `build` en cada push a `main` y en cada PR.
+
+## TypeScript (fase 7, terminada)
+
+**`src/` está entero en TypeScript**: 157 archivos. Los únicos `.js` que quedan son
+los tests y sus dos helpers (`src/test/`).
+
+- **`pnpm build` no chequea tipos.** El build lo hace SWC, que borra las anotaciones sin mirarlas, así que **el único chequeo real es `pnpm typecheck`** (`tsc --noEmit`). Está en CI como paso propio; si se saca, un error de tipos llega a producción en verde.
+- `tsconfig.json` mantiene `allowJs: true` y `checkJs: false` por los tests, que siguen en `.js`. `types: ["vite/client"]` es lo que tipa `import.meta.env` y los imports de `*.module.css`.
+- **`strict` está a medio camino, y a propósito.** Es un paraguas de ocho flags: cuatro (`strictFunctionTypes`, `strictBindCallApply`, `noImplicitThis`, `alwaysStrict`) ya están prendidas porque daban cero errores. Las otras cuatro son deuda medida: `strictNullChecks` 132, `noImplicitAny` 100, `useUnknownInCatchVariables` 12, `strictPropertyInitialization` 1. Conviene ir flag por flag, no prender `strict: true` de una (241 errores juntos).
+- **`typescript` está fijado en `^5.9` a propósito.** `pnpm add -D typescript` instala la 7.x (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta `<6.1.0`: con la 7 el lint queda con un peer sin resolver. Subir recién cuando typescript-eslint la soporte.
+- **`src/types/database.ts` es la verdad y lo genera Supabase** (`pnpm types:db`): no se edita a mano. Está en `.prettierignore` y en los `ignores` de ESLint, porque reformatearlo haría que cada regeneración traiga un diff de formato encima del diff real del esquema.
+- **`src/types/domain.ts` le pone los nombres del dominio** (`Match = Tables<'matches'>`) y guarda lo que el generador no puede saber: qué columna está muerta, cuál es el default roto, qué garantiza el cliente. Antes eran interfaces a mano y **varias estaban mal** (ver el registro de la fase 7): escribir tipos a mano es afirmar, no comprobar.
+- Las uniones de estado (`TournamentStatus`, `RoundStatus`, …) siguen a mano y **no son el tipo de la columna**: los estados son `text` + CHECK y no enums de Postgres, así que el esquema generado los da como `string | null` (`Enums` viene vacío). Sirven para comparar y estrechar.
+- El cliente es `createClient<Database>()`, así que `.from(...).select(...)` devuelve el tipo real, incluidos los embeds con alias. Las RPCs también quedan tipadas.
+- Las funciones piden **el subconjunto de columnas que usan** (`Pick<Match, 'home_team_id' | 'away_team_id'>`) en vez de la fila entera: así sirven igual para un registro de la base y para un objeto armado en un test.
+- **Los tests siguen en `.js`.** Un fixture parcial falla por propiedades faltantes, así que migrarlos es un trabajo de fixtures y no de tipos. Van con las flags de `strict` que faltan.
+- **Los tipos de los componentes se importan de donde viven los datos**, no se redeclaran: las props de una pantalla de estadísticas salen de `utils/stats`, las de una fila de la tabla de `hooks/useLeaderboard`, las del bracket de `hooks/usePlayoffs`. Si un hook cambia su forma, la pantalla deja de compilar.
+- ESLint aplica las reglas del proyecto (`no-console`, `import-x`, a11y, prettier) también a `.ts`/`.tsx`, más un bloque de `typescript-eslint` al final que apaga las reglas core que se pisan con las suyas.
 
 Prettier corre **como regla de ESLint** (`prettier/prettier: error`), así que `pnpm lint` falla por problemas de formato. Config: sin punto y coma, comillas simples, `printWidth: 100`, `arrowParens: avoid`.
 
@@ -39,7 +59,7 @@ En `.env` (no versionado), prefijo `VITE_`:
 
 `.env.example` tiene la lista completa con comentarios.
 
-`src/lib/supabase.jsx` **no** debe tirar si faltan las variables: `createClient` se ejecuta al evaluar el módulo, o sea antes de que React monte, así que un throw ahí deja la pantalla en blanco sin mensaje (ni el `ErrorBoundary` llega a existir). En su lugar construye el cliente con placeholders y exporta `missingSupabaseEnvVars`; `App.jsx` lo chequea antes de los providers y renderiza `Common/ConfigError`. En Vercel las variables se configuran por entorno: Production, Preview y Development son listas separadas.
+`src/lib/supabase.ts` **no** debe tirar si faltan las variables: `createClient` se ejecuta al evaluar el módulo, o sea antes de que React monte, así que un throw ahí deja la pantalla en blanco sin mensaje (ni el `ErrorBoundary` llega a existir). En su lugar construye el cliente con placeholders y exporta `missingSupabaseEnvVars`; `App.jsx` lo chequea antes de los providers y renderiza `Common/ConfigError`. En Vercel las variables se configuran por entorno: Production, Preview y Development son listas separadas.
 
 Deploy en Vercel; `vercel.json` reescribe todo a `/index.html` (SPA) y define los headers de seguridad. La CSP incluye `style-src 'unsafe-inline'` porque la app todavía usa cientos de estilos inline y bloques `<style>` inyectados; se puede endurecer cuando eso se migre.
 
@@ -58,7 +78,7 @@ React 19 + Vite (SWC) + Supabase. Sin router, sin librería de estado, sin CSS f
 
 Son accesibles los torneos con `status === 'active'` y `'finished'` (más `upcoming` para admins si el flag de entorno está activo). Hay un guard con `useEffect` que limpia el torneo si alguien fuerza uno bloqueado vía localStorage.
 
-**Torneos de prueba** (`src/utils/tournamentAccess.js`): los que tienen slug con prefijo `test-` solo son accesibles y visibles para admins. Se distinguen por slug y no por `status` a propósito — quedan en `active`, o sea escribibles, porque cualquier otro status los volvería `isReadOnly` e inservibles para probar. El filtro se aplica en `App.jsx` (acceso + lista del selector) y en `Sidebar` (contador de "Cambiar torneo"). No hay entorno de desarrollo separado: es el mecanismo para probar contra la base real sin tocar un torneo en curso.
+**Torneos de prueba** (`src/utils/tournamentAccess.ts`): los que tienen slug con prefijo `test-` solo son accesibles y visibles para admins. Se distinguen por slug y no por `status` a propósito — quedan en `active`, o sea escribibles, porque cualquier otro status los volvería `isReadOnly` e inservibles para probar. El filtro se aplica en `App.jsx` (acceso + lista del selector) y en `Sidebar` (contador de "Cambiar torneo"). No hay entorno de desarrollo separado: es el mecanismo para probar contra la base real sin tocar un torneo en curso.
 
 **Modo consulta**: `TournamentContext` expone `isReadOnly` (`activeTournament.status !== 'active'`). Es la única definición de "torneo cerrado a escrituras" y la consumen `PredictionForm`, `MatchPrediction`, `WorldCupPredictions`, `Sidebar` (oculta administración), `NavHeader` (badge 🏁) y `Navigation` (entra por la tabla de posiciones en vez del formulario). Cualquier escritura nueva tiene que respetarlo — el gating por status no vive en ningún otro lado. Son guards de UI; qué hace RLS con esas escrituras no está verificado.
 
@@ -69,7 +89,7 @@ Son accesibles los torneos con `status === 'active'` y `'finished'` (más `upcom
 Existen dos ejes de variación por torneo:
 
 - **Tema visual**: `src/config/tournaments.config.js` mapea `slug` → paletas CSS (light/dark) que se inyectan como custom properties en `document.documentElement` y setean `data-tournament`. Las claves deben coincidir con `tournament.slug` en Supabase. Un slug nuevo en la DB sin entrada acá se renderiza con la paleta base de `src/index.css`.
-- **Reglas de negocio**: chequeos ad-hoc de slug, sobre todo `slug === 'mundial-2026'` (secciones mundialistas en `Navigation`, colores de grupo en `utils/groupBadgeStyles.js`, criterios de desempate en `InfoPage/info.config.jsx`).
+- **Reglas de negocio**: chequeos ad-hoc de slug, sobre todo `slug === 'mundial-2026'` (secciones mundialistas en `Navigation`, colores de grupo en `utils/groupBadgeStyles.ts`, criterios de desempate en `InfoPage/info.config.jsx`).
 
 `ThemeContext` (dark/light) y el tema del torneo están acoplados: al togglear el tema se re-aplica `applyTournamentTheme` leyendo el slug desde localStorage.
 
@@ -91,12 +111,12 @@ Para agregar una pantalla: entrada en `MENU_ITEMS` (si es de nivel superior) o e
 
 ### Capa de datos
 
-`src/lib/supabase.jsx` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`. La única lectura que queda fuera de un hook es la RPC de progreso de jugadores en `RoundManager`.
+`src/lib/supabase.ts` exporta un único cliente. Toda la lógica de datos vive en `src/hooks/use*.jsx`. La única lectura que queda fuera de un hook es la RPC de progreso de jugadores en `RoundManager`.
 
 **TanStack Query**: todos los hooks de datos están migrados. Ya no queda ningún `useEffect` de fetching en `src/hooks/`.
 
-- Cliente y defaults en `src/lib/queryClient.js` (`staleTime` 30s, `retry` 1 en lecturas y **0 en mutaciones**, porque reintentar una escritura duplicaría un pronóstico).
-- **Las query keys se arman siempre con `src/lib/queryKeys.js` y empiezan por el id del torneo.** Es lo que impide que el cache mezcle torneos, igual que el filtro `tournament_id` en las queries. Nunca escribir un array de key a mano.
+- Cliente y defaults en `src/lib/queryClient.ts` (`staleTime` 30s, `retry` 1 en lecturas y **0 en mutaciones**, porque reintentar una escritura duplicaría un pronóstico).
+- **Las query keys se arman siempre con `src/lib/queryKeys.ts` y empiezan por el id del torneo.** Es lo que impide que el cache mezcle torneos, igual que el filtro `tournament_id` en las queries. Nunca escribir un array de key a mano.
 - `useMatchesMeta` es la consulta compartida de "todos los partidos del torneo" (`id, round_number, match_date, is_finished, is_playoff`). Su select es un superconjunto a propósito: la usan `useRounds`, `MatchManager`, `RoundManager`, `LeaderBoard` y `Navigation`. Si necesitás otra columna de esa lista, agregala ahí en vez de crear una query nueva. Sin `tournamentId` la query queda deshabilitada (`enabled`), porque traer los partidos de todos los torneos no sirve para nada.
 - Las mutaciones invalidan en vez de parchear estado local, y conservan el contrato `{ data, error }` que ya usan los componentes.
 - Las devtools están disponibles en `pnpm dev` (botón abajo a la izquierda); son la forma de verificar que no haya queries duplicadas.
@@ -108,24 +128,24 @@ Los `value` de `TournamentContext` y `ThemeContext` van con `useMemo` y sus func
 
 Tablas/vistas: `tournaments`, `rounds`, `matches`, `teams`, `predictions`, `profiles`, `round_scores`, `general_leaderboard` (vista), `world_cup_*` (`teams`, `predictions`, `bonus_config`, `bonus_scores`, `official_results`).
 
-RPCs que usa el cliente: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_predictions_summary[_by_tournament][_v2]`, `upsert_world_cup_prediction`, `admin_set_world_cup_lock`, `admin_lock_world_cup_predictions`, `recalculate_world_cup_bonus`.
+RPCs que usa el cliente: `get_personal_stats`, `get_tournament_leaderboard_with_bonus`, `get_round_predictions_summary_by_tournament[_v2]` (**la variante sin scope no existe en la base**: lo confirma el esquema generado), `upsert_world_cup_prediction`, `admin_set_world_cup_lock`, `admin_lock_world_cup_predictions`, `recalculate_world_cup_bonus`.
 
 En Supabase existen además las RPCs de pagos y finanzas (`get_round_payments_status`, `register_payment`, `remove_round_allocation`, `upsert_round_finance`, `get_all_round_financial_summaries`, con sus variantes `_by_tournament`), pero **ya no las llama nadie**: los paneles que las usaban se borraron por no estar cableados.
 
-**Nunca consultar sin scope de torneo.** Los `round_number` se repiten entre torneos, así que una query a `round_scores` (o la RPC `get_round_predictions_summary` legacy) sin `tournament_id` no devuelve un error: devuelve datos de otros torneos mezclados. Existía un patrón de fallback que ante un error en la query scopeada reintentaba sin el filtro — se eliminó, porque degradaba en silencio a datos incorrectos. Si la consulta con scope falla, propagar el error.
+**Nunca consultar sin scope de torneo.** Los `round_number` se repiten entre torneos, así que una query a `round_scores` sin `tournament_id` no devuelve un error: devuelve datos de otros torneos mezclados. Existía un patrón de fallback que ante un error en la query scopeada reintentaba sin el filtro — se eliminó, porque degradaba en silencio a datos incorrectos. Si la consulta con scope falla, propagar el error.
 
 `RoundManager` todavía prueba dos RPC con scope en orden (`_by_tournament_v2` y `_by_tournament`) porque no todas las bases tienen la primera; eso es aceptable, las dos filtran por torneo. Lo que no se hace más es caer a la variante sin scope.
 
-**Ordenamiento de tablas**: `src/utils/ranking.js` (`compareByPoints`, `assignPositions`) es la única forma de ordenar un ranking. Lo usan `useLeaderboard` y las dos agregaciones de `usePersonalStats`. Si una pantalla nueva ordena por su cuenta, va a mostrar posiciones distintas ante empates.
+**Ordenamiento de tablas**: `src/utils/ranking.ts` (`compareByPoints`, `assignPositions`) es la única forma de ordenar un ranking. Lo usan `useLeaderboard` y las dos agregaciones de `usePersonalStats`. Si una pantalla nueva ordena por su cuenta, va a mostrar posiciones distintas ante empates.
 
 El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` / RPCs (triggers o funciones en Supabase). No hay migraciones ni SQL en este repo, pero sí un snapshot del esquema en `docs/supabase-schema.md` (tablas, CHECK constraints y qué valores acepta cada campo de estado). No incluye RLS ni triggers.
 
 ### Reglas de dominio en el cliente
 
-- `src/utils/matchTiming.js` — fuente única de verdad de tiempos: `PREDICTION_CUTOFF_MINUTES = 10` (cierre de pronósticos), `RESULT_LOAD_DELAY_HOURS = 2` (cuándo el admin puede cargar el resultado), y `getNextActiveRoundNumber()`, que deriva la fecha activa desde los `match_date` (no desde `round.status`). Usar `canPredictMatch()` antes de habilitar cualquier input de pronóstico, y `getResultLoadTime()` para mostrar el horario — no recalcular el delay a mano, o el texto termina mintiendo cuando cambia la constante.
+- `src/utils/matchTiming.ts` — fuente única de verdad de tiempos: `PREDICTION_CUTOFF_MINUTES = 10` (cierre de pronósticos), `RESULT_LOAD_DELAY_HOURS = 2` (cuándo el admin puede cargar el resultado), y `getNextActiveRoundNumber()`, que deriva la fecha activa desde los `match_date` (no desde `round.status`). Usar `canPredictMatch()` antes de habilitar cualquier input de pronóstico, y `getResultLoadTime()` para mostrar el horario — no recalcular el delay a mano, o el texto termina mintiendo cuando cambia la constante.
 - `src/constants/hiddenPlayers.js` — `filterHiddenPlayers()` oculta jugadores por coincidencia de nombre normalizado. Se aplica en `useLeaderboard`, `useAllPredictions`, `RoundManager` y `usePersonalStats` (este último con `isHiddenPlayer` sobre el perfil embebido, y sin filtrar nunca al usuario propio). **Si agregás una vista con listas de usuarios, aplicalo también**: si un consumidor se lo saltea, los totales dejan de coincidir entre pantallas.
-- `PREDICTION_CUTOFF_MINUTES` vive solo en `utils/matchTiming.js` (se borró la copia de `constants/predictions.js`). No volver a duplicarla.
-- `src/utils/leaderboardRounds.js` — qué fechas tienen tabla propia en la tabla de posiciones y si el torneo tiene playoffs. **El criterio sale de los partidos, no de `rounds.status`**: una fecha aparece cuando tiene al menos un partido `is_finished`, y las de playoff se detectan por `is_playoff` en vez de por un rango fijo. `rounds.status` se actualiza a mano desde el panel de fechas y queda desincronizado (Clausura 2026 tiene la fecha 4 jugada entera y en `open`; en el Mundial las de playoff siguen en `pending`), así que filtrar por status hacía desaparecer fechas ya jugadas. Lo consumen `LeaderBoard` (opciones del selector) y `Navigation` (mostrar u ocultar el tab de la llave). `WORLD_CUP_STANDALONE_ROUNDS = {4, 5}` es la única excepción hardcodeada y **solo aplica al Mundial**: ahí 16avos y octavos tienen tabla propia y el resto se agrega en "Cuartos a Final".
+- `PREDICTION_CUTOFF_MINUTES` vive solo en `utils/matchTiming.ts` (se borró la copia de `constants/predictions.js`). No volver a duplicarla.
+- `src/utils/leaderboardRounds.ts` — qué fechas tienen tabla propia en la tabla de posiciones y si el torneo tiene playoffs. **El criterio sale de los partidos, no de `rounds.status`**: una fecha aparece cuando tiene al menos un partido `is_finished`, y las de playoff se detectan por `is_playoff` en vez de por un rango fijo. `rounds.status` se actualiza a mano desde el panel de fechas y queda desincronizado (Clausura 2026 tiene la fecha 4 jugada entera y en `open`; en el Mundial las de playoff siguen en `pending`), así que filtrar por status hacía desaparecer fechas ya jugadas. Lo consumen `LeaderBoard` (opciones del selector) y `Navigation` (mostrar u ocultar el tab de la llave). `WORLD_CUP_STANDALONE_ROUNDS = {4, 5}` es la única excepción hardcodeada y **solo aplica al Mundial**: ahí 16avos y octavos tienen tabla propia y el resto se agrega en "Cuartos a Final".
 - `src/constants/worldCupBonus.js` — preguntas bonus del Mundial con sus puntos (`WORLD_CUP_BONUS_MAX_POINTS = 50`) y el mapa slug → código de país para las banderas de flagcdn.
 - Sistema de puntos y desempates (texto que ve el usuario): `src/components/InfoPage/info.config.jsx`. El README describe un esquema de puntos viejo (5/3/1) que ya no aplica.
 
@@ -138,4 +158,4 @@ Tres mecanismos conviven: `*.module.css` por componente (lo preferido en código
 - `PredictionForm/MatchPrediction/index.jsx` (719 líneas) y `RoundManager/index.jsx` (~890) concentran la mayor complejidad.
 - Los paneles de finanzas y pagos (`AdminFinance/`, `AdminPayments/` y sus hooks) se **borraron**: estaban terminados pero no cableados a ninguna vista. Están en el historial de git si algún día se retoma la feature; antes hay que arreglar el esquema, porque `round_finances` y `round_payments` no tienen `tournament_id`.
 - `no-console` es warning; el código existente usa `// eslint-disable-next-line no-console` para los `console.error` de catch.
-- Quedan dos números de fecha hardcodeados: `WORLD_CUP_STANDALONE_ROUNDS = {4, 5}` en `utils/leaderboardRounds.js` (solo para el Mundial) y el fallback `[17, 18, 19, 20]` de la rama de playoffs de `useLeaderboard.jsx`, que corre únicamente cuando no hay torneo — o sea nunca desde la UI, que siempre tiene uno activo.
+- Quedan dos números de fecha hardcodeados: `WORLD_CUP_STANDALONE_ROUNDS = {4, 5}` en `utils/leaderboardRounds.ts` (solo para el Mundial) y el fallback `[17, 18, 19, 20]` de la rama de playoffs de `useLeaderboard.jsx`, que corre únicamente cuando no hay torneo — o sea nunca desde la UI, que siempre tiene uno activo.

@@ -1,0 +1,4 @@
+# Generado por `supabase gen types typescript` (pnpm types:db): no se edita ni se
+# reformatea a mano. Pasarle prettier haria que cada regeneracion venga con un
+# diff de formato encima del diff real del esquema.
+src/types/database.ts

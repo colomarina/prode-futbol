@@ -1,4 +1,4 @@
-# Refactor: lo que queda (fases 7, 8 y 9)
+# Refactor: lo que queda (fases 8 y 9)
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
 previo**. El plan original completo está en
@@ -6,7 +6,7 @@ previo**. El plan original completo está en
 escrito contra el estado de hace 6 fases: varios de sus números y varios de sus
 puntos ya no aplican. Acá está el estado **verificado** al cerrar la fase 6.
 
-Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`.
+Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`, `-7`.
 
 ---
 
@@ -75,47 +75,77 @@ dispara el scoring, así que es una decisión de producto, no un refactor mecán
 
 ---
 
-## Fase 7 — TypeScript gradual
+## Fase 7 — TypeScript: **terminada**
 
-El plan sigue vigente casi entero. Orden:
+`src/` entero en TypeScript, **157 archivos**. El detalle está en
+`docs/pruebas-fase-7.md`; acá queda lo que hace falta para seguir.
 
-1. `tsconfig.json` con `allowJs: true` y `strict: false`.
-   `@vitejs/plugin-react-swc` ya compila TS sin config extra.
-2. **`types/domain.ts` primero**: `Tournament`, `Round`, `Match`, `Prediction`,
-   `Profile`, `RoundScore`, `WorldCupPrediction`. Es lo que más rinde.
-3. Considerar `supabase gen types typescript` para que los tipos de tablas dejen
-   de desincronizarse con `docs/supabase-schema.md`, que se mantiene a mano.
-4. Orden de migración: `utils/` → `types/` → `lib/` → `hooks/` → `Common/` →
-   features de menor a mayor.
-5. Renombrar los **18 `.jsx` que no contienen JSX** a `.ts`. Lista verificada:
+**Verificado en el navegador**: 19 rutas en los dos torneos, los dos temas, escritorio
+y mobile, diffeando el árbol completo contra el estado anterior a la fase → **0
+diferencias**. La única esperada apareció donde tenía que aparecer: en "Ver
+pronósticos → por jugador", 15 tarjetas pasaron de `opacity: 0.6` a `1`, que es el
+bug que el tipado encontró (se le pasaba el partido entero a `hasMatchStarted`, que
+espera la fecha, así que la comparación daba siempre falso y **todas** las tarjetas
+salían atenuadas).
 
-   ```
-   src/lib/supabase.jsx
-   src/hooks/useAllPredictions.jsx      src/hooks/usePersonalStats.jsx
-   src/hooks/useDialogBehavior.jsx      src/hooks/usePlayoffs.jsx
-   src/hooks/useHomePath.jsx            src/hooks/usePredictions.jsx
-   src/hooks/useLeaderboard.jsx         src/hooks/useResetCooldown.jsx
-   src/hooks/useMatches.jsx             src/hooks/useRoundProgress.jsx
-   src/hooks/useMatchesMeta.jsx         src/hooks/useRounds.jsx
-                                        src/hooks/useWorldCupBonus.jsx
-   src/components/InfoPage/info.config.jsx
-   src/components/LeaderBoard/leaderboard.config.jsx
-   src/components/Navigation/Sidebar/menu.config.jsx
-   src/hooks/useResetCooldown.test.jsx
-   ```
+Lo que el tipado sacó a la luz, resumido: un bug real, **cinco props que no hacían
+nada**, **siete tipos escritos a mano que estaban mal** (los tres importantes:
+`matches.is_finished`, `matches.tournament_id` y `rounds.tournament_id` son
+nullables), y varios contratos que estaban implícitos y ahora están escritos.
 
-   Ojo: `pages-with-sections.config.jsx` **sí** tiene JSX (iconos), no entra.
-6. Subir a `strict: true` cuando no queden `.jsx`.
+### Lo que queda como deuda, medido
 
-**Convenciones a unificar mientras se migra** (verificado, sigue vigente):
+**`strict` está a medio prender.** De sus ocho flags, cuatro ya estaban en cero y se
+prendieron; las otras cuatro son:
 
-- **Un solo estilo de export.** 81 componentes usan `export default`; **14** usan
-  solo named export (son los de `PersonalStats/**`).
-- Un solo patrón de carpeta `Componente/index.tsx`. Todavía conviven archivos
-  planos, p. ej. `TournamentSelector/TournamentCard.jsx`.
-- Typos: `LeaderBoard/LeadboardHeader/` (falta la "er"). Y `LeaderBoard` vs
-  `LeaderboardRow` vs `useLeaderboard`: tres capitalizaciones del mismo nombre.
-- `Navigation/Sidebar/Views/` es una carpeta plural con un solo hijo, a 7 niveles.
+| Flag | Errores |
+|---|---|
+| `strictPropertyInitialization` | 1 |
+| `useUnknownInCatchVariables` | 12 |
+| `noImplicitAny` | 100 |
+| `strictNullChecks` | 132 |
+
+De una sola vez son 241 errores; conviene ir flag por flag empezando por las dos
+chicas. De los 132 de `strictNullChecks`, **24 son un solo caso repetido**: las RPC
+del bonus del Mundial declaran sus 15 argumentos como `string` no nullable y el
+cliente manda `null` para las preguntas sin responder. El tipo generado es más
+estricto que la función real; se arregla en la base (fase 9), no en el cliente.
+
+**Los tests siguen en `.js`**, y conviene migrarlos junto con `strictNullChecks`: es
+trabajo de fixtures, no de tipos.
+
+### Las tres intenciones que se recuperaron (o no)
+
+De las cinco props muertas, tres tenían una intención clara. Se resolvieron dentro de
+la fase 7:
+
+- **Emoji del torneo en el selector: aplicado.** Sale de
+  `getTournamentConfig(tournament.slug)?.emoji` con la pelota como fallback. Medido:
+  `⚽ ⚽ ⚽` → `🏆 🏆 🌍`.
+- **Ancho del datepicker: aplicado**, con `.react-datepicker-wrapper { flex: 1 }` en
+  `styles/datepicker-theme.css`. **Falta verlo en el navegador**: la única pantalla
+  que lo usa es `/admin/horarios` y hace falta una sesión de admin.
+- **Globito del suspendido: descartado.** `SUSPENDED_PLAYERS` son los mismos dos
+  nombres que dos de los cinco grupos de `constants/hiddenPlayers`, y
+  `useLeaderboard` filtra los ocultos en todas sus ramas: **ese bloque no se
+  renderiza nunca**. Para que sirva hay que decidir antes si esos jugadores van
+  ocultos o suspendidos, que es una decisión de producto.
+
+### Convenciones: lo que se unificó y lo que no
+
+- ~~Un solo estilo de export~~ → **hecho**: los 10 componentes de `PersonalStats`
+  pasaron de named a default, que es lo que usa el resto del proyecto.
+- Sigue pendiente: el patrón de carpeta (`TournamentSelector/TournamentCard.tsx` es
+  un archivo plano), los typos (`LeaderBoard/LeadboardHeader/`, y `LeaderBoard` vs
+  `LeaderboardRow` vs `useLeaderboard`), y `Navigation/Sidebar/Views/`, una carpeta
+  plural con un solo hijo a 7 niveles.
+
+### Un hueco de tests que apareció migrando
+
+`Common/SelectDropdown` **no tiene un solo test** y lo usan ~10 pantallas. Se notó
+porque un error que introduje al migrarlo (una recursión infinita) lo atajó el lint
+—por una variable sin usar— y no los tests. La fase 8 lo va a tocar igual, porque le
+falta `role="listbox"` y navegación por flechas.
 
 ---
 
@@ -206,8 +236,7 @@ plan original.
 
 ## Antes de mergear a main
 
-1. Terminar las fases 7 y 8, mergeando cada una a
-   `refactor/fase-5-design-system`.
+1. Terminar la fase 8 y mergearla a `refactor/fase-5-design-system` (la 7 ya está).
 2. **Revisar los cambios visuales juntos.** Están listados en
    `docs/pruebas-fase-6.md` (sección "Cambios visuales deliberados") y son los
    que motivaron la estrategia de ramas. Los de la fase 5 que quedaron señalados:
