@@ -13,9 +13,18 @@
  */
 import type { Round } from '../../types/domain'
 
-/** Lo que muestra la pantalla mientras no hay nada que pronosticar. */
+/**
+ * Lo que muestra la pantalla mientras no hay nada que pronosticar.
+ *
+ * `skeleton` se distingue de `loading` porque no tapa la pantalla: cuando lo unico
+ * que falta son los partidos, las fechas ya estan y el selector se puede mostrar,
+ * asi que el esqueleto va donde van a ir las tarjetas y el resto de la pantalla
+ * queda en su lugar. `loading` es el spinner de pantalla completa, para cuando
+ * todavia no hay ni fechas y no hay nada que dibujar alrededor.
+ */
 export type FormPlaceholder =
   | { type: 'loading'; message: string }
+  | { type: 'skeleton' }
   | { type: 'empty'; title: string; description: string }
 
 export const getFormPlaceholder = ({
@@ -41,8 +50,10 @@ export const getFormPlaceholder = ({
     }
   }
 
+  // Las fechas ya llegaron, asi que el selector se puede dibujar: lo unico que
+  // falta son las tarjetas de los partidos, y ese hueco lo llena el esqueleto.
   if (matchesLoading) {
-    return { type: 'loading', message: 'Cargando partidos...' }
+    return { type: 'skeleton' }
   }
 
   // Las fechas ya están pero la auto-selección todavía no corrió su efecto.

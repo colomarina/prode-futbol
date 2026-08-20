@@ -6,7 +6,7 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { getLeaderboardRounds } from '../../utils/leaderboardRounds'
 import LeaderboardHeader from './LeadboardHeader'
 import LeaderboardTable from './LeaderboardTable'
-import LoadingState from '../Common/LoadingState'
+import LeaderboardTableSkeleton from './LeaderboardTableSkeleton'
 import ErrorMessage from '../Common/ErrorMessage'
 import type { LeaderboardSelection } from './LeadboardHeader'
 import type { ViewPredictionsRequest } from './LeaderboardRow'
@@ -32,14 +32,6 @@ export default function Leaderboard({
     [rounds, matchesMeta, isWorldCupTournament]
   )
 
-  if (loading) {
-    return (
-      <div className="container" style={{ maxWidth: '1000px', textAlign: 'center' }}>
-        <LoadingState message="Cargando tabla de posiciones..." />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1000px' }}>
@@ -60,11 +52,22 @@ export default function Leaderboard({
       />
 
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <LeaderboardTable
-          leaderboard={leaderboard}
-          selectedRound={selectedRound}
-          onViewPredictions={onViewPredictions}
-        />
+        {/*
+         * Durante la carga se cambia solo la tabla, no la pantalla entera. Antes
+         * `loading` devolvia un spinner en lugar de todo el contenido, asi que el
+         * header y el selector de fecha tampoco se veian: al llegar los datos
+         * aparecia todo de golpe. Ni el header ni el selector dependen de esta
+         * consulta, asi que no tienen por que esperarla.
+         */}
+        {loading ? (
+          <LeaderboardTableSkeleton selectedRound={selectedRound} />
+        ) : (
+          <LeaderboardTable
+            leaderboard={leaderboard}
+            selectedRound={selectedRound}
+            onViewPredictions={onViewPredictions}
+          />
+        )}
       </div>
     </div>
   )

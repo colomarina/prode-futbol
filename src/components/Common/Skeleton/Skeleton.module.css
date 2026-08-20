@@ -1,0 +1,45 @@
+/**
+ * El bloque gris que ocupa el lugar del contenido mientras carga.
+ *
+ * El brillo va con `background-position` sobre un gradiente y no con un
+ * pseudo-elemento que se desplaza: asi no hace falta `overflow: hidden` ni un
+ * contexto de apilamiento propio, que es lo que rompe cuando el skeleton entra
+ * en una celda de tabla.
+ *
+ * Los dos colores salen de la paleta y no de un gris literal, para que el
+ * skeleton siga al tema y al torneo igual que el resto.
+ */
+.skeleton {
+  background-color: var(--color-surface-variant);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-surface) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-sm);
+  animation: skeleton-brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-brillo {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/*
+ * Un brillo que recorre la pantalla en bucle es justo lo que
+ * `prefers-reduced-motion` viene a apagar. Sin animacion el bloque sigue
+ * comunicando que algo va a aparecer ahi, que es su unico trabajo.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
+}

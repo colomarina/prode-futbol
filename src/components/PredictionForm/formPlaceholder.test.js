@@ -35,10 +35,16 @@ describe('getFormPlaceholder', () => {
     expect(getFormPlaceholder({ ...listo, rounds: undefined })?.type).toBe('empty')
   })
 
-  it('mientras cargan los partidos lo dice', () => {
-    expect(getFormPlaceholder({ ...listo, matchesLoading: true }).message).toBe(
-      'Cargando partidos...'
-    )
+  it('mientras cargan los partidos pide el esqueleto, no el spinner', () => {
+    // Las fechas ya llegaron, así que el selector se puede mostrar: la pantalla no
+    // se reemplaza entera, se reserva el lugar de las tarjetas. Antes acá venía
+    // `{ type: 'loading', message: 'Cargando partidos...' }` y el spinner tapaba
+    // también el selector.
+    expect(getFormPlaceholder({ ...listo, matchesLoading: true })).toEqual({ type: 'skeleton' })
+  })
+
+  it('el esqueleto no trae mensaje: no hay ningún texto que mostrar', () => {
+    expect(getFormPlaceholder({ ...listo, matchesLoading: true }).message).toBeUndefined()
   })
 
   it('con las fechas listas pero sin ninguna elegida espera a la auto-selección', () => {

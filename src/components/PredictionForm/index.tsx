@@ -10,6 +10,7 @@ import ActiveRoundShortcut from './ActiveRoundShortcut'
 import LockedRoundNotice from './LockedRoundNotice'
 import RoundSelector from './RoundSelector'
 import RoundSummary from './RoundSummary'
+import MatchPredictionSkeleton from './MatchPredictionSkeleton'
 import Button from '../Common/Button'
 import Toast from '../Common/Toast'
 import LoadingState from '../Common/LoadingState'
@@ -154,6 +155,26 @@ export default function PredictionForm() {
     matchesLoading,
     selectedRound,
   })
+
+  /*
+   * El esqueleto no es un placeholder de pantalla completa: las fechas ya llegaron,
+   * asi que el selector se dibuja igual y solo se reserva el lugar de las tarjetas.
+   * Por eso sale antes del `if (placeholder)`, que si reemplaza toda la pantalla.
+   */
+  if (placeholder?.type === 'skeleton') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.selectorCard}>
+          <RoundSelector
+            rounds={availableRounds}
+            selectedRound={selectedRound}
+            onSelect={handleRoundSelect}
+          />
+        </div>
+        <MatchPredictionSkeleton />
+      </div>
+    )
+  }
 
   if (placeholder) {
     return (
