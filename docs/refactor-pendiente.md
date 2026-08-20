@@ -123,14 +123,37 @@ la fase 7:
 
 ---
 
-## Fase 8 — UX y accesibilidad: **terminada**
+## Fase 8 — UX y accesibilidad: **terminada y verificada en el navegador**
 
-Rama `refactor/fase-8-ux-accesibilidad`, ocho commits. El detalle está en
-`docs/pruebas-fase-8.md`, incluida **la lista de lo que hay que probar a mano** —que
-es lo que falta para poder mergearla.
+Rama `refactor/fase-8-ux-accesibilidad`, nueve commits. El detalle está en
+`docs/pruebas-fase-8.md`.
 
-Tests: **414 → 456** en **48 → 51** archivos. `lint`, `format:check`, `typecheck`,
+Tests: **414 → 464** en **48 → 52** archivos. `lint`, `format:check`, `typecheck`,
 `test` y `build` en verde.
+
+**Verificado contra la base real con sesión de admin**, midiendo estilos computados y
+el árbol de accesibilidad de Chrome. Lo importante:
+
+- **`MatchResult` en `/admin/partidos`: 0 diferencias** (63 nodos × 27 propiedades,
+  fechas 4 y 5). **Las 14 etiquetas de `/mundialistas`: 0 diferencias.** Los dos eran
+  los cambios prometidos como "visualmente neutros".
+- El salto del esqueleto de posiciones es de **9 px**; el de pronósticos bajó de
+  **2584 a 299 px** al sacar la cantidad de tarjetas de `useMatchesMeta` en vez de una
+  constante. Con nombres de equipo cortos, esqueleto y tarjeta miden lo mismo (172 px).
+- El datepicker de `/admin/horarios` (pendiente de la fase 7) **funciona**: anulando
+  la regla en runtime el input pasa de 264.4 a 176 px.
+- El teclado del `SelectDropdown`, el Enter que guarda sin recargar y el botón de
+  reintentar, verificados de punta a punta.
+
+Y **cuatro bugs más que solo aparecieron midiendo**: los inputs del marcador no
+tenían nombre accesible (`textbox "-"` los dos), el esqueleto de pronósticos
+reservaba un cuarto del alto, el anillo de foco borraba la elevación de la cajita, y
+el brillo del esqueleto era invisible en tema claro e invertido en oscuro.
+
+Lo que queda es lo que una medición no puede decidir —si algo se ve bien— más un
+lector de pantalla de verdad, mobile, y `/admin/mundial`, que no se pudo abrir porque
+`AdminRoute` exige torneo no finalizado y el único Mundial está `finished`. La lista
+está en `docs/pruebas-fase-8.md`, sección "Qué probar a mano".
 
 ### Lo que se hizo
 
@@ -150,7 +173,9 @@ Tests: **414 → 456** en **48 → 51** archivos. `lint`, `format:check`, `typec
 - **Imágenes:** 7 `alt` redundantes a `""`, `loading="lazy"` en los de listas.
 - **`MatchResult`:** 22 de sus 28 literales a tokens.
 
-### Los tres bugs que aparecieron
+### Los siete bugs que aparecieron
+
+Tres salieron de abrir los archivos:
 
 - **`SelectDropdown` nunca anunciaba el valor elegido.** `aria-labelledby` pisa el
   contenido del botón: el nombre accesible era "Equipo" y el equipo elegido quedaba
@@ -162,6 +187,21 @@ Tests: **414 → 456** en **48 → 51** archivos. `lint`, `format:check`, `typec
   `outline: none` lo pisa la regla global `input:focus`, pero lo único que esa hace es
   poner el borde en `--color-primary`, que es el color que el tono `.primary` **ya
   tiene**. En un pronóstico vacío, enfocar no cambiaba un pixel.
+
+Y cuatro más aparecieron **solo al medir en el navegador**, con la fase ya verde en
+tests. Es el argumento a favor de no cerrar una fase de UX sin abrir la app:
+
+- **Los inputs del marcador no tenían nombre**: el árbol de accesibilidad los mostraba
+  como `textbox "-"` los dos, porque el nombre salía del placeholder. Ahora llevan
+  `aria-label` ("Goles de Aldosivi") y el separador pasa a `aria-hidden`.
+- **El esqueleto de pronósticos reservaba un cuarto del alto**: la cantidad de
+  tarjetas era una constante en 4 y las fechas tienen 15 partidos. Ahora sale de
+  contar la fecha en `useMatchesMeta`, que ya está en cache.
+- **El anillo de foco borraba la elevación de la cajita**: `box-shadow` no se acumula
+  entre reglas y la de `:focus-visible` pisaba la de `.box` entera.
+- **El brillo del esqueleto era invisible en claro e invertido en oscuro**, porque
+  `--color-surface` es más claro que `--color-surface-variant` en un tema y más oscuro
+  en el otro. Se cambió a `--color-border`.
 
 ### Tres puntos del plan que no eran así
 
@@ -181,9 +221,14 @@ que corregir. `loading="lazy"` sí suma.
 
 ### Lo que queda de la fase
 
-- **Probar a mano lo de `docs/pruebas-fase-8.md`.** El foco, el layout shift del
-  esqueleto y `/admin/horarios` (que necesita sesión de admin) no se ven desde los
-  tests.
+- **Mirar a ojo lo que quedó en `docs/pruebas-fase-8.md`**, sección "Qué probar a
+  mano". Ya no es una lista de verificación: es lo que una medición no puede decidir
+  (si el anillo de foco se distingue en el tono verde, si el brillo del esqueleto
+  molesta, mobile) más un lector de pantalla de verdad.
+- **`/admin/mundial` quedó sin abrir.** `AdminRoute` exige torneo no finalizado y el
+  único torneo tipo Mundial está en `finished`. Sus etiquetas comparten el patrón con
+  `/mundialistas`, que sí se verificó con 0 diferencias. Para probarla hay que pasar
+  Mundial 2026 a `active` un rato.
 - **Los 4 literales de `MatchResult` sin token exacto** son una decisión visual, no un
   refactor: están comentados en el archivo con el motivo de cada uno.
 - **`useAllPredictions` no expone `error`**, así que "Ver pronósticos" no tiene estado
@@ -337,19 +382,52 @@ cambios de comportamiento:
 
 ## Cómo se verifica un refactor visual en este proyecto
 
-Lo que funcionó en la fase 6, por si sirve de nuevo:
+Lo que funcionó en la fase 6 y se volvió a usar en la 8:
 
 1. `git worktree add <tmp> <commit-anterior>` y una junction a `node_modules`
-   (`New-Item -ItemType Junction`), para no reinstalar.
-2. Un segundo `vite --port 5199` sobre ese worktree.
+   (`New-Item -ItemType Junction`), para no reinstalar. Copiar también el `.env`.
+2. Un segundo `vite --port 5199` sobre ese worktree, **con su propio `cacheDir`**.
+   Esto último es obligatorio y se aprendió a los golpes en la fase 8: la junction
+   comparte `node_modules`, o sea también `node_modules/.vite`. El segundo server
+   re-optimiza las dependencias encima del primero y la app del primero termina
+   recibiendo otra copia de React: `/admin/horarios` reventó con
+   `Cannot read properties of null (reading 'useRef')` en `react-datepicker`, y no
+   era un bug de la app. Un config aparte lo resuelve:
+
+   ```js
+   // vite.diff.config.js, dentro del worktree
+   import { defineConfig, mergeConfig } from 'vite'
+   import base from './vite.config.js'
+   export default mergeConfig(base, defineConfig({ cacheDir: './.vite-diff' }))
+   ```
+
+   Y si algo ya se rompió: matar los dos servers, borrar `node_modules/.vite` y
+   levantar de nuevo.
 3. Playwright sobre los dos puertos, copiando el `localStorage` de un origen al
-   otro para llevar la sesión.
+   otro para llevar la sesión. Alcanza con lanzar un Chromium headed con
+   `--remote-debugging-port`, que Lucas se loguee a mano una vez, y conectarse por
+   `connectOverCDP`. `playwright-core` se instala fuera del repo para no tocar las
+   dependencias del proyecto.
 4. Medir `getComputedStyle` de los nodos identificables por contenido —no por
    posición en el DOM, que cambia a propósito— y **diffear**. Incluir `margin`:
-   olvidarlo escondió el único hallazgo real de la fase.
+   olvidarlo escondió el único hallazgo real de la fase 6.
 5. Cuando un diff parece implausible, **arreglar el medidor antes de creerle**.
    En la fase 6, 15 de 17 diferencias eran un selector que apuntaba a nodos
-   distintos en cada versión.
+   distintos en cada versión; en la fase 8 volvió a pasar exactamente igual con las
+   etiquetas mundialistas, donde la etiqueta pasó a vivir adentro del widget y el
+   selector agarraba el wrapper en una versión y el `<label>` en la otra.
+6. **Y cuando el diff da 0, verificar el medidor también.** Confirmar que las dos
+   versiones estaban en la misma ruta, con la misma cantidad de elementos y los
+   mismos datos, antes de escribir "0 diferencias".
+
+Dos cosas más que hacen falta y no son obvias:
+
+- **Para medir un estado de carga hay que retenerlo.** `page.route` sobre la consulta
+  que la pantalla espera, resolver a mano cuando ya se midió, y medir otra vez. Sin
+  eso el estado de carga dura menos que el `waitForTimeout`.
+- **El tema no se cambia con `setAttribute('data-theme')`.** El tema del torneo
+  escribe la paleta **inline en el root**, y el inline le gana a cualquier hoja de
+  estilos. Va por `localStorage.setItem('theme', ...)` antes de cargar la página.
 
 ## Torneos de prueba
 
