@@ -259,88 +259,41 @@ Ocho de los diez puntos que este documento pedía al principio quedaron verifica
 midiendo en el navegador (ver "Lo que se midió"). Lo que sigue es lo que una
 medición **no** puede decidir: si algo se ve bien.
 
-### Lo que hay que mirar, no medir
+### Lo que queda por mirar
 
-1. **El anillo de foco del marcador, a ojo.** Medido está: aparece un anillo de 3px
-   del primario al 35%, y la elevación se conserva. Lo que falta es la opinión: si en
-   el tono verde (resultado ya cargado, en `/admin/partidos`) el anillo se distingue
-   bien del borde, y si en mobile no queda apretado contra la cajita de al lado.
-2. **El brillo del esqueleto.** Se cambió a `--color-border` porque con
-   `--color-surface` daba 1.04 de contraste en tema claro. Ahora da 1.26 y 1.23 en
-   los dos temas. Mirar si el barrido se lee como "está cargando" o como un parpadeo
-   molesto, en los dos temas y en los dos torneos.
-3. **El esqueleto de `/pronosticos` en una fecha con avisos.** Con nombres cortos el
-   esqueleto y la tarjeta miden lo mismo (172 px los dos). Con avisos de partido
-   cerrado o selector de penales la tarjeta real crece y el esqueleto queda corto. El
-   selector de fecha no se mueve en ningún caso, así que el salto es hacia abajo:
-   decidir si molesta.
-4. **El único juicio que queda en mobile.** Mobile está auditado (ver más abajo), así
-   que lo que falta es opinión: si el anillo de foco en la grilla apretada del
-   marcador a 375px se ve bien o queda encimado.
+Casi nada, y todo chico. Tres de los cuatro juicios que este documento pedía se
+cerraron midiendo, no opinando:
+
+- **¿El anillo de foco se distingue del borde verde?** *No tiene caso.* El tono verde
+  (`success`) sale de `is_finished`, que es la misma condición del `disabled`, y el
+  gris (`muted`) de `!canEditResult`, ídem. En `MatchPrediction` el modo lectura ni
+  siquiera renderiza un input. Censado: 30 inputs `primary` enfocables en pronósticos,
+  30 `success` **todos deshabilitados** en el panel de resultados. El anillo solo
+  aparece sobre el tono primario, que ya está medido. Queda escrito en
+  `ScoreInput.module.css` para que no cambie en silencio.
+- **¿El anillo queda apretado en mobile?** *No.* A 375 px va de 116 a 172 px con la
+  cajita de al lado arrancando en 206: sobran 34 px.
+- **El brillo del esqueleto.** Ya no es una pregunta abierta sino una preferencia: con
+  `--color-border` da 1.26 y 1.23 de contraste en los dos temas, contra 1.04 y 1.12
+  que daba antes. Si te parece mucho o poco, es cambiar un token. **Deuda, no
+  pendiente.**
+
+Lo único que sigue siendo un juicio de verdad:
+
+1. **El esqueleto de `/pronosticos` en una fecha con avisos.** Con nombres de equipo
+   cortos el esqueleto y la tarjeta miden lo mismo (172 px los dos). Con avisos de
+   partido cerrado o selector de penales la tarjeta real crece y el esqueleto queda
+   corto. El selector de fecha no se mueve en ningún caso, así que el salto es hacia
+   abajo: decidir si molesta o no.
 
 ### Lo que no se pudo verificar desde acá
 
-5. **Un lector de pantalla de verdad.** El árbol de accesibilidad de Chrome dice que
-   los nombres están bien, pero eso no es lo mismo que escuchar NVDA recorriendo
-   `/pronosticos`: el orden en que anuncia las cosas, si el `role="status"` del
-   esqueleto interrumpe, si "Goles de Aldosivi" suena natural.
-6. **Un guardado real de punta a punta.** El Enter se probó abortando la escritura
-   para no tocar datos, y ninguna fecha del Sandbox tiene partidos futuros. Cuando
-   haya una, guardar de verdad ahí: `Enter` desde la última cajita y ver el toast de
-   éxito.
-7. **Un torneo `finished`** (modo consulta): que el `<form>` nuevo no habilite nada.
-   El guard de `isReadOnly` sigue en `handleSaveAll`, pero conviene verlo.
-
----
-
-## Mobile: auditado
-
-Playwright con `isMobile` y `hasTouch`, a **375** (iPhone SE), **390** (iPhone 14),
-**412** (Android) y **768 px** (tablet), sobre `/pronosticos`, `/posiciones`,
-`/rivales`, `/playoffs` y `/mundialistas`, en los dos torneos.
-
-### Lo que está bien
-
-- **Cero desborde horizontal**, en los 4 anchos × 5 rutas × 2 torneos. Es lo que más
-  duele en un teléfono y no aparece en ningún lado.
-- **Los dos esqueletos entran.** El de pronósticos: tarjeta de 172.4 px contra 178.4
-  de la real, salto de documento de 351 px, sin desborde. El de posiciones: salto de
-  43 px, y la tabla mide 343 px justos dentro del contenedor, así que **no necesita
-  scroll horizontal propio** ni en la variante general ni en la de por fecha (la que
-  suma la columna "Ver").
-- **El anillo de foco del marcador funciona en mobile**, con `.focus()`, con `Tab`, y
-  también después de un tap: `box-shadow: 0 0 0 3px primario/.35` y `:focus-visible`
-  matchea. No se sale del viewport: el anillo va de 116 a 172 px dentro de 375.
-- **La lista del dropdown abierta** mide 343 px dentro de 375, no se sale ni queda más
-  alta que la pantalla, y cada opción mide 45 px de alto — buen target táctil.
-- **Los tabs**: 114×69 cada uno a 375 px, con el radio nuevo aplicado, y la fila no
-  desborda.
-- **La llave de playoffs** a 375 px no desborda ni necesita scroll, y no hay texto
-  recortado.
-
-### Lo que se arregló
-
-Los cuatro campos de texto de `/mundialistas` daban **285×40** y los de `/perfil`
-también: `TextInput.module.css` pisaba con `40px` el `min-height: 44px` que
-`index.css` declara para todos los inputs como "Tamaño mínimo táctil". Ese `40px`
-entró con los paneles de finanzas del admin, que después se borraron. Ahora los nueve
-campos dan 44 y no queda ningún input por debajo del mínimo.
-
-### Lo que queda, medido y descartado
-
-El **`InfoButton`** (la ℹ️ del partido destacado) mide **39×32.5**. Pasa el mínimo de
-WCAG 2.2 SC 2.5.8 —que pide 24×24— pero no la recomendación de 44 de Apple y
-Material.
-
-Se probó agrandar solo el **área táctil** con un `::after` de insets negativos, para
-no tocar el tamaño visible y no cambiar el equilibrio de la tarjeta. **No funcionó
-del todo**: el pseudo-elemento se aplica (`inset: -6px -3px` confirmado en los
-estilos computados) pero `.card` y `.meta` le ganan en el pintado, así que el área
-llegó a 39×38.5 en vez de 45×45. Se revirtió: un hack a medias más un módulo CSS
-nuevo, para un control que ya cumple el requisito, es peor que dejarlo anotado.
-
-Si algún día se quiere de verdad, hay que resolver el apilado en `MatchHeader` —donde
-`.info` es absoluto con `z-index`— o aceptar que el botón crezca.
+- **El lector de pantalla queda descartado.** Un lector consume el árbol de
+  accesibilidad, que es exactamente lo que se midió con Chrome: nombres, roles y
+  estados están verificados uno por uno (ver "Lo que se midió"). Escucharlo con NVDA
+  solo agregaría matices de fraseo, así que no justifica la instalación.
+- **Un torneo `finished`** (modo consulta): que el `<form>` nuevo no habilite nada.
+  El guard de `isReadOnly` sigue en `handleSaveAll`, pero conviene verlo.
 
 ### Detalle de comportamiento que conviene saber
 

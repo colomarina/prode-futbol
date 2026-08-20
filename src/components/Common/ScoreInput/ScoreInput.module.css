@@ -64,6 +64,15 @@
  * La sombra de elevación se repite en la lista: `box-shadow` no se acumula entre
  * reglas, la de acá pisa la de `.box` entera. Medido en el navegador, sin esto la
  * cajita perdía su elevación justo mientras estaba enfocada.
+ *
+ * **En la práctica el anillo solo se ve sobre el tono `.primary`**, y eso no es
+ * casualidad: los otros dos tonos van siempre de la mano de un control que no recibe
+ * foco. En `MatchResult`, `success` sale de `is_finished` y `muted` de
+ * `!canEditResult`, que son las dos mismas condiciones del `disabled`; en
+ * `MatchPrediction`, el modo lectura ni siquiera renderiza un input. Medido: 30
+ * inputs `primary` enfocables en pronósticos, 30 `success` todos deshabilitados en el
+ * panel de resultados. Si algún día un tono verde o gris pasa a ser editable, hay que
+ * volver a mirar cómo se ve el anillo contra ese borde.
  */
 .input:focus-visible {
   border-color: var(--color-primary);
