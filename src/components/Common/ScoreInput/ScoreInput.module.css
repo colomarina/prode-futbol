@@ -44,6 +44,28 @@
   --score-bg: var(--color-surface);
 }
 
+/**
+ * El anillo de foco, y no es cosmética: esta cajita es el control más usado de la
+ * app y con el teclado no se veía dónde estabas parado.
+ *
+ * El `outline: none` de `.box` lo pisaba la regla global `input:focus` de
+ * `index.css` —(0,1,1) le gana a (0,1,0)—, pero lo único que esa regla hace es
+ * `border-color: var(--color-primary)`, y el tono `.primary` **ya tiene ese mismo
+ * color** en el borde. O sea: en un pronóstico vacío, que es el caso normal,
+ * enfocar el input no cambiaba un solo pixel. Con `.success` cambiaba de un verde
+ * a otro.
+ *
+ * Por eso el indicador es un anillo por fuera del borde y no un cambio de color
+ * del borde: no depende de qué tono tenga la cajita. Va con `box-shadow` en vez de
+ * `outline` para que siga el `border-radius`, igual que `TextInput`, y con más
+ * opacidad que ahí (35% contra 18%) justamente porque acá el borde puede ser del
+ * mismo color.
+ */
+.input:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
 .input:disabled {
   opacity: 0.7;
 }
