@@ -1,19 +1,19 @@
-# Refactor: lo que queda (fases 8 y 10; la 9 quedó cerrada)
+# Refactor: lo que queda (solo la fase 10; la 8 y la 9 quedaron cerradas)
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
 previo**. El plan original completo está en
 `~/.claude/plans/te-animas-a-hacer-groovy-sutton.md` (fuera del repo), pero está
-escrito contra el estado de hace 6 fases: varios de sus números y varios de sus
-puntos ya no aplican. Acá está el estado **verificado** al cerrar la fase 7.
+escrito contra el estado de hace 7 fases: varios de sus números y varios de sus
+puntos ya no aplican. Acá está el estado **verificado** al cerrar la fase 8.
 
-Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`, `-7`.
+Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`, `-7`, `-8`, `-9`.
 
 ---
 
-## Estado al cerrar la fase 7
+## Estado al cerrar la fase 8
 
-Rama actual: `refactor/fase-7-typescript`, sale de `refactor/fase-5-design-system`
-(que ya tiene la fase 6 mergeada).
+Rama actual: `refactor/fase-8-ux-accesibilidad`, sale de
+`refactor/fase-5-design-system` (que ya tiene las fases 6 y 7 mergeadas).
 
 **Estrategia de ramas acordada:** las fases 6 a 10 se mergean a la rama de la fase 5,
 y esa es la que va a `main`. El motivo es que la fase 5 dejó cambios visuales chicos
@@ -26,12 +26,16 @@ Métricas verificadas:
 
 |                                    | Valor                                |
 | ---------------------------------- | ------------------------------------ |
-| Tests                              | 414 en 48 archivos                   |
-| Archivos `.ts`/`.tsx` (sin tests)  | 157                                  |
+| Tests                              | 456 en 51 archivos                   |
+| Archivos `.ts`/`.tsx` (sin tests)  | 160                                  |
 | Archivos `.js`/`.jsx` que quedan   | 2, los helpers de test               |
 | Imports de Supabase en componentes | 0                                    |
 | `useEffect` de fetching en hooks   | 0                                    |
 | Deuda de `strict`                  | 241 errores en 4 flags (ver fase 10) |
+
+La deuda de `strict` **no se volvió a medir** después de la fase 8: los tres
+componentes nuevos están escritos con tipos, así que no debería haber subido, pero el
+número de arriba es el de la fase 7 y hay que remedirlo al arrancar la 10.
 
 `pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm build` en
 verde.
@@ -43,33 +47,35 @@ anotaciones de tipo y comentarios a los archivos que ya eran grandes
 El conteo de líneas dejó de ser un buen proxy de complejidad: los que importan siguen
 siendo los mismos de antes.
 
-### `MatchManager/MatchResult`: se decidió no tocarlo en la fase 6
+### `MatchManager/MatchResult`: resuelto en la fase 8
 
-Era el punto opcional que quedaba de la fase 6 (308 líneas, ~28 literales fuera de
-la escala de tokens). Se leyó entero y **la decisión fue dejarlo como está**:
+Era el punto que la fase 6 dejó abierto y la 8 lo cerró.
 
-- **No es un god component.** De sus 308 líneas, ~90 son lógica y ya delegan en
-  `utils/matchTiming`, `utils/score` y `utils/matchDate`. El resto es JSX con
-  estilos inline. Partirlo no sacaría a la luz ninguna regla sin test: sacaría
-  markup de un archivo y lo pondría en otro.
-- **Migrar sus literales es un cambio visual, no un refactor.** `0.75rem`,
-  `0.8rem`, `0.85rem` y `0.9rem` no están en la escala, así que normalizarlos
-  cambia tamaños de letra en el panel de admin y suma superficie nueva a revisar en
-  un merge cuya razón de ser era justamente revisar los cambios visuales juntos.
-  La rama recién llegó a "0 diferencias medidas"; agregar churn cosmético ahora no
-  compra nada.
-- **Las fases 7 y 8 lo van a abrir igual** (TypeScript en `MatchManager/**`, y el
-  repaso de accesibilidad). Ese es el momento natural para normalizar los tokens:
-  el archivo ya está abierto y la revisión visual del merge ya pasó.
+**La fase 6 se había equivocado en el diagnóstico.** Decía que `0.75rem`, `0.8rem`,
+`0.85rem` y `0.9rem` no estaban en la escala y que por lo tanto migrarlos era un
+cambio visual. Contra `tokens.css`, tres de los cuatro son coincidencia **exacta**
+con `--font-size-xs`, `-sm` y `-md`. De los 28 literales del archivo, **22 tenían
+token exacto** y se migraron sin cambiar un pixel.
 
-**Lo que sí conviene anotar, porque es duplicación real y no cosmética:**
-`MatchResult` reimplementa inline la regla del clasificado por penales —ganador
-automático, bloqueo, efecto de sincronización— que `MatchPrediction/qualifier.js`
-ya encapsula y tiene con tests. No son idénticas: el formulario de pronósticos
-muestra el selector **solo si el marcador es empate** (`shouldShowPicker`), y el
-panel de resultados lo muestra siempre en un partido de playoff y lo deshabilita
-cuando hay ganador. Unificarlas cambiaría la UI del admin y toca la escritura que
-dispara el scoring, así que es una decisión de producto, no un refactor mecánico.
+Los 4 que quedan (6 ocurrencias) sí son una decisión visual y están comentados en el
+archivo con el motivo: `marginTop: 36px` (no es espaciado, es lo que hace falta para
+pasar bajo los badges absolutos), `marginBottom: 20px`, `gap: 10px` más
+`margin: 0 0 10px 0` (el `10px` que `tokens.css` excluyó a propósito), y los dos
+`fontSize: 0.85rem`. La tabla con las alternativas de cada uno está en
+`docs/pruebas-fase-8.md`.
+
+Lo de "no es un god component" sigue valiendo: sus ~90 líneas de lógica ya delegan en
+`utils/matchTiming`, `utils/score` y `utils/matchDate`, y partirlo solo movería markup
+de un archivo a otro.
+
+**Lo que sigue pendiente, porque es duplicación real y no cosmética:** `MatchResult`
+reimplementa inline la regla del clasificado por penales —ganador automático,
+bloqueo, efecto de sincronización— que `MatchPrediction/qualifier.ts` ya encapsula y
+tiene con tests. No son idénticas: el formulario de pronósticos muestra el selector
+**solo si el marcador es empate** (`shouldShowPicker`), y el panel de resultados lo
+muestra siempre en un partido de playoff y lo deshabilita cuando hay ganador.
+Unificarlas cambiaría la UI del admin y toca la escritura que dispara el scoring, así
+que es una decisión de producto, no un refactor mecánico.
 
 ---
 
@@ -117,74 +123,75 @@ la fase 7:
 
 ---
 
-## Fase 8 — UX y accesibilidad
+## Fase 8 — UX y accesibilidad: **terminada**
 
-**Revisado contra el código después de la fase 7.** Los números de abajo están
-medidos, no heredados del plan original.
+Rama `refactor/fase-8-ux-accesibilidad`, ocho commits. El detalle está en
+`docs/pruebas-fase-8.md`, incluida **la lista de lo que hay que probar a mano** —que
+es lo que falta para poder mergearla.
 
-### Ya hecho
+Tests: **414 → 456** en **48 → 51** archivos. `lint`, `format:check`, `typecheck`,
+`test` y `build` en verde.
 
-- ~~Focus trap y restauración de foco~~ → `hooks/useDialogBehavior.ts`, con tests,
-  usado por `TournamentDrawer`. Incluye scroll-lock contado.
-- ~~Inputs sin label asociado~~ → `Common/FormField` los une (8 `htmlFor` en 3
-  archivos; el plan decía 11, ese número era de antes de que `FormField` los
-  centralizara).
-- ~~`className="btn btn-danger"` inexistente~~ → resuelto con `Common/Button`.
-- ~~Contraste en ambos temas~~ → medido en la fase 5: de 62 y 36 textos por debajo
-  del mínimo WCAG AA a **0**.
-- ~~Navegación por flechas en los tabs~~ → `NavTabs` ya maneja `ArrowLeft`,
-  `ArrowRight`, `Home` y `End`, y mueve el foco.
-- **Las tres reglas de `jsx-a11y` que el ESLint tenía en `warn` como "deuda
-  conocida" están en cero.** Lo que queda es lo que el linter no puede ver.
+### Lo que se hizo
 
-### Lo que queda
+- **`SelectDropdown` es un listbox de verdad.** Era el ítem más grande. `role="listbox"`
+  y `role="option"` con `aria-selected`, y teclado completo: las flechas abren y
+  mueven dando la vuelta en los extremos, `Home`/`End`, `Escape` cierra devolviendo el
+  foco, `Tab` cierra sin atrapar. Foco móvil sobre los botones de las opciones, con
+  `preventScroll` para no deshacer el centrado. **De 0 a 31 tests.**
+- **Los tres formularios reales.** `PredictionForm`, `MatchManager` y
+  `WorldCupPredictions` tienen `<form onSubmit>`, así que se guarda con Enter.
+- **Los errores ofrecen reintentar.** `LeaderBoard/ErrorMessage` subió a
+  `Common/ErrorMessage` y lo usan 5 pantallas más. En playoffs y en cargar resultados
+  lo que había era un `EmptyState`, que además no ofrecía salida.
+- **Esqueletos de carga.** `Common/Skeleton` más los de la tabla de posiciones y los
+  pronósticos. Lo importante no es el gris: las dos pantallas devolvían un spinner en
+  lugar de **todo** su contenido, así que ni el selector de fecha se veía.
+- **Imágenes:** 7 `alt` redundantes a `""`, `loading="lazy"` en los de listas.
+- **`MatchResult`:** 22 de sus 28 literales a tokens.
 
-- **`Common/SelectDropdown`**, usado en ~10 pantallas. Tiene `aria-labelledby`,
-  `aria-expanded` y `aria-haspopup="listbox"`, pero **le falta `role="listbox"` /
-  `role="option"` y la navegación por flechas**. Es el ítem más grande de la fase.
+### Los tres bugs que aparecieron
 
-  **Y no tiene un solo test.** Eso se descubrió en la fase 7: un error que se
-  introdujo al migrarlo (una recursión infinita) lo atajó el lint, no los tests. Si
-  se le va a reescribir el manejo de teclado, los tests van primero.
+- **`SelectDropdown` nunca anunciaba el valor elegido.** `aria-labelledby` pisa el
+  contenido del botón: el nombre accesible era "Equipo" y el equipo elegido quedaba
+  invisible, en los 8 lugares que lo usan. Lo encontró un test escrito antes de tocar
+  nada.
+- **21 controles sin nombre accesible** en las dos pantallas mundialistas: un `<label>`
+  suelto sin asociar en una, y un `FormField group` mal usado en la otra.
+- **La cajita del marcador no mostraba el foco.** El control más usado de la app: el
+  `outline: none` lo pisa la regla global `input:focus`, pero lo único que esa hace es
+  poner el borde en `--color-primary`, que es el color que el tono `.primary` **ya
+  tiene**. En un pronóstico vacío, enfocar no cambiaba un pixel.
 
-- **Formularios reales.** Solo `Login` y `UserProfile` usan `<form onSubmit>`.
-  Pronósticos, resultados y bonus son inputs sueltos más un botón, así que no se
-  puede enviar con Enter.
+### Tres puntos del plan que no eran así
 
-- **`loading="lazy"` + `width`/`height`**: hay 12 imágenes y **solo una las tiene**
-  (`Common/TeamOption`). La de más impacto es `Common/TeamDisplay`, que se repite
-  en cada fila de cada tabla: sin dimensiones, cada escudo que carga corre el
-  layout.
+Están explicados en `docs/pruebas-fase-8.md`; en resumen:
 
-- **Skeletons** en tabla de posiciones y pronósticos: hoy todo es spinner
-  (`Common/LoadingState`, con tamaños nombrados, sirve de base) y hay layout shift.
+1. Los `alt=""` de `PlayoffBracket` **estaban bien** (el nombre sí se renderiza al
+   lado). Lo que había era el problema inverso, en 7 lugares.
+2. Los tamaños de letra de `MatchResult` **sí están en la escala**: 3 de los 4 son
+   coincidencia exacta. 22 de los 28 literales se migraron sin cambiar un pixel.
+3. `refetch` **no** estaba «disponible en todos los hooks». Cuatro lo exponían con
+   nombre propio, `usePersonalStats` no devolvía ninguno (ahora sí, `fetchStats`), y
+   `useAllPredictions` **no devuelve `error` en absoluto**.
 
-- **Estados de error accionables.** Hoy el único botón de reintentar está en la
-  tabla de posiciones (`LeaderBoard/ErrorMessage`) más el del `ErrorBoundary`. El
-  resto de las pantallas muestra el texto del error y nada más, teniendo `refetch`
-  disponible en todos los hooks.
+También se descartó agregar atributos `width`/`height` a las imágenes: todas fijan las
+dos dimensiones por CSS, así que el espacio ya queda reservado y no hay layout shift
+que corregir. `loading="lazy"` sí suma.
 
-- **Los dos `alt=""` de `Playoffs/PlayoffBracket`**: ahí el escudo es el único
-  identificador visible del equipo, así que el alt vacío esconde información. (El
-  `alt=""` de `TeamOption` sí está bien: el nombre va al lado.)
+### Lo que queda de la fase
 
-- **El `alt="Cerrar sesión"` de `MainMenuView`**: el ícono está pegado a un texto
-  que dice lo mismo, así que un lector de pantalla lo anuncia dos veces. Va `alt=""`.
-
-- Recorrer la app entera solo con teclado.
-
-### Lo que hereda de las fases 6 y 7
-
-- **`MatchManager/MatchResult/index.tsx`** (308 líneas, ~28 literales fuera de la
-  escala de tokens). Se decidió no tocarlo en la fase 6 justamente porque esta fase
-  lo iba a abrir: es el momento de normalizar sus tamaños de letra.
-- **Verificar el ancho del datepicker en `/admin/horarios`.** La fase 7 lo arregló
-  (`.react-datepicker-wrapper { flex: 1 }`) pero no pudo verlo: esa ruta necesita
-  sesión de admin y la corrida se hizo con la cuenta de prueba.
-- **La duplicación de la regla del clasificado por penales**: `MatchResult`
-  reimplementa inline lo que `MatchPrediction/qualifier.ts` ya tiene con tests. No
-  son idénticas —el formulario muestra el selector solo si hay empate, el panel lo
-  muestra siempre y lo deshabilita—, así que unificarlas cambia la UI del admin.
+- **Probar a mano lo de `docs/pruebas-fase-8.md`.** El foco, el layout shift del
+  esqueleto y `/admin/horarios` (que necesita sesión de admin) no se ven desde los
+  tests.
+- **Los 4 literales de `MatchResult` sin token exacto** son una decisión visual, no un
+  refactor: están comentados en el archivo con el motivo de cada uno.
+- **`useAllPredictions` no expone `error`**, así que "Ver pronósticos" no tiene estado
+  de error que cablear. Va con la fase 10, que ya toca los hooks.
+- **La duplicación de la regla del clasificado por penales** sigue en pie: unificarla
+  cambia la UI del admin, así que es una decisión de producto.
+- **`QualifierPicker` es un `radiogroup` con dos tab stops** en vez del tab stop único
+  con flechas que pide APG. No está roto; no es el patrón.
 
 ---
 
@@ -310,16 +317,23 @@ cambios de comportamiento:
 
 ## Antes de mergear a main
 
-1. Terminar las fases 8, 9 y 10, mergeando cada una a
-   `refactor/fase-5-design-system` (la 6 y la 7 ya están).
-2. **Revisar los cambios visuales juntos.** Están listados en
+1. **Probar a mano la fase 8**, que es lo único que le falta:
+   `docs/pruebas-fase-8.md`, sección "Qué probar a mano". Dos de los diez puntos
+   necesitan sesión de admin.
+2. Terminar la fase 10 y mergearla a `refactor/fase-5-design-system` (la 6, la 7 y la
+   8 ya están, o van ahí).
+3. **Revisar los cambios visuales juntos.** Están listados en
    `docs/pruebas-fase-6.md` (sección "Cambios visuales deliberados") y son los
    que motivaron la estrategia de ramas. Los de la fase 5 que quedaron señalados:
    texto secundario de `#757575` a `#666666`, títulos con el primario más oscuros,
-   e ícono de estado vacío de 4rem a 3rem.
-3. `pnpm lint && pnpm format:check && pnpm test && pnpm build`.
-4. Probar con un torneo `active` y uno `finished`: `isReadOnly` cambia el
-   comportamiento de 6 componentes.
+   e ícono de estado vacío de 4rem a 3rem. **La fase 8 suma superficie nueva a esta
+   revisión**: los dos esqueletos de carga y el anillo de foco del marcador son
+   visibles a propósito, y el resto de sus cambios pretende ser neutro (los tokens de
+   `MatchResult` y las etiquetas de las dos pantallas mundialistas).
+4. `pnpm lint && pnpm format:check && pnpm test && pnpm build`.
+5. Probar con un torneo `active` y uno `finished`: `isReadOnly` cambia el
+   comportamiento de 6 componentes. La fase 8 le agregó `<form>` a tres pantallas de
+   escritura, así que conviene confirmar que en modo consulta siguen sin escribir.
 
 ## Cómo se verifica un refactor visual en este proyecto
 
