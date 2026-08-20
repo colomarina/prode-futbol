@@ -14,7 +14,7 @@ estilos computados y el árbol de accesibilidad de Chrome. Los resultados están
 
 ---
 
-## Los nueve commits
+## Los once commits
 
 | Commit | Qué |
 | --- | --- |
@@ -27,6 +27,12 @@ estilos computados y el árbol de accesibilidad de Chrome. Los resultados están
 | `feat: la tabla de posiciones y los pronosticos cargan con esqueleto` | `Common/Skeleton` y los dos esqueletos |
 | `fix: la cajita del marcador muestra donde esta el foco` | el anillo de foco de `ScoreInput` |
 | `fix: cuatro cosas que solo se vieron midiendo en el navegador` | lo que salió de la verificación |
+| `feat: los tabs tienen las esquinas de arriba redondeadas` | `--radius-md` solo arriba |
+| `refactor: los 4 literales que quedaban en MatchResult...` | salen de la tarjeta gemela |
+
+Ningún commit de la rama queda en rojo. El de los tests de `SelectDropdown` marca
+con `it.fails` el caso que documenta el bug, así que la suite pasa y el bug queda
+igual de escrito; el commit siguiente lo arregla y lo vuelve un `it` normal.
 
 ---
 
@@ -296,17 +302,43 @@ siempre guarda".
 
 ## Lo que queda pendiente
 
-### Los 4 literales de `MatchResult` que son una decisión visual
+### Los 4 literales de `MatchResult`: resueltos
 
-Ninguno tiene token exacto, así que elegir uno **cambia la pantalla**. Están
-comentados en el archivo con el motivo:
+Quedaron sin token exacto y estaban anotados como una decisión visual pendiente. Se
+resolvieron, y el criterio **no fue "el token más cercano"** —que entre dos pasos de
+la escala es una moneda al aire— sino **qué usa `MatchPrediction` para lo mismo**: es
+la tarjeta del mismo partido, con la misma grilla `1fr auto auto auto 1fr` y el mismo
+panel de penales, y ya tenía un token para cada uno.
 
-| Literal | Dónde | Entre qué tokens cae |
+| `MatchResult` (literal) | `MatchPrediction`, para lo mismo | Por cercanía habría salido |
 | --- | --- | --- |
-| `marginTop: 36px` | bloque de fecha | No es espaciado: es lo que hace falta para pasar por debajo de los dos badges absolutos. `--space-2xl` (32px) los pisa |
-| `marginBottom: 20px` | grilla del marcador | `--space-lg` (16) y `--space-xl` (24) |
-| `gap: 10px` y `margin: 0 0 10px 0` | grilla y título de penales | `10px` es el valor que `tokens.css` excluyó a propósito. En la grilla son 4 gaps, así que moverlo cambia 8px el ancho total: hay que mirar el mobile |
-| `fontSize: 0.85rem` ×2 | dos textos de estado | Justo en el medio de `--font-size-sm` (0.8) y `-md` (0.9) |
+| `gap: 10px` | `gap: var(--space-md)` (12) | 8 o 12, a la suerte |
+| `marginBottom: 20px` | `margin-bottom: var(--space-xl)` (24) | **16**, distinto |
+| `margin: 0 0 10px 0` del título de penales | `margin: 0 0 var(--space-md) 0` en `QualifierPicker` | 8 o 12 |
+| `fontSize: 0.85rem` ×2 | `--font-size-sm` en el hint equivalente | **0.9rem**, distinto |
+
+Medido: cada tarjeta pasa de **196.1 a 198.8 px** y las 15 juntas de 2927.6 a 2968.4.
+Horizontalmente **no se mueve nada**: el gap de 10 a 12 se lo comen las columnas
+`1fr` y la columna de equipo sigue en 80 px.
+
+Queda **un** literal en el archivo, el `marginTop: 36px` del bloque de fecha, y no
+por falta de token: no es espaciado, es la altura libre para pasar por debajo de los
+dos badges absolutos, así que sale de la geometría de esos badges. Y es una
+duplicación: `MatchHeader.module.css` tiene el mismo `36px` en `.meta` por el mismo
+motivo, porque las dos tarjetas implementan por su cuenta el patrón "badge absoluto
+arriba + contenido corrido". Se va cuando `MatchResult` use `MatchHeader`.
+
+### Los tabs
+
+Lucas los veía muy rectos y recordaba que antes tenían las puntas redondeadas. En la
+historia del repo **nunca las tuvieron**: los `border-radius` que hay atrás en
+`Navigation` son de badges y del botón de cerrar sesión, y el `TabButton` original
+tampoco tenía radio. Así que no era una regresión de la fase 5.
+
+Se agregó igual, porque la forma del componente lo pide: borde de 1px en tres lados y
+acento de 4px abajo es la pestaña de una carpeta, y una pestaña se apoya en el borde
+del contenido. Va `var(--radius-md) var(--radius-md) 0 0` — arriba redondeadas, abajo
+rectas. Verificado a 4x en los dos temas, en activo y en hover, y a 430 px de ancho.
 
 ### Lo que no entró en la fase
 

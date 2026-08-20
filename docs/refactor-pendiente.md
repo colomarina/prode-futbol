@@ -125,7 +125,7 @@ la fase 7:
 
 ## Fase 8 — UX y accesibilidad: **terminada y verificada en el navegador**
 
-Rama `refactor/fase-8-ux-accesibilidad`, nueve commits. El detalle está en
+Rama `refactor/fase-8-ux-accesibilidad`, once commits, ninguno en rojo. El detalle está en
 `docs/pruebas-fase-8.md`.
 
 Tests: **414 → 464** en **48 → 52** archivos. `lint`, `format:check`, `typecheck`,
@@ -229,14 +229,26 @@ que corregir. `loading="lazy"` sí suma.
   único torneo tipo Mundial está en `finished`. Sus etiquetas comparten el patrón con
   `/mundialistas`, que sí se verificó con 0 diferencias. Para probarla hay que pasar
   Mundial 2026 a `active` un rato.
-- **Los 4 literales de `MatchResult` sin token exacto** son una decisión visual, no un
-  refactor: están comentados en el archivo con el motivo de cada uno.
 - **`useAllPredictions` no expone `error`**, así que "Ver pronósticos" no tiene estado
   de error que cablear. Va con la fase 10, que ya toca los hooks.
 - **La duplicación de la regla del clasificado por penales** sigue en pie: unificarla
-  cambia la UI del admin, así que es una decisión de producto.
+  cambia la UI del admin, así que es una decisión de producto. Y el mismo refactor se
+  lleva puesto el último literal de `MatchResult`: el `marginTop: 36px` está duplicado
+  en `MatchHeader` porque las dos tarjetas implementan por su cuenta el patrón "badge
+  absoluto arriba + contenido corrido".
 - **`QualifierPicker` es un `radiogroup` con dos tab stops** en vez del tab stop único
   con flechas que pide APG. No está roto; no es el patrón.
+
+### Los tabs: no era una regresión
+
+Lucas los veía muy rectos y recordaba las puntas redondeadas. En la historia del repo
+**nunca las tuvieron** —los `border-radius` viejos de `Navigation` son de badges y del
+botón de cerrar sesión—, así que no venía de la fase 5. Se agregó igual, arriba y no
+abajo, porque el componente es la pestaña de una carpeta y una pestaña se apoya en el
+borde del contenido.
+
+Sirve como recordatorio para el resto de la revisión visual: **conviene confirmar
+contra el historial antes de tratar algo como regresión de una fase.**
 
 ---
 
