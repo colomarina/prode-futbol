@@ -24,14 +24,14 @@ que hay que revisar juntos al final, antes de mergear. Cada fase nace de
 
 Métricas verificadas:
 
-| | Valor |
-|---|---|
-| Tests | 414 en 48 archivos |
-| Archivos `.ts`/`.tsx` (sin tests) | 157 |
-| Archivos `.js`/`.jsx` que quedan | 2, los helpers de test |
-| Imports de Supabase en componentes | 0 |
-| `useEffect` de fetching en hooks | 0 |
-| Deuda de `strict` | 241 errores en 4 flags (ver fase 10) |
+|                                    | Valor                                |
+| ---------------------------------- | ------------------------------------ |
+| Tests                              | 414 en 48 archivos                   |
+| Archivos `.ts`/`.tsx` (sin tests)  | 157                                  |
+| Archivos `.js`/`.jsx` que quedan   | 2, los helpers de test               |
+| Imports de Supabase en componentes | 0                                    |
+| `useEffect` de fetching en hooks   | 0                                    |
+| Deuda de `strict`                  | 241 errores en 4 flags (ver fase 10) |
 
 `pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm build` en
 verde.
@@ -190,30 +190,50 @@ medidos, no heredados del plan original.
 
 ## Fase 9 — Supabase (requiere migraciones en la base)
 
-**La fase 7 cambió el punto de partida acá.** Ya no hay que adivinar el esquema: lo
-genera Supabase en `src/types/database.ts` (`pnpm types:db`). De ahí salieron varias
-respuestas y varios hallazgos nuevos.
+**Verificada empíricamente** contra la base con la cuenta de prueba (RLS, triggers y
+las RPC sueltas). El registro completo está en `docs/pruebas-fase-9.md`; acá va el
+resumen y lo que falta arreglar. Todos los arreglos son **migraciones**: no se pueden
+hacer desde el cliente (hace falta `service_role` o el panel), y el repo todavía no
+tiene SQL versionado.
 
-### Lo urgente de verificar
+### 🔴 Lo urgente: una vulnerabilidad real
 
-- **RLS.** Sigue siendo lo más importante y **ninguna fase lo verificó**. Todo el
-  control de admin es del lado del cliente: `AuthContext` chequea
-  `profile?.role === 'admin'` y con eso **solo oculta UI**. Si las policies de
-  `matches`, `rounds` y `predictions` no bloquean el write, cualquiera que fuerce
-  `role` en memoria escribe en la base. Lo mismo con `isReadOnly` en torneos
-  finalizados: es un guard de UI y nada más.
+- **Escalada de privilegios en `profiles`.** Un usuario común puede hacerse admin con
+  `PATCH /profiles { role: 'admin' }` sobre su propia fila: la policy de UPDATE deja
+  cambiar cualquier columna, incluida `role`. Verificado y revertido. **El arreglo**
+  es una policy (o un trigger `BEFORE UPDATE`) que excluya `role` e `id` de lo que el
+  dueño puede editar; el cliente solo toca `username` y `full_name`, así que no rompe
+  nada. Es lo primero de la fase.
 
-  **Pista nueva**: en la base existe una función `is_admin`, así que puede que las
-  policies ya la usen. Hay que leerlas, no suponerlo.
+### RLS: lo que sí está bien y lo que falta
 
-- **Qué escribe `round_scores.total_points`.** Sigue sin confirmarse, pero ahora hay
-  candidatos con nombre: la base tiene `calculate_points`, `recalculate_round`,
-  `recalculate_round_scores` y `reset_round`. Leer sus cuerpos contesta la pregunta.
+- **Bien**: `matches` y `rounds` rechazan el write de un no-admin; un pronóstico de
+  **otro** usuario se rechaza con `42501`. La lectura es pública, que es lo esperado.
+- **`isReadOnly` es solo UI**: se cargó un pronóstico en el Mundial (finalizado) y la
+  base lo aceptó. Falta scoping por status en `predictions` (una policy que rechace
+  escribir si el torneo no está `active`).
+- **El cierre de pronósticos no existe en la base**: se escribió un pronóstico en un
+  partido de hace 10 días y entró. `PREDICTION_CUTOFF_MINUTES` es convención de UI.
 
-- **El cierre de pronósticos.** `PREDICTION_CUTOFF_MINUTES` es una convención de UI,
-  y la base acepta la escritura igual. **Pista nueva**: existe una función
-  `can_predict(match_id)`. Si ya implementa la regla, falta cablearla (o convertirla
-  en trigger); si no, es el lugar donde ponerla.
+### Triggers: contestado con un experimento
+
+- **No hay trigger que calcule puntos.** Se escribió un pronóstico exacto en un partido
+  finalizado y quedó con `points: 0`, sin fila en `round_scores`. El scoring lo
+  dispara un proceso aparte (candidatos: `recalculate_round`,
+  `recalculate_round_scores`, `reset_round`), no un trigger sobre `predictions`.
+- **La fórmula está documentada**: `calculate_points` es pura y se probó. Da lo mismo
+  que `utils/stats/accuracy.ts` asume (pleno = cantidad de goles si son >2, si no 2;
+  ganador = 1; bonus por total de goles = +1). El README con el 5/3/1 sigue mal.
+
+### Las dos RPC pista
+
+- **`is_admin()`** funciona (da `false` para la cuenta de prueba). Las policies de
+  admin **podrían** usarla; hay que leerlas para confirmar. Su firma en el esquema
+  generado (`Args: { p_text }`) está mal, pero no afecta al cliente.
+- **`can_predict(match_id)` está rota**: tira `42P01: relation "matches" does not
+exist`, o sea una `SECURITY DEFINER` sin `search_path`. Parece la pieza pensada para
+  el cierre de pronósticos del lado de la base. Arreglarla y cablearla cierra ese
+  agujero.
 
 ### Deuda de esquema
 
@@ -231,9 +251,9 @@ respuestas y varios hallazgos nuevos.
 - `rounds.status` tiene default `'closed'`, un valor que **no está en su propio
   CHECK** (`pending|open|locked|finished`), así que un INSERT sin `status` explícito
   falla. La fase 6 le puso un fallback en el cliente (`getRoundStatus`).
-- **`matches.status` es columna muerta, confirmado**: el único "estado de partido"
-  del cliente lo deriva `MatchStatusBadge` de `match_date` + `is_finished`. Nadie
-  lee la columna. Elegir una y borrar la otra.
+- ~~**`matches.status` es columna muerta**~~ → **reconfirmado en la fase 9**: el
+  único "estado de partido" del cliente lo deriva `MatchStatusBadge` de `match_date`
+  - `is_finished`. Nadie lee la columna. Elegir una y borrar la otra.
 - **`matches.is_finished` es nullable**, y es el campo que decide qué fecha tiene
   tabla propia y qué partido entra en las estadísticas. Hoy un null se lee como
   falso en todos los usos, que es lo que se quiere, pero es una ausencia y no un
@@ -284,12 +304,12 @@ midió al terminar de migrar y que no entra ni en UX ni en Supabase.
 `strict` es un paraguas de ocho flags. La fase 7 prendió las cuatro que ya daban
 cero. Las otras cuatro, medidas con `tsc --noEmit --<flag>`:
 
-| Flag | Errores | Notas |
-|---|---|---|
-| `strictPropertyInitialization` | 1 | un rato |
-| `useUnknownInCatchVariables` | 12 | mecánico: estrechar en los `catch` |
-| `noImplicitAny` | 100 | callbacks y parámetros sin anotar |
-| `strictNullChecks` | 132 | el grueso |
+| Flag                           | Errores | Notas                              |
+| ------------------------------ | ------- | ---------------------------------- |
+| `strictPropertyInitialization` | 1       | un rato                            |
+| `useUnknownInCatchVariables`   | 12      | mecánico: estrechar en los `catch` |
+| `noImplicitAny`                | 100     | callbacks y parámetros sin anotar  |
+| `strictNullChecks`             | 132     | el grueso                          |
 
 Prender `strict: true` de una son **241 errores juntos**, así que va flag por flag,
 de menor a mayor. Las dos primeras (13 errores) se pueden hacer en cualquier
