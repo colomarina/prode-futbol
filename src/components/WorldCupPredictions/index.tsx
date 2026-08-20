@@ -10,6 +10,7 @@ import Toast from '../Common/Toast'
 import LoadingState from '../Common/LoadingState'
 import TeamOption from '../Common/TeamOption'
 import EmptyState from '../Common/EmptyState'
+import ErrorMessage from '../Common/ErrorMessage'
 import {
   ARGENTINA_STAGE_OPTIONS,
   DEBUTANT_TEAM_SLUGS,
@@ -135,7 +136,7 @@ export default function WorldCupPredictions() {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '900px' }}>
-        <div className="alert alert-error">{error}</div>
+        <ErrorMessage error={error} onRetry={fetchData} />
       </div>
     )
   }

@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import Button from '../../Common/Button'
+import Button from '../Button'
 import { tint } from '../../../utils/tint'
 
 interface ErrorMessageProps {
@@ -8,7 +8,15 @@ interface ErrorMessageProps {
 }
 
 /**
- * El aviso de error de la tabla de posiciones.
+ * El aviso de error con su botón de reintentar.
+ *
+ * Vivía dentro de `LeaderBoard`, que era la única pantalla de la app con un botón
+ * de reintentar: el resto mostraba el texto del error y nada más, teniendo el
+ * `refetch` del hook a mano. Por eso subió a `Common`.
+ *
+ * `onRetry` es opcional a propósito: sin él no se dibuja el botón. Un aviso sin
+ * forma de reintentar es peor que uno con ella, pero mejor que un botón que no
+ * hace nada.
  *
  * El botón tenía sus estilos inline y, además, el hover **en JavaScript**: dos
  * handlers `onMouseEnter`/`onMouseLeave` que escribían `style.opacity` a mano.

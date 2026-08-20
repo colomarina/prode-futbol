@@ -7,7 +7,7 @@ import { getLeaderboardRounds } from '../../utils/leaderboardRounds'
 import LeaderboardHeader from './LeadboardHeader'
 import LeaderboardTable from './LeaderboardTable'
 import LoadingState from '../Common/LoadingState'
-import ErrorMessage from './ErrorMessage'
+import ErrorMessage from '../Common/ErrorMessage'
 import type { LeaderboardSelection } from './LeadboardHeader'
 import type { ViewPredictionsRequest } from './LeaderboardRow'
 

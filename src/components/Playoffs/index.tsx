@@ -4,12 +4,12 @@ import { useTournament } from '../../contexts/TournamentContext'
 import PlayoffBracket from './PlayoffBracket'
 import LoadingState from '../Common/LoadingState'
 import EmptyState from '../Common/EmptyState'
+import ErrorMessage from '../Common/ErrorMessage'
 
 export default function Playoffs() {
   const { activeTournament } = useTournament()
-  const { matchesByStage, predictions, loading, error, hasAnyPlayoffMatches } = usePlayoffs(
-    activeTournament?.id
-  )
+  const { matchesByStage, predictions, loading, error, hasAnyPlayoffMatches, fetchPlayoffs } =
+    usePlayoffs(activeTournament?.id)
 
   const predictionsByMatch = useMemo(() => {
     const map = {}
@@ -30,7 +30,9 @@ export default function Playoffs() {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1200px' }}>
-        <EmptyState icon="⚠️" title="No se pudieron cargar los playoffs" description={error} />
+        {/* Un error no es un estado vacio: el EmptyState que habia aca no ofrecia
+            forma de reintentar, y el hook expone fetchPlayoffs desde siempre. */}
+        <ErrorMessage error={error} onRetry={fetchPlayoffs} />
       </div>
     )
   }

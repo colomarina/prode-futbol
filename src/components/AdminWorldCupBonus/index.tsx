@@ -7,6 +7,7 @@ import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
 import LoadingState from '../Common/LoadingState'
+import ErrorMessage from '../Common/ErrorMessage'
 import TeamOption from '../Common/TeamOption'
 import {
   ARGENTINA_STAGE_OPTIONS,
@@ -168,7 +169,7 @@ export default function AdminWorldCupBonus() {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1000px' }}>
-        <div className="alert alert-error">{error}</div>
+        <ErrorMessage error={error} onRetry={fetchData} />
       </div>
     )
   }

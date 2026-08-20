@@ -12,6 +12,7 @@ import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
 import EmptyState from '../Common/EmptyState'
 import LoadingState from '../Common/LoadingState'
+import ErrorMessage from '../Common/ErrorMessage'
 
 export default function MatchManager() {
   const { activeTournament } = useTournament()
@@ -19,7 +20,11 @@ export default function MatchManager() {
   const [selectedRound, setSelectedRound] = useState(null)
   // Comparte cache con useRounds: antes este componente repetia la misma query
   // por su cuenta, y ademas se tragaba el error en un catch vacio.
-  const { matchesMeta, error: matchesMetaError } = useMatchesMeta(activeTournament?.id)
+  const {
+    matchesMeta,
+    error: matchesMetaError,
+    refetch: refetchMatchesMeta,
+  } = useMatchesMeta(activeTournament?.id)
   const {
     matches,
     loading: matchesLoading,
@@ -181,10 +186,11 @@ export default function MatchManager() {
           falló o que todavía ninguna fecha cumple el delay de RESULT_LOAD_DELAY_HOURS. */}
       {closedRounds.length === 0 &&
         (matchesMetaError ? (
-          <EmptyState
-            icon="⚠️"
-            title="No se pudieron cargar los partidos del torneo"
-            description="Probá recargar la página. Si sigue pasando, revisá la conexión con la base."
+          /* Decia "Probá recargar la página" porque no habia otra forma de
+             reintentar. `useMatchesMeta` expone `refetch`, asi que ahora la hay. */
+          <ErrorMessage
+            error="No se pudieron cargar los partidos del torneo. Si sigue pasando, revisá la conexión con la base."
+            onRetry={refetchMatchesMeta}
           />
         ) : (
           <EmptyState

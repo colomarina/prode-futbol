@@ -13,13 +13,14 @@ import HistoryStats from './HistoryStats'
 import AdditionalStats from './AdditionalStats'
 import StatSection from './StatSection'
 import LoadingState from '../Common/LoadingState'
+import ErrorMessage from '../Common/ErrorMessage'
 import styles from './PersonalStats.module.css'
 
 export default function PersonalStats() {
   const { user } = useAuth()
   const { activeTournament } = useTournament()
   const { rounds } = useRounds(activeTournament?.id)
-  const { stats, loading, error } = usePersonalStats(user?.id, activeTournament?.id)
+  const { stats, loading, error, fetchStats } = usePersonalStats(user?.id, activeTournament?.id)
 
   if (loading) {
     return (
@@ -33,7 +34,7 @@ export default function PersonalStats() {
     return (
       <div className={styles.container}>
         <div className={styles.centered}>
-          <p>{error || 'Error cargando estadísticas'}</p>
+          <ErrorMessage error={error || 'Error cargando estadísticas'} onRetry={fetchStats} />
         </div>
       </div>
     )
