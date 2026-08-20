@@ -1,26 +1,27 @@
-# Refactor: lo que queda (solo la fase 10; la 8 y la 9 quedaron cerradas)
+# Refactor: lo que queda (solo la fase 10, mas la revision visual antes de main)
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
 previo**. El plan original completo está en
 `~/.claude/plans/te-animas-a-hacer-groovy-sutton.md` (fuera del repo), pero está
 escrito contra el estado de hace 7 fases: varios de sus números y varios de sus
-puntos ya no aplican. Acá está el estado **verificado** al cerrar la fase 8.
+puntos ya no aplican. Acá está el estado **verificado** con la fase 8 ya mergeada.
 
 Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`, `-7`, `-8`, `-9`.
 
 ---
 
-## Estado al cerrar la fase 8
+## Estado con la fase 8 ya mergeada
 
-Rama actual: `refactor/fase-8-ux-accesibilidad`, sale de
-`refactor/fase-5-design-system` (que ya tiene las fases 6 y 7 mergeadas).
+**La fase 8 está mergeada** a `refactor/fase-5-design-system` (PR #12), así que esa
+rama ya tiene las fases 6, 7 y 8. Rama de trabajo actual: la de la fase 5.
 
 **Estrategia de ramas acordada:** las fases 6 a 10 se mergean a la rama de la fase 5,
 y esa es la que va a `main`. El motivo es que la fase 5 dejó cambios visuales chicos
 que hay que revisar juntos al final, antes de mergear. Cada fase nace de
 `refactor/fase-5-design-system` y vuelve ahí al terminar.
 
-`main` no tiene ningún commit que la fase 5 no tenga, así que no hay divergencia.
+`main` no tiene ningún commit que la fase 5 no tenga, así que no hay divergencia: son
+**80 commits** de la 5 que a `main` le faltan.
 
 Métricas verificadas:
 
@@ -31,11 +32,12 @@ Métricas verificadas:
 | Archivos `.js`/`.jsx` que quedan   | 2, los helpers de test               |
 | Imports de Supabase en componentes | 0                                    |
 | `useEffect` de fetching en hooks   | 0                                    |
-| Deuda de `strict`                  | 241 errores en 4 flags (ver fase 10) |
+| Deuda de `strict`                  | 236 errores en 4 flags (ver fase 10) |
 
-La deuda de `strict` **no se volvió a medir** después de la fase 8: los tres
-componentes nuevos están escritos con tipos, así que no debería haber subido, pero el
-número de arriba es el de la fase 7 y hay que remedirlo al arrancar la 10.
+**La deuda de `strict` se remidió al cerrar la fase 8 y bajó: 241 → 236.** Todo el
+cambio está en `strictNullChecks` (132 → 123), y no fue casualidad: las guardas que la
+fase 8 agregó —`selectedItem && renderButton`, `renderOption?.()`, el conteo sobre
+`matchesMeta`— son justo las que esa flag pide. Las otras tres no se movieron.
 
 `pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm build` en
 verde.
@@ -106,9 +108,9 @@ nullables), y varios contratos que estaban implícitos y ahora están escritos.
 ### Lo que dejó para después
 
 La fase 7 midió su propia deuda y la dejó agrupada en una fase nueva, la **10**:
-las cuatro flags de `strict` que faltan (241 errores), los 48 tests que siguen en
-`.js`, el hueco de tests de `SelectDropdown` y los renombres de convención que no se
-unificaron. No están acá para no tener la misma lista en dos lugares.
+las cuatro flags de `strict` que faltaban (241 errores entonces, 236 ahora), los tests
+que siguen en `.js`, el hueco de tests de `SelectDropdown` —que la fase 8 cerró— y los
+renombres de convención. La lista al día está en la fase 10, no acá.
 
 ### Las tres intenciones que se recuperaron (o no)
 
@@ -119,8 +121,9 @@ la fase 7:
   `getTournamentConfig(tournament.slug)?.emoji` con la pelota como fallback. Medido:
   `⚽ ⚽ ⚽` → `🏆 🏆 🌍`.
 - **Ancho del datepicker: aplicado**, con `.react-datepicker-wrapper { flex: 1 }` en
-  `styles/datepicker-theme.css`. **Falta verlo en el navegador**: la única pantalla
-  que lo usa es `/admin/horarios` y hace falta una sesión de admin.
+  `styles/datepicker-theme.css`. **Verificado en la fase 8**, con sesión de admin en
+  `/admin/horarios`: anulando la regla en runtime el input cae de 264.4 a 176 px, o sea
+  que el arreglo sirve y antes estaba roto.
 - **Globito del suspendido: descartado.** `SUSPENDED_PLAYERS` son los mismos dos
   nombres que dos de los cinco grupos de `constants/hiddenPlayers`, y
   `useLeaderboard` filtra los ocultos en todas sus ramas: **ese bloque no se
@@ -129,9 +132,10 @@ la fase 7:
 
 ---
 
-## Fase 8 — UX y accesibilidad: **terminada y verificada en el navegador**
+## Fase 8 — UX y accesibilidad: **terminada, verificada y mergeada**
 
-Rama `refactor/fase-8-ux-accesibilidad`, catorce commits, **ninguno en rojo**. El detalle está en
+Rama `refactor/fase-8-ux-accesibilidad`, **19 commits, ninguno en rojo**, mergeada por
+el PR #12. El detalle está en
 `docs/pruebas-fase-8.md`.
 
 Tests: **414 → 464** en **48 → 52** archivos. `lint`, `format:check`, `typecheck`,
@@ -349,42 +353,55 @@ midió al terminar de migrar y que no entra ni en UX ni en Supabase.
 `strict` es un paraguas de ocho flags. La fase 7 prendió las cuatro que ya daban
 cero. Las otras cuatro, medidas con `tsc --noEmit --<flag>`:
 
-| Flag                           | Errores | Notas                              |
-| ------------------------------ | ------- | ---------------------------------- |
-| `strictPropertyInitialization` | 1       | un rato                            |
-| `useUnknownInCatchVariables`   | 12      | mecánico: estrechar en los `catch` |
-| `noImplicitAny`                | 100     | callbacks y parámetros sin anotar  |
-| `strictNullChecks`             | 132     | el grueso                          |
+**Remedidas al cerrar la fase 8** (no son los números de la fase 7):
 
-Prender `strict: true` de una son **241 errores juntos**, así que va flag por flag,
-de menor a mayor. Las dos primeras (13 errores) se pueden hacer en cualquier
+| Flag                           | Errores  | Notas                              |
+| ------------------------------ | -------- | ---------------------------------- |
+| `strictPropertyInitialization` | 1        | un rato                            |
+| `useUnknownInCatchVariables`   | 12       | mecánico: estrechar en los `catch` |
+| `noImplicitAny`                | 100      | callbacks y parámetros sin anotar  |
+| `strictNullChecks`             | 132 → **123** | el grueso                     |
+
+Prender `strict: true` de una son **236 errores juntos** (eran 241), así que va flag
+por flag, de menor a mayor. Las dos primeras (13 errores) se pueden hacer en cualquier
 momento.
 
-**Dependencia con la fase 9**: 24 de los 132 de `strictNullChecks` son un solo caso
-—los argumentos de las RPC del bonus del Mundial declarados no nullables—, y se
-arreglan **en la base**, no en el cliente. Conviene que la fase 9 pase primero, o al
-menos ese punto.
+`strictNullChecks` bajó 9 sin que nadie lo buscara: las guardas que la fase 8 agregó
+—`selectedItem && renderButton`, `renderOption?.()`, el conteo sobre `matchesMeta`—
+son justo las que esa flag pide. Es una señal de que **una parte de esos 123 se cae
+sola al tocar los archivos por otra razón**, y no hace falta atacarlos de frente.
+
+**La dependencia con la fase 9 ya no existe como bloqueo.** El plan decía que 24 de
+los errores eran los argumentos de las RPC del bonus del Mundial declarados no
+nullables, y que había que arreglarlos en la base. La fase 9 cerró sin tocar eso, así
+que siguen ahí: no es un bloqueo, es un subconjunto que se arregla en Supabase y no en
+el cliente. Conviene identificarlo primero para no pelearlo desde TypeScript.
 
 Un dato para calibrar: cuando solo estaban migrados `utils/` y `lib/`,
-`strictNullChecks` daba **0**. Esos módulos están escritos a la defensiva. Los 132
+`strictNullChecks` daba **0**. Esos módulos están escritos a la defensiva; los errores
 aparecieron con los hooks y los componentes.
 
 ### Los tests
 
-Los **48 archivos de test siguen en `.js`**, y es a propósito: un fixture parcial
-falla por propiedades faltantes, así que migrarlos es trabajo de fixtures y no de
-tipos. Conviene hacerlo junto con `strictNullChecks`, con factories que armen
-objetos completos.
+Los **52 archivos de test siguen en `.js`** (eran 48; la fase 8 sumó 4), y es a
+propósito: un fixture parcial falla por propiedades faltantes, así que migrarlos es
+trabajo de fixtures y no de tipos. Conviene hacerlo junto con `strictNullChecks`, con
+factories que armen objetos completos.
 
-También falta cubrir lo que la fase 7 dejó a la vista:
+De lo que la fase 7 había dejado a la vista:
 
-- **`Common/SelectDropdown` no tiene tests** y lo usan ~10 pantallas (ver fase 8).
-- Los hooks de datos que no tienen test propio.
+- ~~**`Common/SelectDropdown` no tiene tests**~~ → **cerrado en la fase 8**: tiene 31,
+  y fueron los que encontraron el bug del nombre accesible.
+- Los hooks de datos que no tienen test propio. **Sigue abierto**, y ahora hay un
+  candidato con nombre: `useAllPredictions`, que además **no devuelve `error`** —el
+  único hook de datos así, lo que deja a "Ver pronósticos" sin estado de error que
+  mostrar.
 
 ### Las convenciones que la fase 7 no unificó
 
 Son renombres mecánicos, y conviene que vayan en un commit propio y no mezclados con
-cambios de comportamiento:
+cambios de comportamiento. **Los cinco siguen abiertos**, verificados con la fase 8
+mergeada:
 
 - `LeaderBoard/LeadboardHeader/` — le falta la "er".
 - `LeaderBoard` vs `LeaderboardRow` vs `useLeaderboard`: tres capitalizaciones del
@@ -395,30 +412,63 @@ cambios de comportamiento:
 - `.gitignore` mantiene la excepción `!src/config/*.config.js`, que quedó vestigial:
   ese archivo ahora es `.ts`. No molesta, pero desorienta.
 
+**Ojo con estos renombres en Windows**: el sistema de archivos no distingue
+mayúsculas, así que un cambio de capitalización a secas no lo ve git. Va con
+`git mv` en dos pasos (a un nombre temporal y después al definitivo) o con
+`git mv --force`.
+
+### Lo que la fase 8 le sumó a la fase 10
+
+- **`useAllPredictions` no devuelve `error`.** Es el único hook de datos así, y lo que
+  impide darle a "Ver pronósticos" un estado de error accionable como al resto de las
+  pantallas. La fase 8 cableó las otras cinco.
+- **Los cuatro tests nuevos también están en `.js`** (`Skeleton`, `ErrorMessage`,
+  `SelectDropdown`, `MatchPredictionSkeleton`), así que entran en la misma migración
+  de fixtures.
+
 ---
 
 ## Antes de mergear a main
 
-1. **La fase 8 no tiene pendientes de verificación**: está toda medida en el navegador
-   contra la base real, mobile incluido, con el guardado real y el modo consulta
-   confirmados. Lo único que queda es una decisión de gusto sobre el salto del
-   esqueleto (`docs/pruebas-fase-8.md`, "Qué probar a mano").
-2. Terminar la fase 10 y mergearla a `refactor/fase-5-design-system` (la 6, la 7 y la
-   8 ya están, o van ahí).
-3. **Revisar los cambios visuales juntos.** Están listados en
-   `docs/pruebas-fase-6.md` (sección "Cambios visuales deliberados") y son los
-   que motivaron la estrategia de ramas. Los de la fase 5 que quedaron señalados:
-   texto secundario de `#757575` a `#666666`, títulos con el primario más oscuros,
-   e ícono de estado vacío de 4rem a 3rem. **La fase 8 suma superficie nueva a esta
-   revisión**: los dos esqueletos de carga y el anillo de foco del marcador son
-   visibles a propósito, y el resto de sus cambios pretende ser neutro (los tokens de
-   `MatchResult` y las etiquetas de las dos pantallas mundialistas).
-4. `pnpm lint && pnpm format:check && pnpm test && pnpm build`.
-5. `isReadOnly` con un torneo `active` y uno `finished` **ya está verificado para la
-   fase 8**: en los dos torneos `finished` hay cero inputs editables, cero botones de
-   submit y forzando `Enter` no se intenta ninguna escritura. Igual sigue valiendo
-   mirarlo al mergear, porque `isReadOnly` toca 6 componentes y las fases anteriores
-   también los tocaron.
+Quedan **dos** cosas, y solo una es trabajo de código.
+
+### 1. La fase 10 (código)
+
+`strict` flag por flag, los tests a `.ts` y los renombres de convención. Está descrita
+arriba con los números remedidos. **No bloquea nada**: es deuda interna, no cambia
+comportamiento ni aspecto.
+
+### 2. La revisión visual junta (solo la puede hacer Lucas)
+
+Es la razón por la que existe esta estrategia de ramas. Hay que mirar de una sola vez
+todo lo que se ve distinto en los 80 commits que `main` no tiene. **La lista completa,
+en un lugar:**
+
+| De la fase | Qué se ve distinto |
+| --- | --- |
+| 5 | texto secundario de `#757575` a `#666666` |
+| 5 | títulos con el primario más oscuros |
+| 5 | ícono de estado vacío de 4rem a 3rem |
+| 6 | lo listado en `docs/pruebas-fase-6.md`, "Cambios visuales deliberados" |
+| 7 | el emoji por torneo en el selector (`⚽⚽⚽` → `🏆🏆🌍`) |
+| 7 | el datepicker de `/admin/horarios`, de 176 a 264 px de ancho |
+| 8 | los dos esqueletos de carga (posiciones y pronósticos) |
+| 8 | el anillo de foco de la cajita del marcador |
+| 8 | las esquinas de arriba de los tabs, redondeadas |
+| 8 | `MatchResult` 2.7 px más alto por tarjeta |
+| 8 | los campos de texto 4 px más altos (40 → 44) |
+
+Todo lo demás de las fases 7 y 8 **está medido con 0 diferencias** y no debería
+aparecer en esta revisión: si algo se ve distinto ahí, es un hallazgo.
+
+### Y al mergear
+
+- `pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm build`.
+- `isReadOnly` con un torneo `active` y uno `finished`. **Para la fase 8 ya está
+  verificado** —cero inputs editables, cero botones de submit, cero escrituras al
+  forzar `Enter`— pero toca 6 componentes y las fases anteriores también los tocaron.
+- Ojo con Vercel: las variables de entorno son listas separadas por entorno
+  (Production, Preview, Development).
 
 ## Datos de prueba que dejó la fase 8
 
