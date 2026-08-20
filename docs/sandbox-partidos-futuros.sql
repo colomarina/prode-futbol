@@ -1,72 +1,108 @@
 -- Fecha 7 del Sandbox de pruebas, con partidos EN EL FUTURO.
 --
--- Para qué: hasta ahora todas las fechas del sandbox tienen partidos pasados
--- (10 al 15 de agosto de 2026), así que `canPredictMatch()` da falso en todas y no
--- hay una sola cajita editable. Sin eso no se puede probar un guardado real de
--- pronósticos de punta a punta.
+-- Para qué: todas las fechas del sandbox tienen partidos del 10 al 15 de agosto de
+-- 2026, así que `canPredictMatch()` da falso en todas y no hay una sola cajita
+-- editable. Sin eso no se puede probar un guardado real de pronósticos de punta a
+-- punta.
 --
 -- Es el mecanismo que el proyecto ya tiene para esto: los torneos con slug `test-`
 -- solo los ven los admins y están en `active` justamente para poder escribirles.
 --
 -- Las fechas van relativas a `now()` y no hardcodeadas, así que este script no
--- vence: corrélo cuando quieras y los partidos van a quedar siempre a futuro.
--- El cierre de pronósticos es 10 minutos antes de cada partido
+-- vence. El cierre de pronósticos es 10 minutos antes de cada partido
 -- (`PREDICTION_CUTOFF_MINUTES` en `src/utils/matchTiming.ts`), así que con +2 días
 -- sobra.
 --
--- Ejecutar en el SQL editor de Supabase.
+-- **Se puede correr más de una vez**: los dos inserts están guardados con
+-- `where not exists`, así que no duplican nada.
+--
+-- Ejecutar en el SQL editor de Supabase, de arriba a abajo.
 
--- 1. La fecha. `status` no decide nada del comportamiento —la app deriva la fecha
---    activa de los `match_date`, no de esto— pero la fila tiene que existir para que
---    `useRounds` la liste y aparezca en el selector.
+-- ---------------------------------------------------------------------------
+-- 0. PREFLIGHT. Correr esto primero, solo.
+--
+-- Tiene que devolver **cero filas**. Si devuelve algo, ese slug no existe en
+-- `teams` y hay que corregirlo antes de seguir: los equipos se eligen por slug, y un
+-- slug mal escrito no da error de tipeo sino un `null` en `home_team_id`, que es
+-- exactamente cómo falló la primera versión de este script (`racing-club` no existe,
+-- el equipo es `racing`).
+select s.slug as slug_que_no_existe
+from (
+  values
+    ('boca-juniors'), ('river-plate'),
+    ('racing'), ('independiente'),
+    ('san-lorenzo'), ('huracan'),
+    ('rosario-central'), ('newells-old-boys')
+) as s (slug)
+where not exists (select 1 from teams t where t.slug = s.slug);
+
+-- ---------------------------------------------------------------------------
+-- 1. La fecha.
+--
+-- `status` no decide nada del comportamiento —la app deriva la fecha activa de los
+-- `match_date`, no de esto— pero la fila tiene que existir para que `useRounds` la
+-- liste y aparezca en el selector.
+--
+-- Va con `where not exists` y no con `on conflict do nothing`, porque este último
+-- solo evita el duplicado si hay un índice único sobre (tournament_id,
+-- round_number), y no está garantizado que lo haya.
 insert into rounds (tournament_id, round_number, name, status)
-values (
+select
   '1e7140a6-7b29-4cc8-81fd-dcf9c166192e',  -- test-sandbox
   7,
   'Fecha 7 (futura, para probar guardado)',
   'open'
-)
-on conflict do nothing;
+where not exists (
+  select 1 from rounds
+  where tournament_id = '1e7140a6-7b29-4cc8-81fd-dcf9c166192e'
+    and round_number = 7
+);
 
+-- ---------------------------------------------------------------------------
 -- 2. Los cuatro partidos.
---    Los equipos se eligen por `slug` en vez de pegar UUIDs, así se lee qué es cada
---    uno y no hay que actualizar el script si cambian los ids.
---    `matches.status` se omite a propósito: es una columna muerta (ver
---    `docs/supabase-schema.md`), el cliente no la lee.
+--
+-- El `join` con `teams` es lo que hace imposible el error de la primera versión: si
+-- un slug no existe, la fila **no se inserta** en vez de insertarse con un `null`.
+-- El paso 3 lo delata, porque van a faltar filas.
+--
+-- `matches.status` se omite a propósito: es una columna muerta (ver
+-- `docs/supabase-schema.md`), el cliente no la lee.
+with nuevos (match_number, local, visitante, cuando) as (
+  values
+    (1, 'boca-juniors', 'river-plate', now() + interval '2 days'),
+    (2, 'racing', 'independiente', now() + interval '2 days 3 hours'),
+    (3, 'san-lorenzo', 'huracan', now() + interval '3 days'),
+    (4, 'rosario-central', 'newells-old-boys', now() + interval '3 days 2 hours')
+)
 insert into matches (
   tournament_id, round_number, match_number,
   home_team_id, away_team_id,
   match_date, is_finished, is_playoff
 )
-values
-  (
-    '1e7140a6-7b29-4cc8-81fd-dcf9c166192e', 7, 1,
-    (select id from teams where slug = 'boca-juniors'),
-    (select id from teams where slug = 'river-plate'),
-    now() + interval '2 days', false, false
-  ),
-  (
-    '1e7140a6-7b29-4cc8-81fd-dcf9c166192e', 7, 2,
-    (select id from teams where slug = 'racing-club'),
-    (select id from teams where slug = 'independiente'),
-    now() + interval '2 days 3 hours', false, false
-  ),
-  (
-    '1e7140a6-7b29-4cc8-81fd-dcf9c166192e', 7, 3,
-    (select id from teams where slug = 'san-lorenzo'),
-    (select id from teams where slug = 'huracan'),
-    now() + interval '3 days', false, false
-  ),
-  (
-    '1e7140a6-7b29-4cc8-81fd-dcf9c166192e', 7, 4,
-    (select id from teams where slug = 'rosario-central'),
-    (select id from teams where slug = 'newells-old-boys'),
-    now() + interval '3 days 2 hours', false, false
-  );
-
--- 3. Verificación: tienen que salir 4 filas, todas con `editable = true`.
 select
-  m.round_number,
+  '1e7140a6-7b29-4cc8-81fd-dcf9c166192e',
+  7,
+  n.match_number,
+  h.id,
+  a.id,
+  n.cuando,
+  false,
+  false
+from nuevos n
+  join teams h on h.slug = n.local
+  join teams a on a.slug = n.visitante
+where not exists (
+  select 1 from matches m
+  where m.tournament_id = '1e7140a6-7b29-4cc8-81fd-dcf9c166192e'
+    and m.round_number = 7
+    and m.match_number = n.match_number
+);
+
+-- ---------------------------------------------------------------------------
+-- 3. Verificación. Tienen que salir **4 filas**, todas con `editable = true`.
+--
+-- Si salen menos de 4, faltó un slug: volver al paso 0.
+select
   m.match_number,
   h.name as local,
   a.name as visitante,
