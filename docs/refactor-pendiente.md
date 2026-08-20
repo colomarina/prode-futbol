@@ -1,4 +1,4 @@
-# Refactor: lo que queda (fases 8, 9 y 10)
+# Refactor: lo que queda (fases 8 y 10; la 9 quedó cerrada)
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
 previo**. El plan original completo está en
@@ -188,109 +188,65 @@ medidos, no heredados del plan original.
 
 ---
 
-## Fase 9 — Supabase (requiere migraciones en la base)
+## Fase 9 — Supabase: **cerrada** (lo urgente hecho; el resto, deuda anotada)
 
-**Verificada empíricamente** contra la base con la cuenta de prueba (RLS, triggers y
-las RPC sueltas). El registro completo está en `docs/pruebas-fase-9.md`; acá va el
-resumen y lo que falta arreglar. Todos los arreglos son **migraciones**: no se pueden
-hacer desde el cliente (hace falta `service_role` o el panel), y el repo todavía no
-tiene SQL versionado.
+Verificada empíricamente contra la base con la cuenta de prueba (RLS, triggers y las
+RPC sueltas). Registro en `docs/pruebas-fase-9.md`; SQL aplicado y rollbacks en
+`docs/plan-fase-9.md`.
 
-### 🔴 Lo urgente: una vulnerabilidad real
+### Hecho y verificado en producción (2026-08-20)
 
-- **Escalada de privilegios en `profiles`.** Un usuario común puede hacerse admin con
-  `PATCH /profiles { role: 'admin' }` sobre su propia fila: la policy de UPDATE deja
-  cambiar cualquier columna, incluida `role`. Verificado y revertido. **El arreglo**
-  es una policy (o un trigger `BEFORE UPDATE`) que excluya `role` e `id` de lo que el
-  dueño puede editar; el cliente solo toca `username` y `full_name`, así que no rompe
-  nada. Es lo primero de la fase.
+Las dos migraciones de seguridad —lo único con riesgo real— están aplicadas:
 
-### RLS: lo que sí está bien y lo que falta
+- **A1 — escalada de privilegios (era 🔴).** Un usuario común podía hacerse admin con
+  `PATCH /profiles { role: 'admin' }`. Cerrado con el trigger
+  `prevent_profile_role_change`: revierte el cambio de `role` cuando `auth.uid()` no
+  es null (desde el panel/`service_role` sí se puede). Verificado: la escalada deja el
+  rol en `user` y el cambio de `full_name` sigue andando.
+- **A2 — `isReadOnly` era solo UI.** Se podía escribir un pronóstico en un torneo
+  finalizado. Cerrado con dos policies restrictive en `predictions` que exigen torneo
+  `active`. Verificado: en `finished` se rechaza, en `active` sigue igual.
 
-- **Bien**: `matches` y `rounds` rechazan el write de un no-admin; un pronóstico de
-  **otro** usuario se rechaza con `42501`. La lectura es pública, que es lo esperado.
-- **`isReadOnly` es solo UI**: se cargó un pronóstico en el Mundial (finalizado) y la
-  base lo aceptó. Falta scoping por status en `predictions` (una policy que rechace
-  escribir si el torneo no está `active`).
-- **El cierre de pronósticos no existe en la base**: se escribió un pronóstico en un
-  partido de hace 10 días y entró. `PREDICTION_CUTOFF_MINUTES` es convención de UI.
+Regresión OK: `matches`/`rounds` siguen rechazando a un no-admin, los pronósticos
+ajenos dan `42501`, la lectura sigue pública.
 
-### Triggers: contestado con un experimento
+También se **documentó la fórmula de puntos** (`calculate_points`, coincide con
+`utils/stats/accuracy.ts`) y que **no hay trigger de scoring**: los puntos los escribe
+un proceso que corre el admin al finalizar la fecha, no la escritura del pronóstico.
 
-- **No hay trigger que calcule puntos.** Se escribió un pronóstico exacto en un partido
-  finalizado y quedó con `points: 0`, sin fila en `round_scores`. El scoring lo
-  dispara un proceso aparte (candidatos: `recalculate_round`,
-  `recalculate_round_scores`, `reset_round`), no un trigger sobre `predictions`.
-- **La fórmula está documentada**: `calculate_points` es pura y se probó. Da lo mismo
-  que `utils/stats/accuracy.ts` asume (pleno = cantidad de goles si son >2, si no 2;
-  ganador = 1; bonus por total de goles = +1). El README con el 5/3/1 sigue mal.
+### Deuda que queda (decidido: no se hace ahora)
 
-### Las dos RPC pista
+- **A3 — cutoff de pronósticos en la base: NO se hace.** El cierre de 10 minutos ya
+  funciona en el cliente (`PredictionForm` + `canPredictMatch`) y está verificado.
+  Ponerlo en la base es defensa en profundidad, pero el guardado es un batch: una
+  policy que rechace una fila vencida puede tumbar el guardado entero, y el agujero
+  solo se explota usando la API a mano. **No vale el riesgo.** Si algún día se retoma,
+  el punto de entrada es `can_predict(match_id)`, que además está rota (le falta
+  `set search_path`).
 
-- **`is_admin()`** funciona (da `false` para la cuenta de prueba). Las policies de
-  admin **podrían** usarla; hay que leerlas para confirmar. Su firma en el esquema
-  generado (`Args: { p_text }`) está mal, pero no afecta al cliente.
-- **`can_predict(match_id)` está rota**: tira `42P01: relation "matches" does not
-exist`, o sea una `SECURITY DEFINER` sin `search_path`. Parece la pieza pensada para
-  el cierre de pronósticos del lado de la base. Arreglarla y cablearla cierra ese
-  agujero.
+- **Entrega B — limpieza de esquema: en el cajón, "por si algún día pinta".** Nada de
+  esto rompe nada hoy; es prolijidad, y los `DROP` tienen riesgo irreversible sin
+  ganancia funcional. Queda anotado y sin fecha:
+  - `matches.tournament_id` y `rounds.tournament_id` a `NOT NULL` (hoy son nullables;
+    cero filas null, así que el ALTER no falla). Es lo más "sano" de la lista.
+  - Borrar `matches.status` (columna muerta confirmada) — necesita revisar triggers
+    en el panel primero.
+  - Las 3 vistas que el cliente no usa (`general_leaderboard_by_tournament`,
+    `leaderboard`, `round_leaderboard`) y la superficie muerta de pagos (4 tablas + 15
+    funciones sin consumidor) — `DROP` de alto riesgo, revisar `pg_depend` antes.
+  - Índices en `matches(tournament_id, round_number)` y
+    `round_scores(tournament_id, round_number)` — inocuos, para cuando haya volumen.
+  - Reducir `docs/supabase-schema.md` a lo que el generador no cubre (RLS, triggers,
+    índices), para que no compita con `src/types/database.ts`.
 
-### Deuda de esquema
+  El SQL de cada una, con su rollback, ya está escrito en `docs/plan-fase-9.md` (entrega
+  B). Cuando pinte, es aplicar y verificar regresión.
 
-- **`matches.tournament_id` y `rounds.tournament_id` son nullables.** Esto lo
-  descubrió el esquema generado en la fase 7 y es lo más grave de la lista: es la
-  columna de la que depende **toda** la separación entre torneos, y la regla
-  "nunca consultar sin scope de torneo" se apoya en ella. Un partido o una fecha sin
-  torneo no debería poder existir.
-- **Los 15 argumentos de las RPC del bonus del Mundial** (`upsert_world_cup_prediction`
-  y `admin_upsert_world_cup_official_results`) están declarados `text` no nullable,
-  pero el cliente manda `null` para las preguntas sin responder. SQL lo acepta, así
-  que hoy funciona; el tipo generado queda más estricto que la función real.
-  Declararlos con `default null` **borra 24 de los 132 errores de
-  `strictNullChecks`** de la fase 10.
-- `rounds.status` tiene default `'closed'`, un valor que **no está en su propio
-  CHECK** (`pending|open|locked|finished`), así que un INSERT sin `status` explícito
-  falla. La fase 6 le puso un fallback en el cliente (`getRoundStatus`).
-- ~~**`matches.status` es columna muerta**~~ → **reconfirmado en la fase 9**: el
-  único "estado de partido" del cliente lo deriva `MatchStatusBadge` de `match_date`
-  - `is_finished`. Nadie lee la columna. Elegir una y borrar la otra.
-- **`matches.is_finished` es nullable**, y es el campo que decide qué fecha tiene
-  tabla propia y qué partido entra en las estadísticas. Hoy un null se lee como
-  falso en todos los usos, que es lo que se quiere, pero es una ausencia y no un
-  "no terminó".
-- Falta `tournament_id` en `predictions`: todo el scoping pasa por join con
-  `matches` y por `.in('match_id', [...])` con listas largas.
-- Cero índices documentados. Faltan casi seguro `matches(tournament_id, round_number)`
-  y `round_scores(tournament_id, round_number)`. El esquema generado no los muestra,
-  así que esto sigue siendo a verificar en la base.
-- Vocabulario inconsistente: `rounds` usa `locked`, `matches` usa `closed` para lo
-  mismo.
-- ~~Verificar que `predictions.qualifier_prediction_id` tenga FK a `teams`~~ →
-  **la tiene**: `predictions_qualifier_prediction_id_fkey`. Lo confirma el esquema
-  generado.
-- **Hay 4 vistas, no 1**: `general_leaderboard`, `general_leaderboard_by_tournament`,
-  `leaderboard` y `round_leaderboard`. El cliente usa **solo la primera**, y en una
-  rama que `App.jsx` prácticamente impide alcanzar (además, todas sus columnas son
-  nullables, incluido el `id`). Hay tres vistas más para revisar y probablemente
-  borrar.
-- **Superficie muerta de pagos y finanzas: 4 tablas y 15 funciones.**
-  `payments`, `payment_allocations`, `round_payments`, `round_finances` y sus RPC
-  siguen en la base sin un solo consumidor desde que la fase 1 borró los paneles.
-  `round_finances` tiene la PK sin `tournament_id`, así que dos torneos no pueden
-  tener finanzas para la misma fecha. Si se retoma pagos, arrancar por ahí; si no,
-  es candidato a borrar.
+### Para limpiar cuando haya `service_role` a mano
 
-### Documentación del esquema
-
-`docs/supabase-schema.md` es un snapshot a mano de agosto y **ahora compite con
-`src/types/database.ts`, que se genera**. Conviene reducirlo a lo que el generador no
-puede saber —RLS, triggers, cuerpos de las funciones, índices— y que para las
-columnas apunte al archivo generado. Mantener dos fuentes es garantizar que una
-mienta.
-
-**Proceso:** adoptar el CLI de Supabase con migraciones versionadas en
-`supabase/migrations/`. Si se corre `npx supabase init` para eso, ojo que crea la
-carpeta `supabase/` en la raíz.
+- Dos pronósticos de prueba de `test-colo` que RLS no deja borrar al dueño: un `2-1`
+  en `test-sandbox` y un `7-7` en `mundial-2026`. Inocuos.
+- `test-vacio` quedó en `finished` para probar A2; se puede devolver a `active`.
 
 ---
 
