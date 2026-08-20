@@ -26,7 +26,7 @@ Métricas verificadas:
 
 |                                    | Valor                                |
 | ---------------------------------- | ------------------------------------ |
-| Tests                              | 456 en 51 archivos                   |
+| Tests                              | 464 en 52 archivos                   |
 | Archivos `.ts`/`.tsx` (sin tests)  | 160                                  |
 | Archivos `.js`/`.jsx` que quedan   | 2, los helpers de test               |
 | Imports de Supabase en componentes | 0                                    |
@@ -57,12 +57,18 @@ cambio visual. Contra `tokens.css`, tres de los cuatro son coincidencia **exacta
 con `--font-size-xs`, `-sm` y `-md`. De los 28 literales del archivo, **22 tenían
 token exacto** y se migraron sin cambiar un pixel.
 
-Los 4 que quedan (6 ocurrencias) sí son una decisión visual y están comentados en el
-archivo con el motivo: `marginTop: 36px` (no es espaciado, es lo que hace falta para
-pasar bajo los badges absolutos), `marginBottom: 20px`, `gap: 10px` más
-`margin: 0 0 10px 0` (el `10px` que `tokens.css` excluyó a propósito), y los dos
-`fontSize: 0.85rem`. La tabla con las alternativas de cada uno está en
-`docs/pruebas-fase-8.md`.
+Los otros 4 (6 ocurrencias) también se resolvieron, y el criterio **no fue "el token
+más cercano"** —que entre dos pasos de la escala es una moneda al aire— sino **qué usa
+`MatchPrediction` para lo mismo**: es la tarjeta del mismo partido, con la misma
+grilla y el mismo panel de penales, y ya tenía un token para cada uno (`--space-md`
+para el gap, `--space-xl` para el margen, `--space-md` para el título de penales,
+`--font-size-sm` para los textos de estado). Por cercanía, dos de los cuatro habrían
+salido distintos. Medido: cada tarjeta pasa de 196.1 a 198.8 px y nada se mueve
+horizontalmente.
+
+Queda **un** literal, el `marginTop: 36px` del bloque de fecha, y no por falta de
+token: no es espaciado, es la altura libre para pasar por debajo de los dos badges
+absolutos. Y es una duplicación con el mismo `36px` de `MatchHeader.module.css`.
 
 Lo de "no es un god component" sigue valiendo: sus ~90 líneas de lógica ya delegan en
 `utils/matchTiming`, `utils/score` y `utils/matchDate`, y partirlo solo movería markup
@@ -125,7 +131,7 @@ la fase 7:
 
 ## Fase 8 — UX y accesibilidad: **terminada y verificada en el navegador**
 
-Rama `refactor/fase-8-ux-accesibilidad`, once commits, ninguno en rojo. El detalle está en
+Rama `refactor/fase-8-ux-accesibilidad`, catorce commits, **ninguno en rojo**. El detalle está en
 `docs/pruebas-fase-8.md`.
 
 Tests: **414 → 464** en **48 → 52** archivos. `lint`, `format:check`, `typecheck`,
@@ -150,10 +156,17 @@ tenían nombre accesible (`textbox "-"` los dos), el esqueleto de pronósticos
 reservaba un cuarto del alto, el anillo de foco borraba la elevación de la cajita, y
 el brillo del esqueleto era invisible en tema claro e invertido en oscuro.
 
+**Mobile también está auditado**, con `isMobile`/`hasTouch` a 375, 390, 412 y 768 px
+sobre cinco rutas y los dos torneos: cero desborde horizontal en todos, los dos
+esqueletos entran, el anillo de foco del marcador aparece igual con teclado y después
+de un tap, y la lista del dropdown y la tabla caben sin scroll propio. Salió un
+arreglo: los campos de texto medían 40 px de alto porque `TextInput` pisaba el
+`min-height: 44px` global con un valor que había entrado con los paneles de finanzas,
+ya borrados.
+
 Lo que queda es lo que una medición no puede decidir —si algo se ve bien— más un
-lector de pantalla de verdad, mobile, y `/admin/mundial`, que no se pudo abrir porque
-`AdminRoute` exige torneo no finalizado y el único Mundial está `finished`. La lista
-está en `docs/pruebas-fase-8.md`, sección "Qué probar a mano".
+lector de pantalla de verdad. La lista está en `docs/pruebas-fase-8.md`, sección "Qué
+probar a mano".
 
 ### Lo que se hizo
 
@@ -224,11 +237,15 @@ que corregir. `loading="lazy"` sí suma.
 - **Mirar a ojo lo que quedó en `docs/pruebas-fase-8.md`**, sección "Qué probar a
   mano". Ya no es una lista de verificación: es lo que una medición no puede decidir
   (si el anillo de foco se distingue en el tono verde, si el brillo del esqueleto
-  molesta, mobile) más un lector de pantalla de verdad.
-- **`/admin/mundial` quedó sin abrir.** `AdminRoute` exige torneo no finalizado y el
-  único torneo tipo Mundial está en `finished`. Sus etiquetas comparten el patrón con
-  `/mundialistas`, que sí se verificó con 0 diferencias. Para probarla hay que pasar
-  Mundial 2026 a `active` un rato.
+  molesta) más un lector de pantalla de verdad.
+- **`/admin/mundial` quedó sin abrir: deuda y nada más.** `AdminRoute` exige torneo no
+  finalizado y el único Mundial está en `finished`. Sus etiquetas comparten el patrón
+  con `/mundialistas`, que sí se verificó con 0 diferencias, y el resto de la pantalla
+  no lo tocó esta fase. Se mira cuando haya un Mundial activo; no vale mover un torneo
+  de estado para verla.
+- **El área táctil del `InfoButton`** (39×32.5: pasa el mínimo WCAG de 24, no la
+  recomendación de 44). El intento de agrandarla sin tocar el tamaño visible, y por
+  qué se revirtió, está en `docs/pruebas-fase-8.md`.
 - **`useAllPredictions` no expone `error`**, así que "Ver pronósticos" no tiene estado
   de error que cablear. Va con la fase 10, que ya toca los hooks.
 - **La duplicación de la regla del clasificado por penales** sigue en pie: unificarla

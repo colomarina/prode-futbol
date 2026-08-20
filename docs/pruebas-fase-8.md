@@ -14,12 +14,12 @@ estilos computados y el árbol de accesibilidad de Chrome. Los resultados están
 
 ---
 
-## Los once commits
+## Los commits
 
 | Commit | Qué |
 | --- | --- |
 | `fix: los escudos dejan de anunciarse dos veces...` | 7 `alt` redundantes a `""`, `loading="lazy"` en los de listas |
-| `refactor: MatchResult usa los tokens...` | 22 de 28 literales a tokens; los 6 que quedan, comentados |
+| `refactor: MatchResult usa los tokens...` | los 22 literales con token exacto |
 | `test: SelectDropdown tiene tests...` | 14 casos sobre el contrato que ya existía |
 | `feat: SelectDropdown es un listbox de verdad...` | roles, teclado y el nombre accesible; 14 → 31 tests |
 | `feat: pronosticos, resultados y bonus...` | `<form onSubmit>` en las tres pantallas + 21 controles sin nombre |
@@ -29,6 +29,8 @@ estilos computados y el árbol de accesibilidad de Chrome. Los resultados están
 | `fix: cuatro cosas que solo se vieron midiendo en el navegador` | lo que salió de la verificación |
 | `feat: los tabs tienen las esquinas de arriba redondeadas` | `--radius-md` solo arriba |
 | `refactor: los 4 literales que quedaban en MatchResult...` | salen de la tarjeta gemela |
+| `docs: se cierran los tres pendientes que quedaban abiertos` | tabs, literales y el commit rojo |
+| `fix: los campos de texto vuelven al minimo tactil de 44px` | lo que salió de auditar mobile |
 
 Ningún commit de la rama queda en rojo. El de los tests de `SelectDropdown` marca
 con `it.fails` el caso que documenta el bug, así que la suite pasa y el bug queda
@@ -64,8 +66,9 @@ fuera de la escala y que migrarlos era un cambio visual. Contra `tokens.css`, tr
 los cuatro son coincidencia **exacta** con `--font-size-xs`, `-sm` y `-md`.
 
 De los 28 literales del archivo, **22 tienen token exacto** y su reemplazo no cambia
-un pixel. Los 6 que quedan afuera se dejaron como literales con el motivo escrito al
-lado, y son una decisión visual pendiente (ver más abajo).
+un pixel. Los otros 6 se resolvieron después, con un criterio mejor que la cercanía
+(ver "Los 4 literales de `MatchResult`" más abajo); solo uno sigue siendo literal, y
+no por falta de token.
 
 ### 3. `refetch` no estaba «disponible en todos los hooks»
 
@@ -271,8 +274,9 @@ medición **no** puede decidir: si algo se ve bien.
    cerrado o selector de penales la tarjeta real crece y el esqueleto queda corto. El
    selector de fecha no se mueve en ningún caso, así que el salto es hacia abajo:
    decidir si molesta.
-4. **Mobile.** Todo lo medido fue en escritorio. Los dos esqueletos, el anillo de
-   foco y la grilla del marcador son lo que más puede apretarse.
+4. **El único juicio que queda en mobile.** Mobile está auditado (ver más abajo), así
+   que lo que falta es opinión: si el anillo de foco en la grilla apretada del
+   marcador a 375px se ve bien o queda encimado.
 
 ### Lo que no se pudo verificar desde acá
 
@@ -280,16 +284,63 @@ medición **no** puede decidir: si algo se ve bien.
    los nombres están bien, pero eso no es lo mismo que escuchar NVDA recorriendo
    `/pronosticos`: el orden en que anuncia las cosas, si el `role="status"` del
    esqueleto interrumpe, si "Goles de Aldosivi" suena natural.
-6. **`/admin/mundial`.** No se pudo abrir: `AdminRoute` exige torneo no finalizado y
-   el único torneo tipo Mundial está en `finished`. Sus etiquetas comparten el patrón
-   con `/mundialistas`, que **sí** se verificó con 0 diferencias, pero la pantalla del
-   admin quedó sin ver. Para probarla hay que pasar Mundial 2026 a `active` un rato.
-7. **Un guardado real de punta a punta.** El Enter se probó abortando la escritura
+6. **Un guardado real de punta a punta.** El Enter se probó abortando la escritura
    para no tocar datos, y ninguna fecha del Sandbox tiene partidos futuros. Cuando
    haya una, guardar de verdad ahí: `Enter` desde la última cajita y ver el toast de
    éxito.
-8. **Un torneo `finished`** (modo consulta): que el `<form>` nuevo no habilite nada.
+7. **Un torneo `finished`** (modo consulta): que el `<form>` nuevo no habilite nada.
    El guard de `isReadOnly` sigue en `handleSaveAll`, pero conviene verlo.
+
+---
+
+## Mobile: auditado
+
+Playwright con `isMobile` y `hasTouch`, a **375** (iPhone SE), **390** (iPhone 14),
+**412** (Android) y **768 px** (tablet), sobre `/pronosticos`, `/posiciones`,
+`/rivales`, `/playoffs` y `/mundialistas`, en los dos torneos.
+
+### Lo que está bien
+
+- **Cero desborde horizontal**, en los 4 anchos × 5 rutas × 2 torneos. Es lo que más
+  duele en un teléfono y no aparece en ningún lado.
+- **Los dos esqueletos entran.** El de pronósticos: tarjeta de 172.4 px contra 178.4
+  de la real, salto de documento de 351 px, sin desborde. El de posiciones: salto de
+  43 px, y la tabla mide 343 px justos dentro del contenedor, así que **no necesita
+  scroll horizontal propio** ni en la variante general ni en la de por fecha (la que
+  suma la columna "Ver").
+- **El anillo de foco del marcador funciona en mobile**, con `.focus()`, con `Tab`, y
+  también después de un tap: `box-shadow: 0 0 0 3px primario/.35` y `:focus-visible`
+  matchea. No se sale del viewport: el anillo va de 116 a 172 px dentro de 375.
+- **La lista del dropdown abierta** mide 343 px dentro de 375, no se sale ni queda más
+  alta que la pantalla, y cada opción mide 45 px de alto — buen target táctil.
+- **Los tabs**: 114×69 cada uno a 375 px, con el radio nuevo aplicado, y la fila no
+  desborda.
+- **La llave de playoffs** a 375 px no desborda ni necesita scroll, y no hay texto
+  recortado.
+
+### Lo que se arregló
+
+Los cuatro campos de texto de `/mundialistas` daban **285×40** y los de `/perfil`
+también: `TextInput.module.css` pisaba con `40px` el `min-height: 44px` que
+`index.css` declara para todos los inputs como "Tamaño mínimo táctil". Ese `40px`
+entró con los paneles de finanzas del admin, que después se borraron. Ahora los nueve
+campos dan 44 y no queda ningún input por debajo del mínimo.
+
+### Lo que queda, medido y descartado
+
+El **`InfoButton`** (la ℹ️ del partido destacado) mide **39×32.5**. Pasa el mínimo de
+WCAG 2.2 SC 2.5.8 —que pide 24×24— pero no la recomendación de 44 de Apple y
+Material.
+
+Se probó agrandar solo el **área táctil** con un `::after` de insets negativos, para
+no tocar el tamaño visible y no cambiar el equilibrio de la tarjeta. **No funcionó
+del todo**: el pseudo-elemento se aplica (`inset: -6px -3px` confirmado en los
+estilos computados) pero `.card` y `.meta` le ganan en el pintado, así que el área
+llegó a 39×38.5 en vez de 45×45. Se revirtió: un hack a medias más un módulo CSS
+nuevo, para un control que ya cumple el requisito, es peor que dejarlo anotado.
+
+Si algún día se quiere de verdad, hay que resolver el apilado en `MatchHeader` —donde
+`.info` es absoluto con `z-index`— o aceptar que el botón crezca.
 
 ### Detalle de comportamiento que conviene saber
 
@@ -354,3 +405,11 @@ rectas. Verificado a 4x en los dos temas, en activo y en hover, y a 430 px de an
   APG es un solo tab stop con flechas moviendo la selección. No está roto —los dos
   botones se alcanzan y se anuncian—, pero no es el patrón. Cambiarlo altera la
   interacción, así que queda como nota.
+- **`/admin/mundial` quedó sin abrir. Deuda, nada más.** `AdminRoute` exige torneo no
+  finalizado y el único torneo tipo Mundial está en `finished`. Sus etiquetas
+  comparten el patrón con `/mundialistas`, que **sí** se verificó con 0 diferencias,
+  y el resto de la pantalla no lo tocó esta fase. Se mira cuando haya un Mundial
+  activo; no vale mover un torneo de estado para verla.
+- **El área táctil del `InfoButton`** (39×32.5, por debajo de la recomendación de 44
+  pero por encima del mínimo WCAG de 24). El intento de agrandarla sin tocar el
+  tamaño visible está documentado arriba, en "Mobile".
