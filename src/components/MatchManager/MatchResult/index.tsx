@@ -152,9 +152,19 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       {/* Match Date and Time */}
       <div
         style={{
-          // No sale de la escala: es lo que hace falta para pasar por debajo de los dos
-          // badges absolutos de arriba (`top: var(--space-md)` + su alto). `--space-2xl`
-          // (32px) los pisa.
+          /*
+           * El unico valor del archivo que sigue siendo literal, y no porque falte un
+           * token: **no es espaciado**. Es la altura libre que hace falta para pasar por
+           * debajo de los dos badges absolutos de arriba (`top: var(--space-md)` mas su
+           * alto), asi que sale de la geometria de esos badges y no de una escala.
+           * `--space-2xl` (32px) los pisa.
+           *
+           * Y es una duplicacion: `MatchHeader.module.css` tiene el mismo `36px` en
+           * `.meta` por el mismo motivo, porque las dos tarjetas implementan por su
+           * cuenta el patron "badge absoluto arriba + contenido corrido". Se va cuando
+           * `MatchResult` use `MatchHeader`, que es el refactor mas grande que este
+           * archivo ya tiene anotado.
+           */
           marginTop: '36px',
           marginBottom: 'var(--space-lg)',
           textAlign: 'center',
@@ -171,17 +181,22 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         </span>
       </div>
 
-      {/* Teams and Score */}
-      {/* `20px` cae justo entre `--space-lg` (16) y `--space-xl` (24). */}
-      <div style={{ marginBottom: '20px' }}>
+      {/*
+       * Teams and Score.
+       *
+       * Los dos valores salen de `MatchPrediction.module.css`, no del token mas
+       * cercano: esa es la tarjeta gemela —el mismo partido, la misma grilla de
+       * `1fr auto auto auto 1fr`— y ya tenia `gap: var(--space-md)` y
+       * `margin-bottom: var(--space-xl)`. Elegir por cercania habria dado 16px de
+       * margen y dejado las dos tarjetas con ritmos distintos, que es justo lo que
+       * la escala de tokens viene a evitar.
+       */}
+      <div style={{ marginBottom: 'var(--space-xl)' }}>
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto auto auto 1fr',
-            // `10px` es el valor que `tokens.css` dejo afuera a proposito. Acá son 4
-            // gaps en una grilla de 5 columnas, así que moverlo a `sm` o a `md`
-            // cambia 8px el ancho total y hay que mirar el mobile antes.
-            gap: '10px',
+            gap: 'var(--space-md)',
             alignItems: 'center',
           }}
         >
@@ -232,8 +247,10 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         >
           <p
             style={{
-              // Mismo `10px` sin token que el gap de la grilla.
-              margin: '0 0 10px 0',
+              // El titulo del panel de penales de `QualifierPicker`, que es el mismo
+              // panel del lado del jugador, usa `margin: 0 0 var(--space-md) 0` y
+              // `--font-size-md`. Queda igual.
+              margin: '0 0 var(--space-md) 0',
               fontSize: 'var(--font-size-md)',
               fontWeight: '700',
               color: 'var(--color-text-primary)',
@@ -285,9 +302,10 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           style={{
             textAlign: 'center',
             marginTop: 'var(--space-sm)',
-            // Justo en el medio de `--font-size-sm` (0.8) y `--font-size-md` (0.9): elegir
-            // uno cambia el tamaño del texto en el panel de admin.
-            fontSize: '0.85rem',
+            // El hint equivalente del lado del jugador (`QualifierPicker`, `.hint`) usa
+            // `--font-size-sm`. Es la misma clase de texto: una linea de estado debajo
+            // del marcador.
+            fontSize: 'var(--font-size-sm)',
             color: 'var(--color-text-secondary)',
             fontWeight: '600',
           }}
@@ -302,9 +320,10 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           style={{
             textAlign: 'center',
             marginTop: 'var(--space-md)',
-            // Justo en el medio de `--font-size-sm` (0.8) y `--font-size-md` (0.9): elegir
-            // uno cambia el tamaño del texto en el panel de admin.
-            fontSize: '0.85rem',
+            // El hint equivalente del lado del jugador (`QualifierPicker`, `.hint`) usa
+            // `--font-size-sm`. Es la misma clase de texto: una linea de estado debajo
+            // del marcador.
+            fontSize: 'var(--font-size-sm)',
             color: 'var(--color-success)',
             display: 'flex',
             alignItems: 'center',
