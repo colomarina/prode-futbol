@@ -255,14 +255,14 @@ sobre `#ffffff`, invisible) y en oscuro iba para el lado contrario; con
 
 ## Qué probar a mano
 
-Ocho de los diez puntos que este documento pedía al principio quedaron verificados
-midiendo en el navegador (ver "Lo que se midió"). Lo que sigue es lo que una
-medición **no** puede decidir: si algo se ve bien.
+**Prácticamente nada.** Los diez puntos que este documento pedía al principio se
+fueron cerrando midiendo (ver "Lo que se midió", "Mobile" y "Nada quedó sin
+verificar"). Queda **una** decisión de gusto, abajo.
 
 ### Lo que queda por mirar
 
-Casi nada, y todo chico. Tres de los cuatro juicios que este documento pedía se
-cerraron midiendo, no opinando:
+Tres de los cuatro juicios que este documento pedía se cerraron midiendo, no
+opinando:
 
 - **¿El anillo de foco se distingue del borde verde?** *No tiene caso.* El tono verde
   (`success`) sale de `is_finished`, que es la misma condición del `disabled`, y el
@@ -286,14 +286,37 @@ Lo único que sigue siendo un juicio de verdad:
    corto. El selector de fecha no se mueve en ningún caso, así que el salto es hacia
    abajo: decidir si molesta o no.
 
-### Lo que no se pudo verificar desde acá
+### Nada quedó sin verificar
 
-- **El lector de pantalla queda descartado.** Un lector consume el árbol de
-  accesibilidad, que es exactamente lo que se midió con Chrome: nombres, roles y
-  estados están verificados uno por uno (ver "Lo que se midió"). Escucharlo con NVDA
-  solo agregaría matices de fraseo, así que no justifica la instalación.
-- **Un torneo `finished`** (modo consulta): que el `<form>` nuevo no habilite nada.
-  El guard de `isReadOnly` sigue en `handleSaveAll`, pero conviene verlo.
+- **El guardado real de punta a punta: hecho.** Se agregó la fecha 7 al sandbox con
+  cuatro partidos a futuro (`docs/sandbox-partidos-futuros.sql`) y se guardó de
+  verdad, sin abortar nada:
+  - 8 cajitas editables (4 partidos × 2) y el botón habilitado con los cuatro
+    cargados.
+  - `Enter` desde la **última** cajita disparó **un solo** `POST` con los cuatro
+    pronósticos en un batch —no cuatro llamadas—, respuesta `201`, y un centinela en
+    `window` sobrevivió: no hubo recarga.
+  - Toast: "✅ 4 pronósticos guardados correctamente".
+  - Recargando, los ocho valores volvieron exactos (`2,1,0,0,3,1,1,2`) y las cuatro
+    tarjetas muestran "Pronóstico guardado".
+  - Y leyendo la base **por fuera de la app**, con `curl` a la API REST, los cuatro
+    pronósticos están ahí con los marcadores correctos.
+- **El modo consulta: hecho.** En los dos torneos `finished` (Mundial 2026 y Apertura
+  2026): **cero** inputs editables —todo se renderiza como `div` de solo lectura—,
+  **cero** botones de submit, y forzando `Enter` no se intentó **ninguna** escritura.
+  El `<form>` se renderiza pero queda inerte: sin submitter no hay envío implícito, y
+  además `handleSaveAll` tiene el guard de `isReadOnly`.
+- **El lector de pantalla queda descartado**, con el motivo escrito: un lector consume
+  el árbol de accesibilidad, que es exactamente lo que se midió con Chrome —nombres,
+  roles y estados, uno por uno—. Escucharlo con NVDA solo agregaría matices de
+  fraseo.
+
+### Datos de prueba que quedaron
+
+En `test-sandbox`, fecha 7: los **4 partidos** y los **4 pronósticos** del usuario
+admin. Son datos de un torneo de prueba, que es para lo que existe, así que no
+molestan. El rollback está al final de `docs/sandbox-partidos-futuros.sql` si se
+quieren sacar.
 
 ### Detalle de comportamiento que conviene saber
 

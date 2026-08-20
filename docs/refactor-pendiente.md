@@ -164,9 +164,17 @@ arreglo: los campos de texto medían 40 px de alto porque `TextInput` pisaba el
 `min-height: 44px` global con un valor que había entrado con los paneles de finanzas,
 ya borrados.
 
-Lo que queda es lo que una medición no puede decidir —si algo se ve bien— más un
-lector de pantalla de verdad. La lista está en `docs/pruebas-fase-8.md`, sección "Qué
-probar a mano".
+**El guardado real y el modo consulta también quedaron verificados.** Para el primero
+se agregó la fecha 7 al sandbox con partidos a futuro
+(`docs/sandbox-partidos-futuros.sql`): `Enter` desde la última cajita disparó un solo
+`POST` en batch con los cuatro pronósticos, `201`, sin recarga, con toast de éxito, y
+recargando volvieron los ocho valores exactos —confirmado además leyendo la base por
+fuera de la app—. Para el segundo, en los dos torneos `finished` hay cero inputs
+editables, cero botones de submit y forzando `Enter` no se intenta ninguna escritura.
+
+**No queda nada por verificar.** Queda **una** decisión de gusto: si molesta el salto
+del esqueleto de pronósticos en una fecha con avisos, donde la tarjeta real crece y el
+esqueleto queda corto. Está en `docs/pruebas-fase-8.md`, sección "Qué probar a mano".
 
 ### Lo que se hizo
 
@@ -391,9 +399,10 @@ cambios de comportamiento:
 
 ## Antes de mergear a main
 
-1. **Probar a mano la fase 8**, que es lo único que le falta:
-   `docs/pruebas-fase-8.md`, sección "Qué probar a mano". Dos de los diez puntos
-   necesitan sesión de admin.
+1. **La fase 8 no tiene pendientes de verificación**: está toda medida en el navegador
+   contra la base real, mobile incluido, con el guardado real y el modo consulta
+   confirmados. Lo único que queda es una decisión de gusto sobre el salto del
+   esqueleto (`docs/pruebas-fase-8.md`, "Qué probar a mano").
 2. Terminar la fase 10 y mergearla a `refactor/fase-5-design-system` (la 6, la 7 y la
    8 ya están, o van ahí).
 3. **Revisar los cambios visuales juntos.** Están listados en
@@ -405,9 +414,18 @@ cambios de comportamiento:
    visibles a propósito, y el resto de sus cambios pretende ser neutro (los tokens de
    `MatchResult` y las etiquetas de las dos pantallas mundialistas).
 4. `pnpm lint && pnpm format:check && pnpm test && pnpm build`.
-5. Probar con un torneo `active` y uno `finished`: `isReadOnly` cambia el
-   comportamiento de 6 componentes. La fase 8 le agregó `<form>` a tres pantallas de
-   escritura, así que conviene confirmar que en modo consulta siguen sin escribir.
+5. `isReadOnly` con un torneo `active` y uno `finished` **ya está verificado para la
+   fase 8**: en los dos torneos `finished` hay cero inputs editables, cero botones de
+   submit y forzando `Enter` no se intenta ninguna escritura. Igual sigue valiendo
+   mirarlo al mergear, porque `isReadOnly` toca 6 componentes y las fases anteriores
+   también los tocaron.
+
+## Datos de prueba que dejó la fase 8
+
+En `test-sandbox`, fecha 7: 4 partidos a futuro y 4 pronósticos del usuario admin,
+creados para poder probar el guardado real. Son datos de un torneo de prueba, que es
+para lo que existe. El rollback está al final de
+`docs/sandbox-partidos-futuros.sql`.
 
 ## Cómo se verifica un refactor visual en este proyecto
 
