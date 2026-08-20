@@ -107,23 +107,23 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         background:
           'linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant))',
         border: '1px solid var(--color-border)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radius-xl)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        padding: '8px',
+        padding: 'var(--space-sm)',
       }}
     >
       {/* Match Number */}
       <div
         style={{
           position: 'absolute',
-          top: '12px',
-          left: '12px',
+          top: 'var(--space-md)',
+          left: 'var(--space-md)',
           backgroundColor: 'var(--color-primary)',
           color: 'var(--color-text-on-primary)',
-          padding: '6px 12px',
-          borderRadius: '12px',
-          fontSize: '0.8rem',
+          padding: 'var(--space-xs) var(--space-md)',
+          borderRadius: 'var(--radius-lg)',
+          fontSize: 'var(--font-size-sm)',
           fontWeight: '700',
         }}
       >
@@ -135,13 +135,13 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         <div
           style={{
             position: 'absolute',
-            top: '12px',
-            right: '12px',
+            top: 'var(--space-md)',
+            right: 'var(--space-md)',
             backgroundColor: 'var(--color-success)',
             color: 'var(--color-text-on-primary)',
-            padding: '4px 12px',
-            borderRadius: '12px',
-            fontSize: '0.75rem',
+            padding: 'var(--space-2xs) var(--space-md)',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: 'var(--font-size-xs)',
             fontWeight: '600',
           }}
         >
@@ -152,14 +152,27 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       {/* Match Date and Time */}
       <div
         style={{
+          /*
+           * El unico valor del archivo que sigue siendo literal, y no porque falte un
+           * token: **no es espaciado**. Es la altura libre que hace falta para pasar por
+           * debajo de los dos badges absolutos de arriba (`top: var(--space-md)` mas su
+           * alto), asi que sale de la geometria de esos badges y no de una escala.
+           * `--space-2xl` (32px) los pisa.
+           *
+           * Y es una duplicacion: `MatchHeader.module.css` tiene el mismo `36px` en
+           * `.meta` por el mismo motivo, porque las dos tarjetas implementan por su
+           * cuenta el patron "badge absoluto arriba + contenido corrido". Se va cuando
+           * `MatchResult` use `MatchHeader`, que es el refactor mas grande que este
+           * archivo ya tiene anotado.
+           */
           marginTop: '36px',
-          marginBottom: '16px',
+          marginBottom: 'var(--space-lg)',
           textAlign: 'center',
         }}
       >
         <span
           style={{
-            fontSize: '0.9rem',
+            fontSize: 'var(--font-size-md)',
             fontWeight: '600',
             color: 'var(--color-text-secondary)',
           }}
@@ -168,13 +181,22 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         </span>
       </div>
 
-      {/* Teams and Score */}
-      <div style={{ marginBottom: '20px' }}>
+      {/*
+       * Teams and Score.
+       *
+       * Los dos valores salen de `MatchPrediction.module.css`, no del token mas
+       * cercano: esa es la tarjeta gemela —el mismo partido, la misma grilla de
+       * `1fr auto auto auto 1fr`— y ya tenia `gap: var(--space-md)` y
+       * `margin-bottom: var(--space-xl)`. Elegir por cercania habria dado 16px de
+       * margen y dejado las dos tarjetas con ritmos distintos, que es justo lo que
+       * la escala de tokens viene a evitar.
+       */}
+      <div style={{ marginBottom: 'var(--space-xl)' }}>
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto auto auto 1fr',
-            gap: '10px',
+            gap: 'var(--space-md)',
             alignItems: 'center',
           }}
         >
@@ -184,11 +206,14 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           </div>
 
           {/* Home Score Input */}
+          {/* Sin `aria-label` el nombre accesible sale del placeholder y las dos
+              cajitas se anuncian "-": no hay forma de saber cual es el local. */}
           <ScoreInput
             value={displayHomeValue}
             onChange={e => handleInputChange('home', e.target.value)}
             disabled={match.is_finished || !canEditResult}
             tone={scoreTone}
+            aria-label={`Goles de ${match.home_team?.name || 'el local'}`}
           />
 
           <ScoreSeparator />
@@ -200,6 +225,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
             onChange={e => handleInputChange('away', e.target.value)}
             disabled={match.is_finished || !canEditResult}
             tone={scoreTone}
+            aria-label={`Goles de ${match.away_team?.name || 'la visita'}`}
           />
 
           {/* Away Team */}
@@ -212,17 +238,20 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
       {match.is_playoff && (
         <div
           style={{
-            marginBottom: '16px',
+            marginBottom: 'var(--space-lg)',
             border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            padding: '12px',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-md)',
             backgroundColor: 'var(--color-surface-variant)',
           }}
         >
           <p
             style={{
-              margin: '0 0 10px 0',
-              fontSize: '0.9rem',
+              // El titulo del panel de penales de `QualifierPicker`, que es el mismo
+              // panel del lado del jugador, usa `margin: 0 0 var(--space-md) 0` y
+              // `--font-size-md`. Queda igual.
+              margin: '0 0 var(--space-md) 0',
+              fontSize: 'var(--font-size-md)',
               fontWeight: '700',
               color: 'var(--color-text-primary)',
             }}
@@ -236,8 +265,8 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
+                gap: 'var(--space-sm)',
+                marginBottom: 'var(--space-sm)',
                 cursor: qualifierIsLocked ? 'default' : 'pointer',
               }}
             >
@@ -248,7 +277,7 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
                 disabled={qualifierIsLocked}
                 onChange={() => handleQualifierChange(team.id)}
               />
-              <span style={{ fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
+              <span style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)' }}>
                 {team.name}
               </span>
             </label>
@@ -257,9 +286,9 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
           {qualifierIsLocked && (
             <p
               style={{
-                margin: '8px 0 0 0',
+                margin: 'var(--space-sm) 0 0 0',
                 color: 'var(--color-text-secondary)',
-                fontSize: '0.8rem',
+                fontSize: 'var(--font-size-sm)',
               }}
             >
               No hace falta elegir: con ese marcador hay ganador directo.
@@ -272,8 +301,11 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         <p
           style={{
             textAlign: 'center',
-            marginTop: '8px',
-            fontSize: '0.85rem',
+            marginTop: 'var(--space-sm)',
+            // El hint equivalente del lado del jugador (`QualifierPicker`, `.hint`) usa
+            // `--font-size-sm`. Es la misma clase de texto: una linea de estado debajo
+            // del marcador.
+            fontSize: 'var(--font-size-sm)',
             color: 'var(--color-text-secondary)',
             fontWeight: '600',
           }}
@@ -287,13 +319,16 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         <p
           style={{
             textAlign: 'center',
-            marginTop: '12px',
-            fontSize: '0.85rem',
+            marginTop: 'var(--space-md)',
+            // El hint equivalente del lado del jugador (`QualifierPicker`, `.hint`) usa
+            // `--font-size-sm`. Es la misma clase de texto: una linea de estado debajo
+            // del marcador.
+            fontSize: 'var(--font-size-sm)',
             color: 'var(--color-success)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px',
+            gap: 'var(--space-2xs)',
             fontWeight: '600',
           }}
         >

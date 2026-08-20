@@ -67,7 +67,7 @@ const fetchTournamentStats = async (userId: Uuid, tournamentId: Uuid): Promise<T
 }
 
 export const usePersonalStats = (userId: Uuid | null, tournamentId: Uuid | null = null) => {
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, error, refetch } = useQuery({
     queryKey: queryKeys.personalStats(tournamentId, userId),
     enabled: Boolean(userId),
     queryFn: async (): Promise<TournamentStats> => {
@@ -89,5 +89,9 @@ export const usePersonalStats = (userId: Uuid | null, tournamentId: Uuid | null 
     // El mensaje se mantiene genérico: el error crudo de Postgres no le dice
     // nada al usuario.
     error: error ? 'No se pudieron cargar las estadísticas personales' : null,
+    // Para que la pantalla pueda ofrecer "Reintentar" y no solo el texto del error.
+    // Se llama `fetchStats` y no `refetch` para seguir el nombre que ya usan
+    // `useLeaderboard` (`fetchLeaderboard`) y `usePlayoffs` (`fetchPlayoffs`).
+    fetchStats: refetch,
   }
 }

@@ -9,6 +9,15 @@ interface MatchSelectorProps {
   isLoading?: boolean
 }
 
+/**
+ * Los `alt` de los escudos son distintos en las dos ramas, y es a proposito:
+ *
+ * - En `renderOption` el nombre de los dos equipos esta escrito al lado
+ *   ("Boca vs River"), asi que el escudo es decorativo: va `alt=""` para que no
+ *   se anuncie dos veces.
+ * - En `renderButton` el unico texto es "vs": ahi el escudo es el unico
+ *   identificador del equipo, asi que el `alt` lleva el nombre.
+ */
 const MatchSelector = ({
   matches,
   selectedMatchId,
@@ -63,7 +72,8 @@ const MatchSelector = ({
           {match.home_team?.logo_url && (
             <img
               src={match.home_team.logo_url}
-              alt={match.home_team.name}
+              alt=""
+              loading="lazy"
               style={{ width: '28px', height: '28px', objectFit: 'contain' }}
             />
           )}
@@ -73,7 +83,8 @@ const MatchSelector = ({
           {match.away_team?.logo_url && (
             <img
               src={match.away_team.logo_url}
-              alt={match.away_team.name}
+              alt=""
+              loading="lazy"
               style={{ width: '28px', height: '28px', objectFit: 'contain' }}
             />
           )}

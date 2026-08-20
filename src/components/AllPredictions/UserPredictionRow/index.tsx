@@ -41,7 +41,8 @@ const UserPredictionRow = ({ user, prediction, isFinished, match }: UserPredicti
               {qualifierPredictionTeam.logo_url && (
                 <img
                   src={qualifierPredictionTeam.logo_url}
-                  alt={qualifierPredictionTeam.name}
+                  alt=""
+                  loading="lazy"
                   className={styles.chipLogo}
                 />
               )}

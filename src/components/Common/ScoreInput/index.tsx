@@ -21,6 +21,12 @@ interface ScoreInputProps extends ComponentProps<'input'> {
  * `tone` —el admin ve en verde el resultado ya cargado— y `readOnly`, que en
  * pronósticos muestra un `div` en vez de un input deshabilitado, porque cuando
  * el partido ya empezó no hay nada que editar.
+ *
+ * **El `aria-label` lo pone quien lo usa, y no es opcional.** Sin él el nombre
+ * accesible sale del `placeholder`, así que las dos cajitas de un partido se
+ * anuncian igual ("-") y no hay forma de saber cuál es el local. El nombre del
+ * equipo lo sabe la pantalla, no este componente, así que no se puede resolver
+ * acá; `ScoreInput` solo se asegura de reenviarlo con el resto de los props.
  */
 export default function ScoreInput({
   value,
@@ -52,7 +58,16 @@ export default function ScoreInput({
   )
 }
 
-/** El guión entre los dos goles, que también estaba duplicado. */
+/**
+ * El guión entre los dos goles, que también estaba duplicado.
+ *
+ * Va `aria-hidden`: es puntuación entre dos campos que ya se anuncian con su
+ * nombre, así que leerlo solo agrega un "guión" en el medio.
+ */
 export function ScoreSeparator() {
-  return <span className={styles.separator}>-</span>
+  return (
+    <span aria-hidden="true" className={styles.separator}>
+      -
+    </span>
+  )
 }

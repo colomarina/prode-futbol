@@ -7,6 +7,7 @@ import SelectDropdown from '../Common/SelectDropdown'
 import TextInput from '../Common/TextInput'
 import Toast from '../Common/Toast'
 import LoadingState from '../Common/LoadingState'
+import ErrorMessage from '../Common/ErrorMessage'
 import TeamOption from '../Common/TeamOption'
 import {
   ARGENTINA_STAGE_OPTIONS,
@@ -168,7 +169,7 @@ export default function AdminWorldCupBonus() {
   if (error) {
     return (
       <div className="container" style={{ maxWidth: '1000px' }}>
-        <div className="alert alert-error">{error}</div>
+        <ErrorMessage error={error} onRetry={fetchData} />
       </div>
     )
   }
@@ -227,32 +228,46 @@ export default function AdminWorldCupBonus() {
       <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
         <h3 style={{ marginTop: 0 }}>Resultados oficiales</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          {WORLD_CUP_BONUS_QUESTIONS.map(question => (
-            <div
-              key={question.key}
-              style={{
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-md)',
-                backgroundColor: 'var(--color-surface-variant)',
-              }}
-            >
-              {/* El control cambia segun `question.type` —dropdown, texto o radios—,
-                  asi que no hay un `for` unico posible: se nombra el grupo. */}
-              <FormField
-                group
-                label={
-                  <>
-                    {question.label}
-                    <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                      {' '}
-                      ({question.points} pts)
-                    </span>
-                  </>
-                }
+          {WORLD_CUP_BONUS_QUESTIONS.map(question => {
+            /*
+             * Antes esto era un `FormField group`, y `group` esta para varias
+             * controles bajo una etiqueta: aca cada rama de `question.type` tiene uno
+             * solo. El grupo quedaba nombrado y el control adentro no, asi que un
+             * lector de pantalla anunciaba la pregunta al entrar y despues un boton
+             * sin nombre.
+             *
+             * Los dropdowns se nombran con su prop `label` —no son un `<select>`, un
+             * `htmlFor` no tiene a que apuntar— y el campo de texto con `FormField`
+             * comun, que genera el id y lo inyecta. Mismo patron que en
+             * `WorldCupPredictions`, que es la pantalla del jugador.
+             *
+             * Visualmente neutro: los `.label` de los tres componentes replican
+             * `.form-label`, y los 8px de separacion salen del `gap` o del
+             * `margin-bottom` segun el caso.
+             */
+            const etiqueta = (
+              <>
+                {question.label}
+                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                  {' '}
+                  ({question.points} pts)
+                </span>
+              </>
+            )
+
+            return (
+              <div
+                key={question.key}
+                style={{
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-md)',
+                  backgroundColor: 'var(--color-surface-variant)',
+                }}
               >
                 {question.type === 'team' && (
                   <SelectDropdown
+                    label={etiqueta}
                     items={
                       question.key === 'best_debutant_team_id'
                         ? teams.filter(team => DEBUTANT_TEAM_SLUGS.includes(team.slug))
@@ -271,13 +286,16 @@ export default function AdminWorldCupBonus() {
                   />
                 )}
                 {question.type === 'text' && (
-                  <TextInput
-                    value={resultsForm[question.key]}
-                    onChange={event => setField(question.key, event.target.value)}
-                  />
+                  <FormField label={etiqueta}>
+                    <TextInput
+                      value={resultsForm[question.key]}
+                      onChange={event => setField(question.key, event.target.value)}
+                    />
+                  </FormField>
                 )}
                 {question.type === 'number' && (
                   <SelectDropdown
+                    label={etiqueta}
                     items={FINAL_GOALS_OPTIONS}
                     selectedId={
                       resultsForm[question.key] === '' || resultsForm[question.key] === null
@@ -293,6 +311,7 @@ export default function AdminWorldCupBonus() {
                 )}
                 {question.type === 'boolean' && (
                   <SelectDropdown
+                    label={etiqueta}
                     items={HAT_TRICK_OPTIONS}
                     selectedId={
                       resultsForm[question.key] === null || resultsForm[question.key] === undefined
@@ -308,6 +327,7 @@ export default function AdminWorldCupBonus() {
                 )}
                 {question.type === 'stage' && (
                   <SelectDropdown
+                    label={etiqueta}
                     items={ARGENTINA_STAGE_OPTIONS}
                     selectedId={resultsForm[question.key]}
                     onSelect={value => setField(question.key, value)}
@@ -317,9 +337,9 @@ export default function AdminWorldCupBonus() {
                     renderOption={item => <span>{item.label}</span>}
                   />
                 )}
-              </FormField>
-            </div>
-          ))}
+              </div>
+            )
+          })}
         </div>
 
         <div

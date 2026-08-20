@@ -12,6 +12,16 @@ interface TeamDisplayProps {
   showNameBelow?: boolean
 }
 
+/**
+ * El escudo va con `alt=""` a proposito: las dos ramas renderizan el nombre del
+ * equipo al lado (o debajo), asi que un `alt` con el nombre lo hace anunciar dos
+ * veces. Con el texto ahi, el escudo es decorativo.
+ *
+ * `loading="lazy"` si suma: este componente se repite en cada fila de cada tabla.
+ * Atributos `width`/`height` no hacen falta: `sizes[size]` fija las dos
+ * dimensiones por CSS, asi que el espacio ya queda reservado y el escudo que
+ * carga no corre el layout.
+ */
 export default function TeamDisplay({
   team,
   size = 'md',
@@ -46,7 +56,8 @@ export default function TeamDisplay({
         {team.logo_url && (
           <img
             src={team.logo_url}
-            alt={team.name}
+            alt=""
+            loading="lazy"
             style={{
               ...sizes[size],
               objectFit: 'contain',
@@ -83,7 +94,8 @@ export default function TeamDisplay({
       {team.logo_url && (
         <img
           src={team.logo_url}
-          alt={team.name}
+          alt=""
+          loading="lazy"
           style={{
             ...sizes[size],
             objectFit: 'contain',

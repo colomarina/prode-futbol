@@ -10,6 +10,17 @@
  * un componente a otro. Ahora `NavTabs` pasa `isCompact` como prop, así que cada
  * componente es dueño de sus propias clases.
  */
+/*
+ * El radio va **solo arriba**, y eso es la forma del componente y no un adorno:
+ * este botón tiene borde en tres lados y un acento de 4px abajo, o sea la pestaña
+ * de una carpeta. Una pestaña se apoya en el borde del contenido, así que las
+ * esquinas de abajo van rectas; redondear las cuatro la despegaría y la haría leer
+ * como un botón suelto.
+ *
+ * Se ve recién cuando hay algo que pintar —o sea en `:hover` y en `.active`, que
+ * son los dos estados con fondo y borde visible—, pero se declara acá y no en cada
+ * uno para que los tres tengan la misma silueta.
+ */
 .button {
   flex: 1;
   padding: var(--space-md) var(--space-sm);
@@ -18,6 +29,7 @@
   background-color: transparent;
   border: 1px solid transparent;
   border-bottom: 4px solid transparent;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   color: var(--color-text-secondary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;

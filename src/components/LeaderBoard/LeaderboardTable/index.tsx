@@ -55,7 +55,12 @@ const LeaderboardTable = memo(function LeaderboardTable({
   )
 })
 
-const TableHeader = memo(function TableHeader({ columns }: { columns: string[] }) {
+/**
+ * Se exporta para que `LeaderboardTableSkeleton` use este mismo encabezado. Si
+ * tuviera el suyo, el alto de la fila de titulos dependeria de dos copias de los
+ * mismos estilos y al llegar los datos la tabla saltaria.
+ */
+export const TableHeader = memo(function TableHeader({ columns }: { columns: string[] }) {
   return (
     <thead>
       <tr

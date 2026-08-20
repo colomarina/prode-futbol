@@ -60,9 +60,37 @@ describe('tonos', () => {
   })
 })
 
+describe('ScoreInput, nombre accesible', () => {
+  it('sin aria-label el nombre sale del placeholder, que no distingue una cajita de la otra', () => {
+    // Este es el estado que habia y que se vio en el arbol de accesibilidad del
+    // navegador: las dos cajitas de un partido se anunciaban "-". El test lo deja
+    // escrito para que se entienda por que las pantallas pasan `aria-label`.
+    render(<ScoreInput value="" onChange={() => {}} />)
+
+    expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', '-')
+    expect(screen.getByRole('textbox')).not.toHaveAttribute('aria-label')
+  })
+
+  it('el aria-label que le pasa la pantalla llega al input', () => {
+    // El nombre del equipo lo sabe la pantalla, no el componente, asi que lo unico
+    // que se puede garantizar aca es que se reenvie.
+    render(<ScoreInput value="" onChange={() => {}} aria-label="Goles de Aldosivi" />)
+
+    expect(screen.getByRole('textbox', { name: 'Goles de Aldosivi' })).toBeInTheDocument()
+  })
+})
+
 describe('ScoreSeparator', () => {
   it('es el guión entre los dos goles', () => {
     render(<ScoreSeparator />)
     expect(screen.getByText('-')).toBeInTheDocument()
+  })
+
+  it('queda fuera del arbol de accesibilidad', () => {
+    // Es puntuacion entre dos campos que ya se anuncian con su nombre: leerlo solo
+    // agrega un "guion" en el medio del marcador.
+    const { container } = render(<ScoreSeparator />)
+
+    expect(container.firstChild).toHaveAttribute('aria-hidden', 'true')
   })
 })

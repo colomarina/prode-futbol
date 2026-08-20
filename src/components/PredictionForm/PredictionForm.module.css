@@ -77,3 +77,12 @@
 .saveIcon {
   font-size: var(--font-size-2xl);
 }
+
+/*
+ * El `<form>` no aporta layout: existe para que Enter en cualquier marcador
+ * guarde la fecha. `margin: 0` porque el UA le pone margen propio en algunos
+ * navegadores y esto es un wrapper, no una caja con estilo.
+ */
+.form {
+  margin: 0;
+}

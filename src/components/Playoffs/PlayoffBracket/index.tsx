@@ -60,6 +60,12 @@ const teamRowStyle: CSSProperties = {
   minWidth: 0,
 }
 
+/**
+ * El escudo va con `alt=""`: `teamNameStyle` renderiza el nombre al lado y el
+ * recorte es solo visual (`text-overflow: ellipsis`), asi que el texto completo
+ * esta en el DOM y un lector de pantalla lo lee igual. Poner el nombre en el
+ * `alt` lo anunciaria dos veces.
+ */
 const logoStyle: CSSProperties = {
   width: '14px',
   height: '14px',
@@ -214,7 +220,12 @@ const PlayoffBracket = memo(function PlayoffBracket({
                         >
                           <div style={teamRowStyle}>
                             {match.home_team?.logo_url ? (
-                              <img src={match.home_team.logo_url} alt="" style={logoStyle} />
+                              <img
+                                src={match.home_team.logo_url}
+                                alt=""
+                                loading="lazy"
+                                style={logoStyle}
+                              />
                             ) : (
                               <span style={{ fontSize: 'var(--font-size-sm)' }}>⚽</span>
                             )}
@@ -222,7 +233,12 @@ const PlayoffBracket = memo(function PlayoffBracket({
                           </div>
                           <div style={{ ...teamRowStyle, marginTop: 'var(--space-2xs)' }}>
                             {match.away_team?.logo_url ? (
-                              <img src={match.away_team.logo_url} alt="" style={logoStyle} />
+                              <img
+                                src={match.away_team.logo_url}
+                                alt=""
+                                loading="lazy"
+                                style={logoStyle}
+                              />
                             ) : (
                               <span style={{ fontSize: 'var(--font-size-sm)' }}>⚽</span>
                             )}

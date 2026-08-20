@@ -1,6 +1,17 @@
+/*
+ * `min-height: 44px` es el target tactil minimo, y es el que `index.css` ya declara
+ * para `input, select, textarea` con el comentario "Tamaño mínimo táctil".
+ *
+ * Este modulo lo venia pisando con `40px`, que gana por especificidad (una clase le
+ * gana a un selector de tipo). Ese valor entro con los paneles de finanzas del admin
+ * —que despues se borraron—, asi que estaba dimensionando para una pantalla que ya no
+ * existe y de paso encogia los campos de login, de perfil y los de las dos pantallas
+ * mundialistas. Medido en un iPhone SE: los cuatro campos de texto del bonus daban
+ * 285x40.
+ */
 .input {
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

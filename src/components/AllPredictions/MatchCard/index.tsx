@@ -61,7 +61,8 @@ const MatchCard = ({ match, prediction, started }: MatchCardProps) => {
                       {qualifierPredictionTeam.logo_url && (
                         <img
                           src={qualifierPredictionTeam.logo_url}
-                          alt={qualifierPredictionTeam.name}
+                          alt=""
+                          loading="lazy"
                           className={styles.chipLogo}
                         />
                       )}
