@@ -29,12 +29,12 @@ CI en `.github/workflows/ci.yml`: corre `lint`, `typecheck`, `format:check`, `te
 
 ## TypeScript (fase 7, terminada)
 
-**`src/` está entero en TypeScript**: 157 archivos. Los únicos `.js` que quedan son
+**`src/` está entero en TypeScript**: 160 archivos. Los únicos `.js` que quedan son
 los tests y sus dos helpers (`src/test/`).
 
 - **`pnpm build` no chequea tipos.** El build lo hace SWC, que borra las anotaciones sin mirarlas, así que **el único chequeo real es `pnpm typecheck`** (`tsc --noEmit`). Está en CI como paso propio; si se saca, un error de tipos llega a producción en verde.
 - `tsconfig.json` mantiene `allowJs: true` y `checkJs: false` por los tests, que siguen en `.js`. `types: ["vite/client"]` es lo que tipa `import.meta.env` y los imports de `*.module.css`.
-- **`strict` está a medio camino, y a propósito.** Es un paraguas de ocho flags: cuatro (`strictFunctionTypes`, `strictBindCallApply`, `noImplicitThis`, `alwaysStrict`) ya están prendidas porque daban cero errores. Las otras cuatro son deuda medida: `strictNullChecks` 132, `noImplicitAny` 100, `useUnknownInCatchVariables` 12, `strictPropertyInitialization` 1. Conviene ir flag por flag, no prender `strict: true` de una (241 errores juntos).
+- **`strict` está a medio camino, y a propósito.** Es un paraguas de ocho flags: cuatro (`strictFunctionTypes`, `strictBindCallApply`, `noImplicitThis`, `alwaysStrict`) ya están prendidas porque daban cero errores. Las otras cuatro son deuda medida: `strictNullChecks` 123, `noImplicitAny` 100, `useUnknownInCatchVariables` 12, `strictPropertyInitialization` 1. Conviene ir flag por flag, no prender `strict: true` de una (236 errores juntos). Las dos últimas son 13 errores entre las dos: son la puerta de entrada. Y `strictNullChecks` bajó de 132 a 123 durante la fase 8 sin que nadie lo buscara, porque las guardas que esa flag pide son las mismas que pide escribir código defensivo: parte de la deuda se cae sola al tocar los archivos por otra razón.
 - **`typescript` está fijado en `^5.9` a propósito.** `pnpm add -D typescript` instala la 7.x (el compilador nativo nuevo) y `typescript-eslint` declara soporte hasta `<6.1.0`: con la 7 el lint queda con un peer sin resolver. Subir recién cuando typescript-eslint la soporte.
 - **`src/types/database.ts` es la verdad y lo genera Supabase** (`pnpm types:db`): no se edita a mano. Está en `.prettierignore` y en los `ignores` de ESLint, porque reformatearlo haría que cada regeneración traiga un diff de formato encima del diff real del esquema.
 - **`src/types/domain.ts` le pone los nombres del dominio** (`Match = Tables<'matches'>`) y guarda lo que el generador no puede saber: qué columna está muerta, cuál es el default roto, qué garantiza el cliente. Antes eran interfaces a mano y **varias estaban mal** (ver el registro de la fase 7): escribir tipos a mano es afirmar, no comprobar.
@@ -147,7 +147,7 @@ El scoring **no se calcula en el cliente**: los puntos llegan de `round_scores` 
 - `PREDICTION_CUTOFF_MINUTES` vive solo en `utils/matchTiming.ts` (se borró la copia de `constants/predictions.js`). No volver a duplicarla.
 - `src/utils/leaderboardRounds.ts` — qué fechas tienen tabla propia en la tabla de posiciones y si el torneo tiene playoffs. **El criterio sale de los partidos, no de `rounds.status`**: una fecha aparece cuando tiene al menos un partido `is_finished`, y las de playoff se detectan por `is_playoff` en vez de por un rango fijo. `rounds.status` se actualiza a mano desde el panel de fechas y queda desincronizado (Clausura 2026 tiene la fecha 4 jugada entera y en `open`; en el Mundial las de playoff siguen en `pending`), así que filtrar por status hacía desaparecer fechas ya jugadas. Lo consumen `LeaderBoard` (opciones del selector) y `Navigation` (mostrar u ocultar el tab de la llave). `WORLD_CUP_STANDALONE_ROUNDS = {4, 5}` es la única excepción hardcodeada y **solo aplica al Mundial**: ahí 16avos y octavos tienen tabla propia y el resto se agrega en "Cuartos a Final".
 - `src/constants/worldCupBonus.js` — preguntas bonus del Mundial con sus puntos (`WORLD_CUP_BONUS_MAX_POINTS = 50`) y el mapa slug → código de país para las banderas de flagcdn.
-- Sistema de puntos y desempates (texto que ve el usuario): `src/components/InfoPage/info.config.jsx`. El README describe un esquema de puntos viejo (5/3/1) que ya no aplica.
+- Sistema de puntos y desempates (texto que ve el usuario): `src/components/InfoPage/info.config.jsx`. El README ya no repite el esquema: apunta acá, que es la única fuente.
 
 ### Estilos
 
@@ -167,7 +167,7 @@ Las escalas de espaciado, radio, tipografía y capas viven en `src/styles/tokens
 
 ## Puntos a tener en cuenta
 
-- `PredictionForm/MatchPrediction/index.tsx` y `RoundManager/index.tsx` (~890) concentran la mayor complejidad.
+- **Ya no hay god components.** La fase 6 los partió: `RoundManager/index.tsx` pasó de ~1.270 líneas a **165** y `MatchPrediction/index.tsx` a **218**. Sacando `types/database.ts` (generado, 1.631) los archivos más grandes son `AdminWorldCupBonus` (365), `Common/SelectDropdown` (361), `config/tournaments.config.ts` (355) y `MatchManager/MatchResult` (343) — ninguno es un god component, y de los cuatro el único con lógica densa es `MatchResult`. El conteo de líneas dejó de ser un buen proxy: `SelectDropdown` creció en la fase 8 y fue para mejor (teclado completo y el porqué escrito al lado).
 - `MatchManager/MatchResult` reimplementa inline la regla del clasificado por penales que `MatchPrediction/qualifier.ts` ya tiene con tests. **No son idénticas**: el formulario muestra el selector solo si el marcador es empate, el panel de admin lo muestra siempre en un playoff y lo deshabilita cuando hay ganador. Unificarlas cambia la UI del admin y toca la escritura que dispara el scoring, así que es una decisión de producto.
 - `useAllPredictions` **no devuelve `error`**, así que "Ver pronósticos" no tiene estado de error que mostrar. Es el único hook de datos así.
 - Los paneles de finanzas y pagos (`AdminFinance/`, `AdminPayments/` y sus hooks) se **borraron**: estaban terminados pero no cableados a ninguna vista. Están en el historial de git si algún día se retoma la feature; antes hay que arreglar el esquema, porque `round_finances` y `round_payments` no tienen `tournament_id`.

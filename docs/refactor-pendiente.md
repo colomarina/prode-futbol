@@ -1,12 +1,68 @@
-# Refactor: lo que queda (solo la fase 10, mas la revision visual antes de main)
+# Refactor: el plan original está terminado; falta mergear a `main`
 
 Este documento existe para poder **arrancar una conversación nueva sin contexto
-previo**. El plan original completo está en
-`~/.claude/plans/te-animas-a-hacer-groovy-sutton.md` (fuera del repo), pero está
-escrito contra el estado de hace 7 fases: varios de sus números y varios de sus
-puntos ya no aplican. Acá está el estado **verificado** con la fase 8 ya mergeada.
+previo**.
 
-Registros por fase: `docs/pruebas-fase-3a.md`, `-3b`, `-4`, `-6`, `-7`, `-8`, `-9`.
+## Lo primero, para no confundirse
+
+**El plan original está completo.** Iba de la fase 0 a la 9 y las diez están hechas:
+
+| Fase | | Dónde está |
+| --- | --- | --- |
+| 0 | red de seguridad (tooling, CI, tests) | en `main` |
+| 1 | borrar código muerto | en `main` |
+| 2 | bugs de correctitud | en `main` |
+| 3a + 3b | TanStack Query | en `main` |
+| 4 | React Router | en `main` |
+| 5 | design system | en `fase-5` |
+| 6 | romper los god components | en `fase-5` |
+| 7 | TypeScript | en `fase-5` |
+| 8 | UX y accesibilidad | en `fase-5` |
+| 9 | Supabase | aplicada en la base; no es código |
+
+**La "fase 10" no es del plan original.** La creó la fase 7 midiendo su propia deuda,
+y le pusimos número de fase — lo que hace parecer que falta una etapa cuando en
+realidad es deuda interna opcional. Está descrita más abajo con ese encuadre.
+
+Así que lo único que queda del refactor es **mergear `refactor/fase-5-design-system` a
+`main`**: 80 commits con las fases 5 a 8.
+
+## Cuándo mergear: no con una fecha en juego
+
+**Decisión de Lucas, 2026-08-21: el merge a `main` espera a que no haya una fecha en
+juego.** Desplegar 80 commits en medio de una fecha con pronósticos abiertos pone en
+riesgo algo que la gente está usando en ese momento, y el refactor no tiene ninguna
+urgencia que lo justifique.
+
+O sea: la rama queda lista y esperando, no a medio hacer. Si una sesión futura sugiere
+mergear, el criterio es este y no la impaciencia.
+
+El plan original está en `~/.claude/plans/te-animas-a-hacer-groovy-sutton.md` (fuera
+del repo), pero está escrito contra el estado de hace 8 fases: varios de sus números
+ya no aplican. Lo verificado está acá.
+
+## Los documentos de `docs/`
+
+Cada registro de fase dice en su encabezado "descartable una vez mergeada", así que se
+van por tandas cuando esa condición se cumple. Los de las fases **3a, 3b y 4 ya se
+borraron**: esas fases están en `main` desde hace semanas y git los conserva.
+
+Lo que queda, y por qué:
+
+| Archivo | Por qué sigue |
+| --- | --- |
+| `refactor-pendiente.md` | este documento |
+| `pruebas-fase-6.md` | tiene la lista de **cambios visuales deliberados** que necesita el merge |
+| `pruebas-fase-7.md` | registro de la fase, todavía no en `main` |
+| `pruebas-fase-8.md` | ídem, más el **método de verificación visual** y lo medido en el navegador |
+| `pruebas-fase-9.md` | qué se verificó de RLS y triggers contra la base |
+| `plan-fase-9.md` | **el SQL aplicado a Supabase y sus rollbacks.** No hay migraciones en el repo: este es el único registro de lo que se cambió en la base |
+| `supabase-schema.md` | snapshot del esquema; lo referencia `CLAUDE.md` |
+| `sandbox-partidos-futuros.sql` | utilidad reusable: arma una fecha futura en el sandbox para probar escrituras |
+
+**Después de mergear a `main`**, los de las fases 6, 7 y 8 pasan a ser descartables por
+el mismo criterio. Los de la 9 y el esquema **no**: describen el estado de la base, no
+de una rama.
 
 ---
 
@@ -343,10 +399,22 @@ un proceso que corre el admin al finalizar la fecha, no la escritura del pronós
 
 ---
 
-## Fase 10 — `strict` y tests
+## "Fase 10" — `strict` y tests: **deuda opcional, no una etapa del plan**
 
-Fase nueva, y **sale de la fase 7**: no es un pendiente olvidado, es trabajo que se
-midió al terminar de migrar y que no entra ni en UX ni en Supabase.
+**No está en el plan original.** La midió la fase 7 al terminar de migrar y se le puso
+número de fase, que fue un error de encuadre: hace parecer que el refactor quedó a
+9/10 cuando en realidad terminó.
+
+Es deuda interna: **no cambia comportamiento ni aspecto, y no bloquea el merge a
+`main`**. Se hace cuando haya ganas.
+
+Si se retoma, el orden con mejor relación esfuerzo/resultado:
+
+1. **`strictPropertyInitialization` + `useUnknownInCatchVariables`: 13 errores entre
+   las dos.** Es una tarde y deja el paraguas de `strict` a dos flags de cerrarse.
+2. **Los renombres de convención**, que son mecánicos y van en un commit propio.
+3. `noImplicitAny` (100) y `strictNullChecks` (123), que son el grueso — y de los que
+   una parte se cae sola al tocar los archivos por otras razones (ver abajo).
 
 ### `strict`, flag por flag
 
@@ -430,13 +498,12 @@ mayúsculas, así que un cambio de capitalización a secas no lo ve git. Va con
 
 ## Antes de mergear a main
 
-Quedan **dos** cosas, y solo una es trabajo de código.
+Nada de código. Lo que falta es **una decisión de timing y una revisión visual**.
 
-### 1. La fase 10 (código)
+### 1. Que no haya una fecha en juego
 
-`strict` flag por flag, los tests a `.ts` y los renombres de convención. Está descrita
-arriba con los números remedidos. **No bloquea nada**: es deuda interna, no cambia
-comportamiento ni aspecto.
+Es la condición, y está arriba: desplegar 80 commits mientras la gente carga
+pronósticos pone en riesgo algo que está en uso. La rama espera.
 
 ### 2. La revisión visual junta (solo la puede hacer Lucas)
 
