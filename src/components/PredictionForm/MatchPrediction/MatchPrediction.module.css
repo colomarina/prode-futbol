@@ -1,0 +1,80 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant));
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* El partido de la fecha, el que vale doble. */
+.card[data-highlight='true'] {
+  background: var(--color-match-highlight);
+}
+
+/*
+ * Atenuada: el partido ya cerró y el usuario no cargó nada. No se atenúa un
+ * partido finalizado —ahí lo importante es el resultado— ni uno con pronóstico.
+ */
+.card[data-dimmed='true'] {
+  opacity: 0.7;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto 1fr;
+  gap: var(--space-md);
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.homeTeam {
+  justify-self: end;
+  text-align: center;
+}
+
+.awayTeam {
+  justify-self: start;
+  text-align: center;
+}
+
+.warning {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 2px solid;
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--font-size-md);
+}
+
+/* Se perdió el pronóstico: el partido terminó hace rato. */
+.warning[data-kind='missed'] {
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-color: var(--color-error);
+  color: var(--color-error-text);
+}
+
+/* El partido está en curso: cerró el pronóstico, todavía no hay resultado. */
+.warning[data-kind='locked'] {
+  background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  border-color: var(--color-warning);
+  color: var(--color-warning-text);
+}
+
+.saved {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  margin-top: var(--space-md);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  /*
+   * Es texto sobre el fondo de la tarjeta, así que va con el token de letra:
+   * `--color-success` como color de texto no llega al contraste mínimo.
+   */
+  color: var(--color-success-text);
+}

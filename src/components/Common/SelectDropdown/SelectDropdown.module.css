@@ -1,0 +1,16 @@
+/**
+ * Por ahora solo la etiqueta. El resto del componente sigue con estilos inline:
+ * migrarlo entero va junto con el trabajo de widgets compuestos, para no dejarlo
+ * a mitad de camino entre dos mecanismos.
+ *
+ * Replica la clase global `.form-label`, que es lo que usaban los seis lugares
+ * que hoy declaran la etiqueta por fuera.
+ */
+
+.label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}

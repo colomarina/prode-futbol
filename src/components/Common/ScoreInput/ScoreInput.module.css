@@ -1,0 +1,105 @@
+/**
+ * La cajita de un gol. Estaba duplicada casi verbatim entre `MatchResult` (el
+ * admin cargando el resultado) y `MatchPrediction` (el usuario pronosticando):
+ * mismo alto, mismo borde de 3px, misma sombra, escritos dos veces.
+ *
+ * El color y el borde salen de dos custom properties en vez de multiplicar
+ * clases: así el modo lectura puede pisar solo el borde sin tocar el color del
+ * número, que es justo lo que hace `MatchPrediction` con un pronóstico ya
+ * cargado.
+ */
+
+.box {
+  width: 50px;
+  padding: var(--space-sm) var(--space-xs);
+  border: 3px solid var(--score-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--score-bg);
+  color: var(--score-color);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.primary {
+  --score-border: var(--color-primary);
+  --score-color: var(--color-primary-text);
+}
+
+/* El resultado ya cargado: el admin lo ve en verde. */
+.success {
+  --score-border: var(--color-success);
+  --score-color: var(--color-success);
+}
+
+.muted {
+  --score-border: var(--color-border);
+  --score-color: var(--color-text-secondary);
+}
+
+.input {
+  --score-bg: var(--color-surface);
+}
+
+/**
+ * El anillo de foco, y no es cosmética: esta cajita es el control más usado de la
+ * app y con el teclado no se veía dónde estabas parado.
+ *
+ * El `outline: none` de `.box` lo pisaba la regla global `input:focus` de
+ * `index.css` —(0,1,1) le gana a (0,1,0)—, pero lo único que esa regla hace es
+ * `border-color: var(--color-primary)`, y el tono `.primary` **ya tiene ese mismo
+ * color** en el borde. O sea: en un pronóstico vacío, que es el caso normal,
+ * enfocar el input no cambiaba un solo pixel. Con `.success` cambiaba de un verde
+ * a otro.
+ *
+ * Por eso el indicador es un anillo por fuera del borde y no un cambio de color
+ * del borde: no depende de qué tono tenga la cajita. Va con `box-shadow` en vez de
+ * `outline` para que siga el `border-radius`, igual que `TextInput`, y con más
+ * opacidad que ahí (35% contra 18%) justamente porque acá el borde puede ser del
+ * mismo color.
+ *
+ * La sombra de elevación se repite en la lista: `box-shadow` no se acumula entre
+ * reglas, la de acá pisa la de `.box` entera. Medido en el navegador, sin esto la
+ * cajita perdía su elevación justo mientras estaba enfocada.
+ *
+ * **En la práctica el anillo solo se ve sobre el tono `.primary`**, y eso no es
+ * casualidad: los otros dos tonos van siempre de la mano de un control que no recibe
+ * foco. En `MatchResult`, `success` sale de `is_finished` y `muted` de
+ * `!canEditResult`, que son las dos mismas condiciones del `disabled`; en
+ * `MatchPrediction`, el modo lectura ni siquiera renderiza un input. Medido: 30
+ * inputs `primary` enfocables en pronósticos, 30 `success` todos deshabilitados en el
+ * panel de resultados. Si algún día un tono verde o gris pasa a ser editable, hay que
+ * volver a mirar cómo se ve el anillo contra ese borde.
+ */
+.input:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow:
+    0 2px 8px rgb(0 0 0 / 8%),
+    0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.input:disabled {
+  opacity: 0.7;
+}
+
+/**
+ * Modo lectura: no es un input deshabilitado sino un `div`, porque no hay nada
+ * que editar. El borde queda siempre neutro —va después de las clases de tono a
+ * propósito, para pisarlo— y el tono solo tiñe el número.
+ */
+.readOnly {
+  --score-bg: var(--color-surface-variant);
+  --score-border: var(--color-border);
+
+  box-shadow: none;
+}
+
+.separator {
+  padding: 0 var(--space-3xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}

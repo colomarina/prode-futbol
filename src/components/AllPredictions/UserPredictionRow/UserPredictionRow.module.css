@@ -1,0 +1,173 @@
+/**
+ * La fila de un jugador con su pronóstico.
+ *
+ * Reemplaza un bloque `<style>` que se inyectaba por fila: con 20 jugadores en
+ * pantalla eran 20 bloques declarando los mismos selectores GLOBALES
+ * (`.match-prediction-row`, `.match-prediction-main`…) con `!important` para
+ * poder ganarle a los estilos inline del propio componente. Y el grid se
+ * interpolaba dentro del CSS según `is_playoff`, así que el último bloque
+ * inyectado decidía el layout de todas las filas.
+ *
+ * Acá el caso de playoff es una clase más (`.playoff`) y el `!important` ya no
+ * hace falta, porque no hay inline con el que competir.
+ */
+/*
+ * No lleva la clase global `card`: los estilos inline que se sacaron ya pisaban
+ * todo lo que `card` aportaba —fondo, borde, radio, sombra y padding— porque un
+ * estilo inline le gana a cualquier hoja. Lo único que quedaba en pie era el
+ * `margin-bottom`, que se replica acá.
+ */
+.row {
+  margin-bottom: var(--space-lg);
+  padding: 10px var(--space-md);
+  background: linear-gradient(to bottom, var(--color-surface), var(--color-surface-variant));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  align-items: center;
+  column-gap: var(--space-md);
+  row-gap: var(--space-xs);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'user points'
+    'prediction points';
+}
+
+.playoff {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'user user points'
+    'prediction qualifier points';
+}
+
+.user {
+  grid-area: user;
+  min-width: 0;
+}
+
+.username {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.fullName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.main {
+  grid-area: prediction;
+  min-width: 0;
+  align-self: start;
+}
+
+.qualifier {
+  grid-area: qualifier;
+  min-width: 0;
+  align-self: start;
+}
+
+/*
+ * El `min-width` de móvil venía de un bloque `<style>` de `MatchPredictionsByMatch`,
+ * el único componente que usa estas filas. Vive acá porque es la columna de esta
+ * fila, no algo del contenedor.
+ */
+.score {
+  grid-area: points;
+  text-align: right;
+  min-width: 80px;
+}
+
+.etiqueta {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3xs);
+}
+
+.marcador {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-primary-text);
+  line-height: 1.1;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-sm);
+  background-color: var(--color-primary-light);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.chipLogo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.vacio {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.puntos {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.acerto {
+  color: var(--color-success-text);
+}
+
+.fallo {
+  color: var(--color-error-text);
+}
+
+@media (min-width: 640px) {
+  .row {
+    margin-bottom: var(--space-xl);
+  }
+}
+
+/* Desde tablet: todo en una sola línea. */
+@media (min-width: 768px) {
+  .row {
+    grid-template-columns: minmax(170px, 1fr) auto auto;
+    grid-template-areas: 'user prediction points';
+    row-gap: 0;
+  }
+
+  .playoff {
+    grid-template-columns: minmax(170px, 1fr) auto minmax(150px, 1fr) auto;
+    grid-template-areas: 'user prediction qualifier points';
+  }
+
+  .main {
+    justify-self: center;
+    text-align: center;
+  }
+
+  .qualifier {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .score {
+    min-width: 92px;
+  }
+}
+
+/* En móvil el nombre del equipo no entra: queda solo el escudo. */
+@media (max-width: 767px) {
+  .chipNombre {
+    display: none;
+  }
+}

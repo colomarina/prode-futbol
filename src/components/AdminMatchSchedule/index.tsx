@@ -1,0 +1,277 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTournament } from '../../contexts/TournamentContext'
+import { useRounds } from '../../hooks/useRounds'
+import { useMatches } from '../../hooks/useMatches'
+import { getRoundDisplayName } from '../../utils/roundLabels'
+import { formatMatchDateTimeLong } from '../../utils/matchDate'
+import Button from '../Common/Button'
+import LoadingState from '../Common/LoadingState'
+import SelectDropdown from '../Common/SelectDropdown'
+import TeamDisplay from '../Common/TeamDisplay'
+import DateTimeInput from '../Common/DateTimeInput'
+import Toast from '../Common/Toast'
+
+const toDatetimeLocalValue = value => {
+  if (!value) return ''
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const pad = number => String(number).padStart(2, '0')
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hours = pad(date.getHours())
+  const minutes = pad(date.getMinutes())
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+const toUtcIso = value => {
+  if (!value) return null
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+
+  return date.toISOString()
+}
+
+export default function AdminMatchSchedule() {
+  const { activeTournament } = useTournament()
+  const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
+  const [selectedRound, setSelectedRound] = useState(null)
+  const [scheduleValues, setScheduleValues] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  const {
+    matches,
+    loading: matchesLoading,
+    updateMatch,
+  } = useMatches(selectedRound, activeTournament?.id)
+
+  useEffect(() => {
+    if (selectedRound || rounds.length === 0) return
+    setSelectedRound(rounds[0]?.round_number ?? null)
+  }, [rounds, selectedRound])
+
+  /**
+   * Los inputs se rellenan con el horario que está en la base.
+   *
+   * El estado se re-setea solo si de verdad cambió algo. Dos motivos: guardar
+   * invalida la query, y con la respuesta nueva este efecto pisaba lo que el
+   * admin estuviera tipeando; y si `matches` volviera a llegar con una
+   * referencia nueva en cada render, devolver `prev` corta el bucle en vez de
+   * encadenar renders (era el "Maximum update depth exceeded" del panel).
+   */
+  useEffect(() => {
+    setScheduleValues(prev => {
+      const next = {}
+      matches.forEach(match => {
+        next[match.id] = toDatetimeLocalValue(match.match_date)
+      })
+
+      const ids = Object.keys(next)
+      const igual =
+        ids.length === Object.keys(prev).length && ids.every(id => prev[id] === next[id])
+
+      return igual ? prev : next
+    })
+  }, [matches])
+
+  const pendingChanges = useMemo(() => {
+    return matches.filter(match => {
+      const currentValue = toDatetimeLocalValue(match.match_date)
+      return scheduleValues[match.id] !== undefined && scheduleValues[match.id] !== currentValue
+    })
+  }, [matches, scheduleValues])
+
+  const handleValueChange = useCallback((matchId, value) => {
+    setScheduleValues(prev => ({
+      ...prev,
+      [matchId]: value,
+    }))
+  }, [])
+
+  const handleSaveAll = useCallback(async () => {
+    if (pendingChanges.length === 0) {
+      setToast({ message: 'No hay cambios de horario para guardar', type: 'warning' })
+      return
+    }
+
+    const invalidValues = pendingChanges.some(match => {
+      const value = scheduleValues[match.id]
+      return !value || Number.isNaN(new Date(value).getTime())
+    })
+
+    if (invalidValues) {
+      setToast({ message: 'Alguno de los horarios ingresados no es válido', type: 'error' })
+      return
+    }
+
+    setSaving(true)
+
+    const results = await Promise.all(
+      pendingChanges.map(async match => {
+        const isoDate = toUtcIso(scheduleValues[match.id])
+        return updateMatch(match.id, { match_date: isoDate })
+      })
+    )
+
+    const successCount = results.filter(result => !result.error).length
+    const errorCount = results.filter(result => result.error).length
+
+    setSaving(false)
+
+    if (successCount > 0 && errorCount === 0) {
+      setToast({
+        message: `${successCount} horario${successCount > 1 ? 's' : ''} actualizado${successCount > 1 ? 's' : ''}`,
+        type: 'success',
+      })
+    } else if (successCount > 0 && errorCount > 0) {
+      setToast({
+        message: `${successCount} actualizado${successCount > 1 ? 's' : ''}, ${errorCount} falló${errorCount > 1 ? 'n' : ''}`,
+        type: 'warning',
+      })
+    } else {
+      setToast({ message: 'No se pudieron guardar los horarios', type: 'error' })
+    }
+  }, [pendingChanges, scheduleValues, updateMatch])
+
+  if (roundsLoading) {
+    return (
+      <div className="container" style={{ maxWidth: '1000px' }}>
+        <LoadingState message="Cargando fechas del torneo..." />
+      </div>
+    )
+  }
+
+  return (
+    <div className="container" style={{ maxWidth: '1000px' }}>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <h2 style={{ marginBottom: 'var(--space-sm)' }}>🕒 Reprogramar partidos</h2>
+        <p style={{ marginTop: 0, color: 'var(--color-text-secondary)' }}>
+          Ajustá los horarios de los partidos por fecha para cubrir aplazos, suspensiones o cambios
+          de agenda.
+        </p>
+
+        <SelectDropdown
+          label="Fecha del torneo"
+          items={rounds.map(round => ({ ...round, id: round.round_number }))}
+          selectedId={selectedRound ?? ''}
+          onSelect={value => setSelectedRound(Number(value))}
+          placeholder="Seleccionar fecha..."
+          valueKey="round_number"
+          renderButton={round => <span>{getRoundDisplayName(round)}</span>}
+          renderOption={round => <span>{getRoundDisplayName(round)}</span>}
+        />
+      </div>
+
+      {!selectedRound ? (
+        <div className="card">Seleccioná una fecha para ver y modificar los horarios.</div>
+      ) : matchesLoading ? (
+        <LoadingState message="Cargando partidos..." />
+      ) : matches.length === 0 ? (
+        <div className="card">No hay partidos cargados para esta fecha.</div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            {matches.map(match => {
+              const matchDateValue = scheduleValues[match.id] ?? ''
+              const currentDateLabel = formatMatchDateTimeLong(match.match_date)
+              const hasChanges =
+                scheduleValues[match.id] !== undefined &&
+                scheduleValues[match.id] !== toDatetimeLocalValue(match.match_date)
+
+              return (
+                <div key={match.id} className="card" style={{ padding: 'var(--space-lg)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 'var(--space-lg)',
+                      flexWrap: 'wrap',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'var(--space-md)',
+                          flexWrap: 'wrap',
+                          marginBottom: 'var(--space-sm)',
+                        }}
+                      >
+                        <TeamDisplay team={match.home_team} size="md" />
+                        <span style={{ fontWeight: '700', color: 'var(--color-primary-text)' }}>
+                          vs
+                        </span>
+                        <TeamDisplay team={match.away_team} size="md" />
+                      </div>
+
+                      <div style={{ fontWeight: '700', marginBottom: 'var(--space-xs)' }}>
+                        Partido {match.match_number}
+                      </div>
+                      <div
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontSize: 'var(--font-size-base)',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: '600',
+                            color: 'var(--color-text-primary)',
+                            marginBottom: 'var(--space-2xs)',
+                          }}
+                        >
+                          Horario actual
+                        </div>
+                        <div>{currentDateLabel}</div>
+                        {hasChanges && (
+                          <div
+                            style={{
+                              marginTop: 'var(--space-2xs)',
+                              color: 'var(--color-warning)',
+                              fontWeight: '600',
+                            }}
+                          >
+                            Cambiará al guardar
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ minWidth: '220px', width: '100%', maxWidth: '320px' }}>
+                      <DateTimeInput
+                        label="Horario"
+                        value={matchDateValue}
+                        onChange={event => handleValueChange(match.id, event.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div style={{ marginTop: 'var(--space-lg)' }}>
+            <Button
+              variant="success"
+              onClick={handleSaveAll}
+              disabled={saving || pendingChanges.length === 0}
+              fullWidth
+            >
+              {saving ? 'Guardando horarios...' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

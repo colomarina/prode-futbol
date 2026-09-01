@@ -1,0 +1,9 @@
+.value {
+  font-weight: 600;
+}
+
+/* La opción ocupa el ancho libre para que la tilde del seleccionado quede a la derecha. */
+.option {
+  flex: 1;
+  font-weight: 600;
+}

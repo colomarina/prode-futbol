@@ -1,0 +1,88 @@
+/*
+ * El encabezado de la tarjeta de pronóstico. Las tres primeras piezas van
+ * absolutas contra la tarjeta (que es `position: relative`) porque se apoyan en
+ * sus esquinas; el grupo y la fecha van en el flujo normal.
+ */
+.matchNumber {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.info {
+  position: absolute;
+  top: var(--space-md);
+  /* Justo a la derecha del número de partido. */
+  left: 55px;
+  z-index: var(--z-raised);
+}
+
+.status {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  padding: var(--space-2xs) var(--space-md);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.status[data-status='finished'] {
+  background-color: var(--color-success);
+}
+
+.status[data-status='playing'] {
+  background-color: var(--color-warning);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/*
+ * El original declaraba `animation: pulse ...` pero **el @keyframes no existía en
+ * ninguna parte**, así que el badge de "En Juego" nunca latió. Se define acá para
+ * que haga lo que el código pedía. Es sutil a propósito: el badge es chico y un
+ * parpadeo fuerte al lado de los inputs molesta más de lo que informa.
+ */
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status[data-status='playing'] {
+    animation: none;
+  }
+}
+
+.meta {
+  margin-top: 36px;
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.group {
+  margin-bottom: var(--space-xs);
+}
+
+.groupBadge {
+  padding: var(--space-2xs) var(--space-md);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  /* Los del Mundial los pisa `getGroupBadgeColors` con el color del grupo. */
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.datetime {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}

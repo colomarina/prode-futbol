@@ -1,0 +1,101 @@
+import { memo, useMemo } from 'react'
+import LeaderboardRow from '../LeaderboardRow'
+import EmptyState from '../EmptyState'
+import { TABLE_COLUMNS } from '../leaderboard.config'
+import type { LeaderboardEntry } from '../../../hooks/useLeaderboard'
+import type { LeaderboardSelection } from '../LeadboardHeader'
+import type { ViewPredictionsRequest } from '../LeaderboardRow'
+
+interface LeaderboardTableProps {
+  leaderboard: LeaderboardEntry[]
+  selectedRound?: LeaderboardSelection
+  onViewPredictions?: (request: ViewPredictionsRequest) => void
+}
+
+const LeaderboardTable = memo(function LeaderboardTable({
+  leaderboard,
+  selectedRound,
+  onViewPredictions,
+}: LeaderboardTableProps) {
+  const columns = useMemo(() => {
+    if (selectedRound === 'playoffs') return TABLE_COLUMNS.playoffs
+    return TABLE_COLUMNS[selectedRound ? 'round' : 'general']
+  }, [selectedRound])
+
+  const showViewColumn = Boolean(selectedRound && selectedRound !== 'playoffs')
+
+  if (leaderboard.length === 0) {
+    return <EmptyState />
+  }
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+        }}
+      >
+        <TableHeader columns={columns} />
+        <tbody>
+          {leaderboard.map((player, index) => (
+            <LeaderboardRow
+              key={player.id}
+              player={player}
+              position={index + 1}
+              showRoundsColumn={!selectedRound}
+              showViewColumn={showViewColumn}
+              onViewPredictions={onViewPredictions}
+              selectedRound={selectedRound}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+})
+
+/**
+ * Se exporta para que `LeaderboardTableSkeleton` use este mismo encabezado. Si
+ * tuviera el suyo, el alto de la fila de titulos dependeria de dos copias de los
+ * mismos estilos y al llegar los datos la tabla saltaria.
+ */
+export const TableHeader = memo(function TableHeader({ columns }: { columns: string[] }) {
+  return (
+    <thead>
+      <tr
+        style={{
+          backgroundColor: 'var(--color-surface-variant)',
+          borderBottom: '2px solid var(--color-border)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 'var(--z-base)',
+        }}
+      >
+        {columns.map((column, index) => (
+          <th
+            key={column}
+            style={{
+              padding: 'var(--space-md) var(--space-sm)',
+              textAlign:
+                index === 0
+                  ? 'left'
+                  : column === 'Pts' || column === 'Fch' || column === 'Ver'
+                    ? 'center'
+                    : 'left',
+              fontSize: 'var(--font-size-2xs)',
+              fontWeight: '700',
+              color: 'var(--color-text-secondary)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            {column}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  )
+})
+
+export default LeaderboardTable

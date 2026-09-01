@@ -1,0 +1,80 @@
+/**
+ * Tema del calendario de `react-datepicker`, para que use la paleta de la app.
+ *
+ * Estas clases son globales de la librería, así que no pueden ir en un
+ * `*.module.css`: el hash de los módulos las renombraría y no matchearían nada.
+ * Va como hoja aparte, igual que `tippy-theme.css`.
+ *
+ * Antes esto era un template literal inyectado en un `<style>` DENTRO del
+ * componente, o sea una copia por cada input en pantalla: en `/admin/horarios`
+ * hay un `DateTimeInput` por partido, así que se inyectaba el bloque completo
+ * una vez por partido. Importado acá, Vite lo emite una sola vez.
+ */
+.react-datepicker {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  font-family: inherit;
+}
+
+.react-datepicker__header {
+  background: var(--color-surface-variant);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  color: var(--color-text-primary);
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range,
+.react-datepicker__month-text--selected,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__year-text--selected {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.react-datepicker__day:hover,
+.react-datepicker__month-text:hover,
+.react-datepicker__quarter-text:hover,
+.react-datepicker__year-text:hover {
+  background-color: var(--color-surface-variant);
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.react-datepicker__time-box {
+  width: 100%;
+}
+
+/*
+ * El wrapper que react-datepicker pone alrededor del input no tiene ancho propio,
+ * asi que dentro del flex de `DateTimeInput` se encogia al contenido y el campo
+ * quedaba chico al lado del icono. El input de adentro ya estaba al 100% (la regla
+ * de abajo), lo que faltaba era esto.
+ *
+ * Antes se intentaba con un `style={{ width: '100%' }}` en el <DatePicker>, pero ese
+ * componente **no acepta `style`**: la prop se ignoraba en silencio. Lo marco el
+ * tipado al migrar a TypeScript.
+ */
+.react-datepicker-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  padding: 0;
+}

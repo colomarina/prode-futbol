@@ -1,10 +1,16 @@
 /* Hamburger Button - Mobile First */
 .hamburgerButton {
-  z-index: 1000;
+  /*
+   * Era 1000, un número que no ordenaba nada: el botón vive dentro de
+   * `NavHeader`, que con `position: sticky` + `z-index` crea su propio contexto
+   * de apilamiento, y ningún hermano suyo declara `z-index`. Contra el resto de
+   * la página lo ordena el header, no este valor.
+   */
+  z-index: var(--z-raised);
   background-color: var(--color-primary);
   color: var(--color-text-on-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   width: 44px;
   height: 44px;
   display: flex;

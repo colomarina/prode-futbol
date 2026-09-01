@@ -1,0 +1,150 @@
+/**
+ * Este archivo es ahora el único lugar donde se decide cómo se ve un botón.
+ *
+ * Hasta acá la geometría estaba duplicada: la misma declaraba el `button {}`
+ * global de `index.css` y la repetía este módulo. De esa regla global quedó solo
+ * el reset (`font-family`, `cursor`, `min-height` táctil) más `:disabled` y
+ * `:focus-visible`, que siguen siendo de todos los `<button>` de la app tengan
+ * clase o no.
+ *
+ * El padding horizontal era `20px`, el único valor del componente que no salía de
+ * la escala de espaciado. Ahora es `--space-xl` (24px): 4px más ancho, que es el
+ * costo de que el valor exista en la escala.
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+/* Compacto: reemplaza los `padding: 8px 16px` + `fontSize: 0.9rem` inline. */
+.sm {
+  min-height: 36px;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-md);
+}
+
+/**
+ * La acción principal de una pantalla: el botón de guardar de la barra fija.
+ *
+ * Estaba copiado en tres pantallas con valores distintos entre sí —padding 18/18/16,
+ * fuente 1.1/1.1/1.05rem, sombra con dos opacidades— y las tres repetían a mano el
+ * `opacity` y el `cursor` del estado deshabilitado, que el `button` global ya
+ * define. Acá quedan iguales las tres.
+ */
+.lg {
+  min-height: 56px;
+  padding: var(--space-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 15%);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.primary:hover:not(:disabled),
+.primary:active:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text-on-primary);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--color-secondary-light);
+}
+
+.success {
+  background-color: var(--color-success);
+  color: var(--color-text-on-primary);
+}
+
+.success:hover:not(:disabled) {
+  background-color: var(--color-success-light);
+}
+
+/* `danger` en la API, `--color-error` en el token: el color describe el estado,
+   la variante describe para qué sirve el botón. */
+.danger {
+  background-color: var(--color-error);
+  color: var(--color-text-on-primary);
+}
+
+.danger:hover:not(:disabled) {
+  background-color: var(--color-error-light);
+}
+
+.outline {
+  background-color: transparent;
+  color: var(--color-primary-text);
+  border: 2px solid var(--color-primary);
+}
+
+.outline:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+/* `info` para acciones que no son ni la principal ni destructivas: "Finalizar
+   fecha" en el panel del admin, que antes era un gradiente azul a mano. */
+.info {
+  background-color: var(--color-info);
+  color: var(--color-text-on-primary);
+}
+
+.info:hover:not(:disabled) {
+  background-color: var(--color-info-light);
+}
+
+.text {
+  background-color: transparent;
+  color: var(--color-primary-text);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+.text:hover:not(:disabled) {
+  background-color: var(--color-surface-highlight);
+}
+
+/**
+ * Un botón que se lee como un link: subrayado, sin caja y sin alto mínimo.
+ *
+ * Es para una acción secundaria metida dentro de un texto —"¿Olvidaste tu
+ * contraseña?"— que no tiene que competir visualmente con el botón principal.
+ * Sigue siendo un `<button>` y no un `<a>` porque no navega a ninguna parte.
+ *
+ * Va último a propósito: `min-height` y `padding` le tienen que ganar a los de
+ * `.button`, y con la misma especificidad decide el orden del archivo.
+ */
+.link {
+  background-color: transparent;
+  color: var(--color-primary-text);
+  text-decoration: underline;
+  min-height: auto;
+  padding: var(--space-2xs) 0;
+}
+
+.link:hover:not(:disabled) {
+  color: var(--color-primary-dark);
+}

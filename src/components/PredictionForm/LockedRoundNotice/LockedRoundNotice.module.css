@@ -1,0 +1,12 @@
+.box {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-variant);
+  text-align: center;
+}
+
+.text {
+  margin: 0;
+  color: var(--color-text-secondary);
+}

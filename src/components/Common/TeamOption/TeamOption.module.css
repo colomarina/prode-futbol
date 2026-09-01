@@ -1,0 +1,16 @@
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.bandera {
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  /*
+   * El borde es un negro translúcido a propósito y no un token: separa la
+   * bandera del fondo sin importar de qué color sean sus franjas, y varias
+   * banderas tienen blanco en el borde.
+   */
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}

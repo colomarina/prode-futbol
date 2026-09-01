@@ -1,0 +1,32 @@
+/**
+ * El circulito que gira. Los tres valores que varían entran como custom
+ * properties desde el JSX; el resto es igual siempre.
+ */
+.spinner {
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+  border: var(--spinner-border) solid var(--spinner-track);
+  border-top-color: var(--spinner-color);
+  border-radius: var(--radius-circle);
+  animation: spin 0.8s linear infinite;
+}
+
+/*
+ * El keyframe vive acá y no en `index.css`: el componente no debería depender de
+ * que alguien más haya declarado la animación. Los otros spinners que se
+ * borraron declaraban su propia copia por lo mismo.
+ */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * Con reduced motion se sigue viendo que algo carga, pero sin el giro rápido.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

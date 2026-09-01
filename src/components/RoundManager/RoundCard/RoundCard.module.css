@@ -1,0 +1,120 @@
+/*
+ * Una fecha de la lista: nombre, estado, conteo de partidos y el selector para
+ * cambiarle el estado.
+ *
+ * Los colores de cada estado se resuelven acá por `[data-status]`. Antes venían
+ * de un objeto en JS que devolvía `bg`, `border` y `color` por estado, y esos
+ * tres valores se interpolaban en cuatro `style={{}}` distintos.
+ */
+.card {
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-surface);
+  transition: all 0.2s;
+}
+
+/* Solo la fecha abierta se destaca; el resto queda en el fondo neutro. */
+.card[data-active='true'] {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.badge,
+.matchCount {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-3xs) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border: 2px solid;
+}
+
+/*
+ * En los cuatro estados el borde lleva el color de relleno y la letra el `-text`:
+ * sobre el fondo tinteado, el de relleno como letra no llega al contraste mínimo
+ * (`--color-error` da 2.9:1 en tema oscuro).
+ */
+.badge[data-status='pending'] {
+  background-color: color-mix(in srgb, var(--color-text-secondary) 10%, transparent);
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
+}
+
+.badge[data-status='open'] {
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border-color: var(--color-success);
+  color: var(--color-success-text);
+}
+
+.badge[data-status='locked'] {
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-color: var(--color-error);
+  color: var(--color-error-text);
+}
+
+.badge[data-status='finished'] {
+  background-color: color-mix(in srgb, var(--color-info) 10%, transparent);
+  border-color: var(--color-info);
+  color: var(--color-info-text);
+}
+
+/*
+ * El conteo de partidos vivía solo dentro del botón Finalizar, que aparece nada
+ * más cuando la fecha está bloqueada: en una fecha finalizada o pendiente no
+ * había forma de ver cuántos partidos tiene ni cuántos se cargaron.
+ */
+.matchCount {
+  background-color: var(--color-surface-highlight);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.matchCount[data-complete='true'] {
+  color: var(--color-primary-text);
+}
+
+.statusSelect {
+  width: 100%;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.statusSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.statusSelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* El botón Finalizar aparece solo con la fecha bloqueada; sin él no hace falta. */
+.withAction {
+  margin-bottom: var(--space-md);
+}

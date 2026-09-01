@@ -1,0 +1,63 @@
+/*
+ * El panel de resultado de un partido terminado. Verde si el pronóstico sumó,
+ * rojo si no: `data-scored` decide los dos colores del panel y el del chip de
+ * puntos, que antes eran cuatro ternarios repetidos sobre la misma condición.
+ */
+.panel {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.panel[data-scored='true'] {
+  border-color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.result {
+  margin: 0 0 var(--space-2xs) 0;
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.score {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.detail {
+  margin: var(--space-2xs) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.points {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-error);
+  color: var(--color-text-on-primary);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+}
+
+.points[data-scored='true'] {
+  background-color: var(--color-success);
+}
+
+.pointsIcon {
+  font-size: var(--font-size-2xl);
+}

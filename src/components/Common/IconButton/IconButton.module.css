@@ -1,0 +1,42 @@
+/**
+ * Botón representado solo por un ícono. No es un `Button` sin texto: no lleva
+ * variantes de color —todos los de la app son transparentes— y hereda el color
+ * del contexto, que es lo que le permite verse blanco sobre el toast y gris en
+ * una fila de la tabla sin necesitar una prop.
+ *
+ * El alto mínimo de 44px ya lo pone el `button` global de `index.css`; acá no se
+ * fija un ancho mínimo a propósito, porque el 👀 vive en una celda de tabla y
+ * ensancharía la columna. Los tamaños de área táctil se deciden en la fase 8.
+ */
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xs);
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/**
+ * El hover se hace con CSS y no con `onMouseEnter`/`onMouseLeave` escribiendo en
+ * `style` a mano, que es como estaba en el toast: eso no se puede desactivar con
+ * `prefers-reduced-motion` ni se ve en las devtools como una regla.
+ */
+.iconButton:hover:not(:disabled) {
+  background-color: rgb(128 128 128 / 15%);
+}
+
+/* Ícono chico, para cuando vive dentro de una celda o de un input. */
+.sm {
+  font-size: var(--font-size-sm);
+  padding: var(--space-3xs);
+}

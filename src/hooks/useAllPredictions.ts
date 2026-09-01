@@ -1,0 +1,202 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useRounds } from './useRounds'
+import { useMatches } from './useMatches'
+import { useMatchesMeta } from './useMatchesMeta'
+import { useTournament } from '../contexts/TournamentContext'
+import { supabase } from '../lib/supabase'
+import { queryKeys } from '../lib/queryKeys'
+import { filterHiddenPlayers } from '../constants/hiddenPlayers'
+import { hasMatchStarted } from '../utils/matchTiming'
+import type { Prediction, Profile, Uuid } from '../types/domain'
+
+/** Las dos formas de mirar los pronósticos ajenos. */
+export type AllPredictionsViewMode = 'by-match' | 'by-user'
+
+/** El jugador tal como lo trae el selector: sin el resto del perfil. */
+export type PredictionsUser = Pick<Profile, 'id' | 'username' | 'full_name'>
+
+/** Pronósticos indexados por una de sus columnas, para buscar en O(1). */
+export type PredictionsByKey = Record<string, Prediction>
+
+/** Mapa vacío compartido, para no devolver un `{}` nuevo en cada render. */
+const EMPTY_MAP: PredictionsByKey = {}
+
+/** Convierte una lista de pronósticos en un mapa por la clave indicada. */
+const indexBy = (
+  predictions: Prediction[] | null | undefined,
+  key: 'match_id' | 'user_id'
+): PredictionsByKey =>
+  Object.fromEntries((predictions || []).map(prediction => [prediction[key], prediction]))
+
+export function useAllPredictions({
+  initialRound = null,
+  initialUser = '',
+}: { initialRound?: number | null; initialUser?: Uuid | '' } = {}) {
+  const { activeTournament } = useTournament()
+  const tournamentId = activeTournament?.id ?? null
+  const { rounds, loading: roundsLoading } = useRounds(tournamentId)
+  const { matchesMeta } = useMatchesMeta(tournamentId)
+
+  const [selectedRound, setSelectedRound] = useState<number | null>(initialRound || null)
+  const [selectedUser, setSelectedUser] = useState<Uuid | ''>('')
+  const [selectedMatchId, setSelectedMatchId] = useState<Uuid | null>(null)
+  const [viewMode, setViewMode] = useState<AllPredictionsViewMode>('by-match')
+
+  const { matches, loading: matchesLoading } = useMatches(selectedRound, tournamentId)
+
+  const { data: users } = useQuery({
+    queryKey: queryKeys.profiles(),
+    queryFn: async (): Promise<PredictionsUser[]> => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, full_name')
+        .order('full_name')
+
+      if (error) throw error
+      return filterHiddenPlayers(data || [])
+    },
+  })
+
+  /**
+   * El 👀 de la tabla de posiciones entra con un `initialUser`, y esta pantalla
+   * arranca en la vista por partido. El efecto de abajo solo aplica `initialUser`
+   * cuando el modo YA es 'by-user', asi que sin este cambio de modo el jugador
+   * nunca se seleccionaba: se aterrizaba en la vista por partido y el deep link
+   * quedaba a medias (la fecha si llegaba, porque va por useState).
+   *
+   * No se pisa con el efecto de `viewMode`: ese limpia `selectedUser` solo al
+   * SALIR de la vista por usuario.
+   */
+  useEffect(() => {
+    if (initialUser) setViewMode('by-user')
+  }, [initialUser])
+
+  useEffect(() => {
+    if (initialUser && viewMode === 'by-user') setSelectedUser(initialUser)
+  }, [initialUser, viewMode])
+
+  useEffect(() => {
+    setSelectedMatchId(null)
+  }, [selectedRound])
+
+  useEffect(() => {
+    if (viewMode === 'by-user') {
+      setSelectedMatchId(null)
+    } else {
+      setSelectedUser('')
+    }
+  }, [viewMode])
+
+  // Solo se listan las fechas que ya empezaron: antes de eso, mostrar los
+  // pronosticos ajenos seria espiar.
+  const availableRounds = useMemo(
+    () =>
+      rounds
+        .filter(round =>
+          matchesMeta.some(
+            match => match.round_number === round.round_number && hasMatchStarted(match.match_date)
+          )
+        )
+        .sort((a, b) => a.round_number - b.round_number),
+    [matchesMeta, rounds]
+  )
+
+  const selectedUserData = useMemo(
+    () => (users ?? []).find(user => user.id === selectedUser),
+    [users, selectedUser]
+  )
+
+  const selectedMatch = useMemo(
+    () => matches.find(match => match.id === selectedMatchId),
+    [matches, selectedMatchId]
+  )
+
+  const selectedRoundHasStartedMatches = useMemo(
+    () => matches.some(match => hasMatchStarted(match.match_date)),
+    [matches]
+  )
+
+  const matchIds = useMemo(() => matches.map(match => match.id), [matches])
+
+  const roundPredictionsEnabled =
+    viewMode === 'by-user' &&
+    Boolean(selectedRound) &&
+    Boolean(selectedUser) &&
+    matchIds.length > 0 &&
+    selectedRoundHasStartedMatches
+
+  const roundPredictionsQuery = useQuery({
+    queryKey: queryKeys.predictionsOfUserInRound(tournamentId, selectedRound, selectedUser),
+    enabled: roundPredictionsEnabled,
+    queryFn: async (): Promise<PredictionsByKey> => {
+      const { data, error } = await supabase
+        .from('predictions')
+        .select('*')
+        .in('match_id', matchIds)
+        .eq('user_id', selectedUser)
+
+      if (error) throw error
+      return indexBy(data, 'match_id')
+    },
+  })
+
+  const matchPredictionsEnabled =
+    viewMode === 'by-match' &&
+    Boolean(selectedMatchId) &&
+    Boolean(selectedMatch) &&
+    hasMatchStarted(selectedMatch?.match_date)
+
+  const matchPredictionsQuery = useQuery({
+    queryKey: queryKeys.predictionsByMatch(tournamentId, selectedMatchId),
+    enabled: matchPredictionsEnabled,
+    queryFn: async (): Promise<PredictionsByKey> => {
+      const { data, error } = await supabase
+        .from('predictions')
+        .select('*')
+        .eq('match_id', selectedMatchId)
+
+      if (error) throw error
+      return indexBy(data, 'user_id')
+    },
+  })
+
+  // Referencias estables: el ternario de abajo también devolvía un `{}` nuevo por
+  // render en la rama deshabilitada. Ver el comentario de `useMatches`.
+  const usersList = useMemo(() => users ?? [], [users])
+
+  const roundPredictions = useMemo(
+    () => (roundPredictionsEnabled ? (roundPredictionsQuery.data ?? EMPTY_MAP) : EMPTY_MAP),
+    [roundPredictionsEnabled, roundPredictionsQuery.data]
+  )
+
+  const matchPredictions = useMemo(
+    () => (matchPredictionsEnabled ? (matchPredictionsQuery.data ?? EMPTY_MAP) : EMPTY_MAP),
+    [matchPredictionsEnabled, matchPredictionsQuery.data]
+  )
+
+  return {
+    rounds,
+    roundsLoading,
+    availableRounds,
+    matches,
+    matchesLoading,
+    users: usersList,
+    selectedUser,
+    setSelectedUser,
+    selectedUserData,
+    selectedRound,
+    setSelectedRound,
+    selectedMatchId,
+    setSelectedMatchId,
+    selectedMatch,
+    viewMode,
+    setViewMode,
+    // Sin seleccion no hay nada que mostrar: el mapa vacio es el estado correcto.
+    roundPredictions,
+    matchPredictions,
+    loading: roundPredictionsEnabled && roundPredictionsQuery.isPending,
+    matchLoading: matchPredictionsEnabled && matchPredictionsQuery.isPending,
+    hasMatchStarted,
+  }
+}

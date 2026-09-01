@@ -1,0 +1,32 @@
+.wrapper {
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+/*
+  `inline-flex` con `width: 100%` es la combinación que ya tenía: se comporta como
+  un bloque de ancho completo, pero centra su contenido sin estirar los hijos.
+*/
+.box {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-variant);
+  border: 2px solid var(--color-border);
+}
+
+.title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.description {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}

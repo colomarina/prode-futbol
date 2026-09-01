@@ -1,0 +1,38 @@
+/**
+ * Reproduce las clases globales `.form-label` y `.form-error` de `App.css`, que
+ * es lo que hoy usan los formularios, más el `gap` de 8px que `Login` repetía en
+ * un `div` con estilos inline en cada campo.
+ *
+ * Las globales siguen existiendo mientras queden formularios sin migrar; se van
+ * cuando este componente los cubra a todos.
+ */
+
+/**
+ * Sin `margin-bottom` a propósito: el espaciado entre campos lo decide el
+ * contenedor, no el campo. Con un margen propio se suma al `gap` del formulario
+ * y el resultado depende de dónde se use — en el registro quedaban 36px entre
+ * campos (20 del `gap` + 16 del margen) en vez de los 20 de siempre.
+ */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+/* Un grupo de controles bajo una sola etiqueta (una fecha y una hora, por
+   ejemplo): el layout lo define quien lo usa, acá solo se agrupan. */
+.group {
+  display: contents;
+}

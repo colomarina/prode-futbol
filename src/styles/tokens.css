@@ -1,0 +1,73 @@
+/**
+ * Tokens de diseño: las escalas que hoy están hardcodeadas en los estilos inline.
+ *
+ * Los de color NO están acá: viven en `index.css` porque cambian con el tema
+ * (claro/oscuro) y con el torneo, que los pisa en runtime desde
+ * `config/tournaments.config.js`. Estos otros no dependen de ninguno de los dos,
+ * así que se definen una sola vez.
+ *
+ * Cada escala sale de contar los valores reales del código, no de una plantilla.
+ * Donde la escala tiene menos pasos que el inventario es a propósito: unificar es
+ * el punto de la fase. La migración se hace de a un feature por vez, comparando
+ * contra las capturas de la línea de base.
+ */
+
+:root {
+  /**
+   * Espaciado. Del inventario salieron 2/4/6/8/10/12/16/24/48 px entre `padding`,
+   * `gap`, `marginTop` y `marginBottom`.
+   *
+   * `10px` queda afuera a propósito: al migrar cae en `sm` o en `md` según el
+   * caso. Es el único valor que exige mirar la pantalla antes de reemplazar.
+   */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /**
+   * Radios. Eran 8 valores distintos (2/6/8/10/12/16/999px y 50%) sin criterio:
+   * `2px` y `6px` colapsan en `sm`, `10px` y `12px` en `lg`.
+   */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /**
+   * Tipografía. Eran 20 tamaños distintos entre 0.7rem y 4rem, con pares que no
+   * se distinguen a simple vista (0.7/0.72, 0.78/0.8/0.82, 1.75/1.8). La escala
+   * los agrupa: `base` es el tamaño de lectura y de ahí para arriba y para abajo.
+   */
+  --font-size-2xs: 0.7rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8rem;
+  --font-size-md: 0.9rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 3rem;
+
+  /**
+   * Capas. Los valores se conservan tal cual estaban (1, 2, 10, 100, 1100, 9999):
+   * lo que faltaba no era la escala sino el nombre, para saber qué va arriba de
+   * qué sin tener que buscarlo por el código.
+   */
+  --z-base: 1;
+  --z-raised: 2;
+  --z-sticky: 10;
+  --z-dropdown: 100;
+  /* El velo que tapa la página detrás de un diálogo, siempre justo abajo de él. */
+  --z-backdrop: 1000;
+  --z-modal: 1100;
+  --z-toast: 9999;
+}
