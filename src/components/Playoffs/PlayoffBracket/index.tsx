@@ -50,6 +50,14 @@ const PlayoffBracket = memo(function PlayoffBracket({
     />
   )
 
+  // Fuera del cuadro: no alimenta ninguna ronda, así que no lleva conectores.
+  const thirdPlaceBlock = bracket.thirdPlace && (
+    <div className={styles.thirdPlace}>
+      <h4 className={styles.thirdPlaceTitle}>Tercer puesto</h4>
+      {renderCard(bracket.thirdPlace)}
+    </div>
+  )
+
   return (
     <div>
       <div className={styles.mobile}>
@@ -70,6 +78,7 @@ const PlayoffBracket = memo(function PlayoffBracket({
               {[...selectedRound.slots].sort(byDate).map((slot, index) => (
                 <div key={slot.match?.id ?? `vacio-${index}`}>{renderCard(slot)}</div>
               ))}
+              {selectedStage === 'final' && thirdPlaceBlock}
             </div>
           </>
         )}
@@ -85,16 +94,29 @@ const PlayoffBracket = memo(function PlayoffBracket({
               data-last={roundIndex === bracket.rounds.length - 1 || undefined}
             >
               <h3 className={styles.title}>{round.label}</h3>
-              <div
-                className={styles.slots}
-                style={{ gridTemplateRows: `repeat(${round.slots.length}, 1fr)` }}
-              >
-                {round.slots.map((slot, index) => (
-                  <div key={slot.match?.id ?? `vacio-${index}`} className={styles.slot}>
-                    <div className={styles.cardWrap}>{renderCard(slot)}</div>
+              {round.stage === 'final' && thirdPlaceBlock ? (
+                // Filas `1fr auto 1fr`: la final queda centrada entre sus semis y el
+                // tercer puesto ocupa la fila de abajo sin correrla. Si no entra, las
+                // dos filas `1fr` crecen igual y la final sigue en el medio.
+                <div className={styles.slots} style={{ gridTemplateRows: '1fr auto 1fr' }}>
+                  <div aria-hidden="true" />
+                  <div className={styles.slot}>
+                    <div className={styles.cardWrap}>{renderCard(round.slots[0])}</div>
                   </div>
-                ))}
-              </div>
+                  {thirdPlaceBlock}
+                </div>
+              ) : (
+                <div
+                  className={styles.slots}
+                  style={{ gridTemplateRows: `repeat(${round.slots.length}, 1fr)` }}
+                >
+                  {round.slots.map((slot, index) => (
+                    <div key={slot.match?.id ?? `vacio-${index}`} className={styles.slot}>
+                      <div className={styles.cardWrap}>{renderCard(slot)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           ))}
         </div>

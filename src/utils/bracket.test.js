@@ -70,7 +70,7 @@ describe('getPlayoffWinnerId', () => {
 
 describe('buildBracket', () => {
   it('sin partidos no hay rondas', () => {
-    expect(buildBracket(stages(), NOW)).toEqual({ rounds: [], connected: false })
+    expect(buildBracket(stages(), NOW)).toEqual({ rounds: [], thirdPlace: null, connected: false })
   })
 
   it('completa las rondas futuras con A confirmar', () => {
@@ -134,6 +134,44 @@ describe('buildBracket', () => {
       'scheduled',
     ])
     expect(round.slots.map(slot => slot.winnerTeamId)).toEqual(['b', null, null, null])
+  })
+})
+
+describe('buildBracket con partido por el tercer puesto', () => {
+  // El Mundial 2026 cargó el tercer puesto como un segundo partido de `final`.
+  const semifinal = [
+    m('semifinal', 1, 'francia', 'espana', finished(0, 2)),
+    m('semifinal', 2, 'inglaterra', 'argentina', finished(1, 2)),
+  ]
+
+  it('lo separa de la final y el cuadro sigue conectado', () => {
+    const final = [
+      m('final', 1, 'francia', 'inglaterra', finished(4, 6, { match_date: '2026-07-18T21:00:00Z' })),
+      m('final', 2, 'espana', 'argentina', finished(1, 0, { match_date: '2026-07-19T19:00:00Z' })),
+    ]
+    const bracket = buildBracket(stages({ semifinal, final }), NOW)
+
+    expect(bracket.rounds.at(-1).slots.map(slot => slot.match.home_team_id)).toEqual(['espana'])
+    expect(bracket.thirdPlace.match.home_team_id).toBe('francia')
+    expect(bracket.connected).toBe(true)
+  })
+
+  it('sin semis definidas, el tercer puesto es el que se juega primero', () => {
+    const pendientes = semifinal.map(match => ({ ...match, is_finished: false }))
+    const final = [
+      m('final', 1, 'x', 'y', { match_date: '2026-07-19T19:00:00Z' }),
+      m('final', 2, 'z', 'w', { match_date: '2026-07-18T21:00:00Z' }),
+    ]
+    const bracket = buildBracket(stages({ semifinal: pendientes, final }), NOW)
+
+    expect(bracket.thirdPlace.match.home_team_id).toBe('z')
+    expect(bracket.rounds.at(-1).slots.map(slot => slot.match.home_team_id)).toEqual(['x'])
+  })
+
+  it('con una sola final no hay tercer puesto', () => {
+    const final = [m('final', 1, 'espana', 'argentina')]
+
+    expect(buildBracket(stages({ semifinal, final }), NOW).thirdPlace).toBeNull()
   })
 })
 

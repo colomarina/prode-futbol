@@ -120,3 +120,18 @@
   width: calc(var(--bracket-gap) / 2);
   border-top: 1px solid var(--color-border);
 }
+
+/* El tercer puesto va debajo de la final, sin conectores: no sale de ningún cruce del cuadro. */
+.thirdPlace {
+  align-self: start;
+  padding-top: var(--space-lg);
+}
+
+.thirdPlaceTitle {
+  margin: 0 0 var(--space-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-transform: uppercase;
+}

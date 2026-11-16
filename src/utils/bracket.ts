@@ -51,6 +51,8 @@ export interface BracketRound {
 
 export interface Bracket {
   rounds: BracketRound[]
+  /** El partido por el tercer puesto, fuera del cuadro. `null` si no hay. */
+  thirdPlace: BracketSlot | null
   /** Si los cruces cierran y se pueden dibujar los conectores. */
   connected: boolean
 }
@@ -118,25 +120,57 @@ const roundsConnect = (previous: BracketRound, current: BracketRound): boolean =
   })
 }
 
+const toSlot = (match: MatchWithTeams | null, now: Date): BracketSlot => ({
+  match,
+  state: match ? getSlotState(match, now) : null,
+  winnerTeamId: match ? getPlayoffWinnerId(match) : null,
+})
+
+/**
+ * El tercer puesto no tiene etapa propia en el CHECK de `playoff_stage`: el
+ * Mundial 2026 lo cargó como un segundo partido de `final`. Es el que juegan los
+ * dos que perdieron su semi; si las semis no están definidas todavía, el que se
+ * juega primero (siempre va antes que la final).
+ */
+const splitThirdPlace = (
+  finals: MatchWithTeams[],
+  semis: MatchWithTeams[]
+): { finals: MatchWithTeams[]; thirdPlace: MatchWithTeams | null } => {
+  if (finals.length < 2) return { finals, thirdPlace: null }
+
+  const semiWinners = semis.map(getPlayoffWinnerId)
+  const byTeams =
+    semis.length > 0 && semiWinners.every(Boolean)
+      ? finals.find(match => !teamsOf(match).some(team => semiWinners.includes(team)))
+      : undefined
+  const thirdPlace =
+    byTeams ??
+    [...finals].sort(
+      (a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime()
+    )[0]
+
+  return { finals: finals.filter(match => match !== thirdPlace), thirdPlace }
+}
+
 export function buildBracket(matchesByStage: MatchesByStage, now: Date = new Date()): Bracket {
   const firstStage = STAGES.findIndex(stage => (matchesByStage[stage] ?? []).length > 0)
-  if (firstStage < 0) return { rounds: [], connected: false }
+  if (firstStage < 0) return { rounds: [], thirdPlace: null, connected: false }
 
+  const { finals, thirdPlace } = splitThirdPlace(
+    matchesByStage.final ?? [],
+    matchesByStage.semifinal ?? []
+  )
   const rounds: BracketRound[] = []
 
   STAGES.slice(firstStage).forEach((stage, index) => {
-    const matches = matchesByStage[stage] ?? []
+    const matches = stage === 'final' ? finals : (matchesByStage[stage] ?? [])
     const previousSize = index === 0 ? 0 : rounds[index - 1].slots.length
     const size = Math.max(matches.length, Math.ceil(previousSize / 2), 1)
 
     rounds.push({
       stage,
       label: STAGE_LABELS[stage],
-      slots: placeMatches(matches, size).map(match => ({
-        match,
-        state: match ? getSlotState(match, now) : null,
-        winnerTeamId: match ? getPlayoffWinnerId(match) : null,
-      })),
+      slots: placeMatches(matches, size).map(match => toSlot(match, now)),
     })
   })
 
@@ -144,7 +178,7 @@ export function buildBracket(matchesByStage: MatchesByStage, now: Date = new Dat
     (round, index) => index === 0 || roundsConnect(rounds[index - 1], round)
   )
 
-  return { rounds, connected }
+  return { rounds, thirdPlace: thirdPlace ? toSlot(thirdPlace, now) : null, connected }
 }
 
 /**

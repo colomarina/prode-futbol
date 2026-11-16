@@ -76,6 +76,40 @@ describe('PlayoffBracket', () => {
     expect(screen.getByRole('tab', { name: 'Cuartos' })).toHaveAttribute('aria-selected', 'true')
   })
 
+  it('muestra el tercer puesto aparte de la final', () => {
+    const terminado = (home, away, date) => ({
+      is_finished: true,
+      home_score: home,
+      away_score: away,
+      match_date: date,
+    })
+    renderBracket(
+      stages({
+        semifinal: [
+          m('semifinal', 1, 'francia', 'espana', terminado(0, 2, PAST)),
+          m('semifinal', 2, 'inglaterra', 'argentina', terminado(1, 2, PAST)),
+        ],
+        final: [
+          m('final', 1, 'francia', 'inglaterra', terminado(4, 6, '2026-11-11T20:00:00Z')),
+          m('final', 2, 'espana', 'argentina', terminado(1, 0, '2026-11-12T20:00:00Z')),
+        ],
+      })
+    )
+
+    const titulos = screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)
+    expect(titulos).toEqual(['Semifinales', 'Final'])
+    // Uno en el cuadro de escritorio y otro en la tab del celular.
+    expect(screen.getAllByRole('heading', { level: 4, name: 'Tercer puesto' })).toHaveLength(2)
+
+    // En el celular, la tab Final muestra primero la final y después el tercer puesto.
+    const panel = screen.getByRole('tabpanel')
+    const equipos = within(panel)
+      .getAllByText(/^(espana|francia)$/)
+      .map(el => el.textContent)
+    expect(equipos).toEqual(['espana', 'francia'])
+    expect(within(panel).getByText('Tercer puesto')).toBeInTheDocument()
+  })
+
   it('lista la ronda elegida por horario', () => {
     const fechas = ['2099-01-03T20:00:00Z', '2099-01-01T20:00:00Z', '2099-01-02T20:00:00Z']
     renderBracket(
