@@ -1,0 +1,108 @@
+/**
+ * La tarjeta de un cruce: la misma en el cuadro de escritorio y en las tabs del
+ * celular, así que no fija ancho; lo pone el contenedor.
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-variant);
+}
+
+.card[data-placeholder] {
+  border-style: dashed;
+  color: var(--color-text-secondary);
+}
+
+.card[data-state='live'] {
+  border-color: var(--color-primary);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+
+/* El eliminado se atenúa; el ganador además lleva el texto oculto "clasificado". */
+.row[data-result='winner'] {
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.row[data-result='loser'] {
+  opacity: 0.55;
+}
+
+/* 18px: no hay token de tamaño de icono; es lo que entra en una fila de --font-size-sm. */
+.logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  font-size: var(--font-size-sm);
+  line-height: 18px;
+  text-align: center;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.score {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta,
+.live {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.live {
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.prediction {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-sm);
+  margin-top: var(--space-2xs);
+  padding-top: var(--space-2xs);
+  border-top: 1px dashed var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.points {
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.pick {
+  flex-basis: 100%;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
