@@ -4,6 +4,7 @@ import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { getRoundDisplayName } from '../../utils/roundLabels'
 import { formatMatchDateTimeLong } from '../../utils/matchDate'
+import { showsMatchNumber } from '../../utils/matchNumber'
 import Button from '../Common/Button'
 import LoadingState from '../Common/LoadingState'
 import SelectDropdown from '../Common/SelectDropdown'
@@ -213,9 +214,11 @@ export default function AdminMatchSchedule() {
                         <TeamDisplay team={match.away_team} size="md" />
                       </div>
 
-                      <div style={{ fontWeight: '700', marginBottom: 'var(--space-xs)' }}>
-                        Partido {match.match_number}
-                      </div>
+                      {showsMatchNumber(match) && (
+                        <div style={{ fontWeight: '700', marginBottom: 'var(--space-xs)' }}>
+                          Partido {match.match_number}
+                        </div>
+                      )}
                       <div
                         style={{
                           color: 'var(--color-text-secondary)',

@@ -38,19 +38,10 @@ const PlayoffMatch = memo(function PlayoffMatch({
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           marginBottom: 'var(--space-sm)',
         }}
       >
-        <span
-          style={{
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-text-secondary)',
-            fontWeight: '700',
-          }}
-        >
-          #{match.match_number || '?'}
-        </span>
         <span
           style={{
             fontSize: 'var(--font-size-sm)',

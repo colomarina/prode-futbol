@@ -1,6 +1,7 @@
 import InfoButton from '../../../Common/InfoButton'
 import { getGroupBadgeColors } from '../../../../utils/groupBadgeStyles'
 import { formatMatchDateShort, formatMatchTime } from '../../../../utils/matchDate'
+import { showsMatchNumber } from '../../../../utils/matchNumber'
 import type { MatchWithTeams } from '../../../../types/domain'
 import type { MatchStatus } from '../matchWarnings'
 import styles from './MatchHeader.module.css'
@@ -30,7 +31,7 @@ export default function MatchHeader({
 
   return (
     <>
-      <div className={styles.matchNumber}>#{match.match_number || '?'}</div>
+      {showsMatchNumber(match) && <div className={styles.matchNumber}>#{match.match_number}</div>}
 
       {isGameOfTheRound && (
         <div className={styles.info}>
