@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import type { KeyboardEvent } from 'react'
+import { STAGE_SHORT_LABELS } from '../../../utils/bracket'
 import type { BracketRound } from '../../../utils/bracket'
 import type { PlayoffStage } from '../../../types/domain'
 import { getStageTabId } from './stageTabId'
@@ -65,7 +66,7 @@ export default function StageTabs({
             onClick={() => onSelect(round.stage)}
             onKeyDown={handleKeyDown}
           >
-            {round.label}
+            {STAGE_SHORT_LABELS[round.stage]}
           </button>
         )
       })}

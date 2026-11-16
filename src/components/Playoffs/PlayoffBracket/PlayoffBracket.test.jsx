@@ -73,10 +73,7 @@ describe('PlayoffBracket', () => {
       })
     )
 
-    expect(screen.getByRole('tab', { name: 'Cuartos de final' })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    )
+    expect(screen.getByRole('tab', { name: 'Cuartos' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('lista la ronda elegida por horario', () => {

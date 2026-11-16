@@ -23,6 +23,16 @@ export const STAGE_LABELS: Record<PlayoffStage, string> = {
   final: 'Final',
 }
 
+/** Para las tabs del celular, donde los nombres completos no entran todos. */
+export const STAGE_SHORT_LABELS: Record<PlayoffStage, string> = {
+  '32avos': '32avos',
+  '16avos': '16avos',
+  octavos: 'Octavos',
+  cuartos: 'Cuartos',
+  semifinal: 'Semis',
+  final: 'Final',
+}
+
 export type SlotState = 'scheduled' | 'live' | 'finished'
 
 export interface BracketSlot {

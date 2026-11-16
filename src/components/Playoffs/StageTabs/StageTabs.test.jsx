@@ -19,10 +19,21 @@ describe('StageTabs', () => {
   it('marca la ronda elegida y solo ella entra en el orden de tabulación', () => {
     renderTabs('cuartos')
 
-    const elegida = screen.getByRole('tab', { name: 'Cuartos de final' })
+    const elegida = screen.getByRole('tab', { name: 'Cuartos' })
     expect(elegida).toHaveAttribute('aria-selected', 'true')
     expect(elegida).toHaveAttribute('tabindex', '0')
     expect(screen.getByRole('tab', { name: 'Final' })).toHaveAttribute('tabindex', '-1')
+  })
+
+  it('usa nombres cortos para que entren todas las rondas en el celular', () => {
+    renderTabs()
+
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual([
+      'Octavos',
+      'Cuartos',
+      'Semis',
+      'Final',
+    ])
   })
 
   it('no se lleva el foco al montar', () => {
@@ -34,17 +45,17 @@ describe('StageTabs', () => {
   it('mueve la selección y el foco con las flechas', () => {
     const onSelect = renderTabs('octavos')
 
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Octavos de final' }), { key: 'ArrowRight' })
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Octavos' }), { key: 'ArrowRight' })
     expect(onSelect).toHaveBeenLastCalledWith('cuartos')
-    expect(screen.getByRole('tab', { name: 'Cuartos de final' })).toHaveFocus()
+    expect(screen.getByRole('tab', { name: 'Cuartos' })).toHaveFocus()
 
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Octavos de final' }), { key: 'ArrowLeft' })
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Octavos' }), { key: 'ArrowLeft' })
     expect(onSelect).toHaveBeenLastCalledWith('final')
   })
 
   it('Home y End van a la primera y la última ronda', () => {
     const onSelect = renderTabs('cuartos')
-    const tab = screen.getByRole('tab', { name: 'Cuartos de final' })
+    const tab = screen.getByRole('tab', { name: 'Cuartos' })
 
     fireEvent.keyDown(tab, { key: 'End' })
     expect(onSelect).toHaveBeenLastCalledWith('final')
