@@ -1,6 +1,6 @@
 import { getWinnerTeamId } from './score'
 import type { MatchesByStage } from '../hooks/usePlayoffs'
-import type { Match, MatchWithTeams, PlayoffStage, Uuid } from '../types/domain'
+import type { Match, MatchWithTeams, PlayoffStage, TeamSummary, Uuid } from '../types/domain'
 
 /**
  * El modelo del cuadro de playoffs, separado de cómo se dibuja.
@@ -41,6 +41,20 @@ export interface BracketSlot {
   /** `null` si no hay partido. */
   state: SlotState | null
   winnerTeamId: Uuid | null
+  /**
+   * Para un cruce sin cargar en un cuadro que cierra: de dónde sale cada lado.
+   * `null` si el cruce está cargado o si los cruces no cierran (no se inventa).
+   */
+  sources: [SlotSource, SlotSource] | null
+}
+
+/**
+ * Un lado de un cruce sin cargar: el ganador si su partido de origen terminó (un
+ * equipo), los dos que lo juegan si no (dos), o nada si el origen tampoco se
+ * conoce todavía.
+ */
+export interface SlotSource {
+  teams: TeamSummary[]
 }
 
 export interface BracketRound {
@@ -124,7 +138,39 @@ const toSlot = (match: MatchWithTeams | null, now: Date): BracketSlot => ({
   match,
   state: match ? getSlotState(match, now) : null,
   winnerTeamId: match ? getPlayoffWinnerId(match) : null,
+  sources: null,
 })
+
+const sourceOf = ({ match, winnerTeamId }: BracketSlot): SlotSource => {
+  if (!match) return { teams: [] }
+
+  const teams = [match.home_team, match.away_team].filter((team): team is TeamSummary =>
+    Boolean(team)
+  )
+  const winner = teams.find(team => team.id === winnerTeamId)
+  return { teams: winner ? [winner] : teams }
+}
+
+/** Completa `sources` en los cruces sin cargar, mirando sus dos partidos de origen. */
+const withSources = (rounds: BracketRound[]): BracketRound[] =>
+  rounds.map((round, index) =>
+    index === 0
+      ? round
+      : {
+          ...round,
+          slots: round.slots.map((slot, slotIndex) =>
+            slot.match
+              ? slot
+              : {
+                  ...slot,
+                  sources: [
+                    sourceOf(rounds[index - 1].slots[slotIndex * 2]),
+                    sourceOf(rounds[index - 1].slots[slotIndex * 2 + 1]),
+                  ],
+                }
+          ),
+        }
+  )
 
 /**
  * El tercer puesto no tiene etapa propia en el CHECK de `playoff_stage`: el
@@ -178,7 +224,11 @@ export function buildBracket(matchesByStage: MatchesByStage, now: Date = new Dat
     (round, index) => index === 0 || roundsConnect(rounds[index - 1], round)
   )
 
-  return { rounds, thirdPlace: thirdPlace ? toSlot(thirdPlace, now) : null, connected }
+  return {
+    rounds: connected ? withSources(rounds) : rounds,
+    thirdPlace: thirdPlace ? toSlot(thirdPlace, now) : null,
+    connected,
+  }
 }
 
 /**

@@ -106,3 +106,13 @@
   white-space: nowrap;
   border-width: 0;
 }
+
+/* Los dos escudos de un cruce posible, juntos y algo superpuestos. */
+.logos {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.logos > .logo + .logo {
+  margin-left: calc(var(--space-2xs) * -1);
+}

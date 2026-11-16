@@ -36,6 +36,41 @@ describe('BracketMatchCard', () => {
     expect(screen.getAllByText('A confirmar')).toHaveLength(2)
   })
 
+  it('en un cruce sin cargar muestra de dónde sale cada lado', () => {
+    const velez = { id: 'velez', name: 'Vélez', logo_url: null }
+    const river = { id: 'river', name: 'River Plate', logo_url: null }
+    const lanus = { id: 'lanus', name: 'Lanús', logo_url: null }
+    render(
+      <BracketMatchCard
+        slot={{
+          match: null,
+          state: null,
+          winnerTeamId: null,
+          sources: [{ teams: [velez] }, { teams: [river, lanus] }],
+        }}
+      />
+    )
+
+    expect(screen.getByText('Vélez')).toBeInTheDocument()
+    expect(screen.getByText('River Plate o Lanús')).toBeInTheDocument()
+    expect(screen.queryByText('A confirmar')).not.toBeInTheDocument()
+  })
+
+  it('sin origen conocido sigue diciendo A confirmar', () => {
+    render(
+      <BracketMatchCard
+        slot={{
+          match: null,
+          state: null,
+          winnerTeamId: null,
+          sources: [{ teams: [] }, { teams: [] }],
+        }}
+      />
+    )
+
+    expect(screen.getAllByText('A confirmar')).toHaveLength(2)
+  })
+
   it('marca al ganador con texto, no solo color', () => {
     const slot = {
       match: match({ is_finished: true, home_score: 2, away_score: 0 }),

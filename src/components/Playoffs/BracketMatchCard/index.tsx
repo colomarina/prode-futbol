@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { resolveTeamName } from '../../../utils/teams'
 import { formatMatchDateShort, formatMatchTime } from '../../../utils/matchDate'
-import type { BracketSlot } from '../../../utils/bracket'
+import type { BracketSlot, SlotSource } from '../../../utils/bracket'
 import type { PlayoffPrediction } from '../../../hooks/usePlayoffs'
 import type { MatchWithTeams, Team, Uuid } from '../../../types/domain'
 import styles from './BracketMatchCard.module.css'
@@ -39,6 +39,32 @@ function TeamRow({
       <span className={styles.name}>{team?.name || 'A confirmar'}</span>
       {result === 'winner' && <span className={styles.srOnly}>clasificado</span>}
       {score !== null && <span className={styles.score}>{score}</span>}
+    </div>
+  )
+}
+
+/**
+ * Un lado de un cruce sin cargar: el ganador ya definido, los dos posibles
+ * ("River Plate o Lanús", con los dos escudos) o "A confirmar" si tampoco se
+ * conoce el partido de origen.
+ */
+function SourceRow({ source }: { source: SlotSource }) {
+  if (source.teams.length === 0) return <TeamRow team={null} score={null} result={undefined} />
+
+  return (
+    <div className={styles.row}>
+      <span className={styles.logos}>
+        {source.teams.map(team =>
+          team.logo_url ? (
+            <img key={team.id} className={styles.logo} src={team.logo_url} alt="" loading="lazy" />
+          ) : (
+            <span key={team.id} className={styles.logo} aria-hidden="true">
+              ⚽
+            </span>
+          )
+        )}
+      </span>
+      <span className={styles.name}>{source.teams.map(team => team.name).join(' o ')}</span>
     </div>
   )
 }
@@ -97,10 +123,12 @@ const BracketMatchCard = memo(function BracketMatchCard({
   const { match } = slot
 
   if (!match) {
+    const sources = slot.sources ?? [{ teams: [] }, { teams: [] }]
     return (
       <article className={styles.card} data-placeholder="true">
-        <TeamRow team={null} score={null} result={undefined} />
-        <TeamRow team={null} score={null} result={undefined} />
+        {sources.map((source, index) => (
+          <SourceRow key={index} source={source} />
+        ))}
       </article>
     )
   }

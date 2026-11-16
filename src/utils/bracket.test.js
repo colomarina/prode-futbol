@@ -137,6 +137,39 @@ describe('buildBracket', () => {
   })
 })
 
+describe('buildBracket: de dónde sale un cruce sin cargar', () => {
+  const ids = source => source.teams.map(team => team.id)
+
+  it('muestra el ganador si el partido de origen terminó y los dos si no', () => {
+    const octavos = octavosCompletos()
+    octavos[0] = m('octavos', 1, 'h1', 'a1', finished(0, 2))
+    const [, cuartos] = buildBracket(stages({ octavos }), NOW).rounds
+
+    expect(cuartos.slots[0].sources.map(ids)).toEqual([['a1'], ['h2', 'a2']])
+  })
+
+  it('sin partido de origen conocido no muestra equipos', () => {
+    const [, , semis] = buildBracket(stages({ octavos: octavosCompletos() }), NOW).rounds
+
+    expect(semis.slots[0].sources.map(ids)).toEqual([[], []])
+  })
+
+  it('un cruce cargado no proyecta nada', () => {
+    const cuartos = [m('cuartos', 1, 'h1', 'h2')]
+    const [, round] = buildBracket(stages({ octavos: octavosCompletos(), cuartos }), NOW).rounds
+
+    expect(round.slots[0].sources).toBeNull()
+  })
+
+  it('un cuadro que no cierra no inventa cruces', () => {
+    const octavos = octavosCompletos()
+    const cuartos = [m('cuartos', 1, 'h1', 'h4')]
+    const [, round] = buildBracket(stages({ octavos, cuartos }), NOW).rounds
+
+    expect(round.slots[1].sources).toBeNull()
+  })
+})
+
 describe('buildBracket con partido por el tercer puesto', () => {
   // El Mundial 2026 cargó el tercer puesto como un segundo partido de `final`.
   const semifinal = [
@@ -146,7 +179,13 @@ describe('buildBracket con partido por el tercer puesto', () => {
 
   it('lo separa de la final y el cuadro sigue conectado', () => {
     const final = [
-      m('final', 1, 'francia', 'inglaterra', finished(4, 6, { match_date: '2026-07-18T21:00:00Z' })),
+      m(
+        'final',
+        1,
+        'francia',
+        'inglaterra',
+        finished(4, 6, { match_date: '2026-07-18T21:00:00Z' })
+      ),
       m('final', 2, 'espana', 'argentina', finished(1, 0, { match_date: '2026-07-19T19:00:00Z' })),
     ]
     const bracket = buildBracket(stages({ semifinal, final }), NOW)
