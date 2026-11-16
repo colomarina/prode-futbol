@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildBracket, getCurrentStage, getPlayoffWinnerId } from './bracket'
+import { buildBracket, getCurrentStage, getNextChange, getPlayoffWinnerId } from './bracket'
 
 const NOW = new Date('2026-11-16T12:00:00Z')
 const PAST = '2026-11-10T20:00:00Z'
@@ -233,5 +233,79 @@ describe('getCurrentStage', () => {
     const final = [m('final', 1, 'a', 'c', finished(2, 0))]
 
     expect(getCurrentStage(buildBracket(stages({ semifinal, final }), NOW))).toBe('final')
+  })
+})
+
+describe('estado de un partido empezado', () => {
+  const conFecha = date =>
+    buildBracket(stages({ final: [m('final', 1, 'a', 'b', { match_date: date })] }), NOW).rounds[0]
+      .slots[0].state
+
+  it('en juego durante las primeras horas', () => {
+    expect(conFecha('2026-11-16T11:00:00Z')).toBe('live')
+  })
+
+  it('pasado el plazo para cargar el resultado, queda pendiente', () => {
+    // RESULT_LOAD_DELAY_HOURS = 2: empezó hace 3 horas y nadie cargó el resultado.
+    expect(conFecha('2026-11-16T09:00:00Z')).toBe('awaiting-result')
+  })
+})
+
+describe('getNextChange', () => {
+  const bracketCon = dates =>
+    buildBracket(
+      stages({
+        semifinal: dates.map((date, i) =>
+          m('semifinal', i + 1, `h${i}`, `a${i}`, { match_date: date })
+        ),
+      }),
+      NOW
+    )
+
+  it('es el próximo arranque o el próximo vencimiento, el que llegue antes', () => {
+    // Uno en juego desde las 11 (pasa a pendiente a las 13) y otro que arranca a las 15.
+    const bracket = bracketCon(['2026-11-16T11:00:00Z', '2026-11-16T15:00:00Z'])
+
+    expect(getNextChange(bracket, NOW)).toEqual(new Date('2026-11-16T13:00:00Z'))
+  })
+
+  it('sin nada por cambiar no hay próximo cambio', () => {
+    const terminado = { is_finished: true, home_score: 1, away_score: 0, match_date: PAST }
+    const bracket = buildBracket(stages({ final: [m('final', 1, 'a', 'b', terminado)] }), NOW)
+
+    expect(getNextChange(bracket, NOW)).toBeNull()
+  })
+})
+
+describe('connected exige cruces coherentes', () => {
+  const terminado = (home, away) => ({
+    is_finished: true,
+    home_score: home,
+    away_score: away,
+    match_date: PAST,
+  })
+
+  it('no conecta si los dos equipos salen del mismo partido', () => {
+    const cuartos = [m('cuartos', 1, 'h1', 'a1')]
+
+    expect(buildBracket(stages({ octavos: octavosCompletos(), cuartos }), NOW).connected).toBe(
+      false
+    )
+  })
+
+  it('no conecta si pasó el que perdió', () => {
+    const octavos = octavosCompletos()
+    octavos[0] = m('octavos', 1, 'h1', 'a1', terminado(2, 0))
+    const cuartos = [m('cuartos', 1, 'a1', 'h2')]
+
+    expect(buildBracket(stages({ octavos, cuartos }), NOW).connected).toBe(false)
+  })
+
+  it('conecta si pasó el ganador, aunque el otro cruce no haya terminado', () => {
+    const octavos = octavosCompletos()
+    octavos[0] = m('octavos', 1, 'h1', 'a1', terminado(2, 0))
+    const cuartos = [m('cuartos', 1, 'a2', 'h1')]
+
+    expect(buildBracket(stages({ octavos, cuartos }), NOW).connected).toBe(true)
   })
 })

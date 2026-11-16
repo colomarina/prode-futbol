@@ -8,6 +8,13 @@ import styles from './BracketMatchCard.module.css'
 
 type TeamResult = 'winner' | 'loser' | undefined
 
+/**
+ * Empate con el marcador cargado. Sin el chequeo de `null`, un partido marcado
+ * terminado sin goles daba `null === null` y mostraba "Clasificó por penales".
+ */
+const isTieScore = (match: Pick<MatchWithTeams, 'home_score' | 'away_score'>) =>
+  match.home_score !== null && match.home_score === match.away_score
+
 const getResult = (teamId: Uuid, winnerTeamId: Uuid | null): TeamResult => {
   if (!winnerTeamId) return undefined
   return teamId === winnerTeamId ? 'winner' : 'loser'
@@ -71,6 +78,7 @@ function SourceRow({ source }: { source: SlotSource }) {
 
 function Footer({ slot }: { slot: BracketSlot & { match: MatchWithTeams } }) {
   if (slot.state === 'live') return <p className={styles.live}>En juego</p>
+  if (slot.state === 'awaiting-result') return <p className={styles.meta}>Resultado pendiente</p>
   if (slot.state === 'finished') return <p className={styles.meta}>Final</p>
 
   return (
@@ -94,7 +102,7 @@ function PredictionLine({
   prediction: PlayoffPrediction
   isFinished: boolean
 }) {
-  const isTie = isFinished && match.home_score === match.away_score
+  const isTie = isFinished && isTieScore(match)
   const hitQualifier = prediction.qualifier_prediction_id === match.qualifier_team_id
 
   return (
@@ -134,8 +142,7 @@ const BracketMatchCard = memo(function BracketMatchCard({
   }
 
   const isFinished = slot.state === 'finished'
-  const wonOnPenalties =
-    isFinished && match.home_score === match.away_score && Boolean(match.qualifier_team_id)
+  const wonOnPenalties = isFinished && isTieScore(match) && Boolean(match.qualifier_team_id)
 
   return (
     <article className={styles.card} data-state={slot.state}>

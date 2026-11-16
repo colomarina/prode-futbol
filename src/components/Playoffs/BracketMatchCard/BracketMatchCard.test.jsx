@@ -155,4 +155,22 @@ describe('BracketMatchCard', () => {
 
     expect(screen.getByText(/Elegiste: River Plate/)).toHaveTextContent('❌')
   })
+  it('dice Resultado pendiente si venció el plazo y no hay resultado', () => {
+    render(
+      <BracketMatchCard slot={{ match: match(), state: 'awaiting-result', winnerTeamId: null }} />
+    )
+
+    expect(screen.getByText('Resultado pendiente')).toBeInTheDocument()
+  })
+
+  it('no habla de penales si el marcador no está cargado', () => {
+    const slot = {
+      match: match({ is_finished: true, qualifier_team_id: 'river' }),
+      state: 'finished',
+      winnerTeamId: 'river',
+    }
+    render(<BracketMatchCard slot={slot} />)
+
+    expect(screen.queryByText('Clasificó por penales')).not.toBeInTheDocument()
+  })
 })

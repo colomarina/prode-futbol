@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, screen, within, act } from '@testing-library/react'
 import PlayoffBracket from './index'
 
 const PAST = '2026-11-10T20:00:00Z'
@@ -125,5 +125,31 @@ describe('PlayoffBracket', () => {
       .getAllByText(/^local\d$/)
       .map(el => el.textContent)
     expect(locales).toEqual(['local2', 'local3', 'local1'])
+  })
+})
+
+describe('PlayoffBracket: accesibilidad y tiempo', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('el panel de la ronda entra en el orden de tabulación', () => {
+    renderBracket(stages({ octavos: octavos() }))
+
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('tabindex', '0')
+  })
+
+  it('pasa a En juego cuando arranca el partido, sin pedir datos', () => {
+    vi.useFakeTimers({ now: new Date('2026-11-16T12:00:00Z') })
+    renderBracket(
+      stages({ final: [m('final', 1, 'river', 'boca', { match_date: '2026-11-16T12:05:00Z' })] })
+    )
+    expect(screen.queryByText('En juego')).not.toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(5 * 60 * 1000)
+    })
+
+    expect(screen.getAllByText('En juego').length).toBeGreaterThan(0)
   })
 })

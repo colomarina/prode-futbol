@@ -1,12 +1,14 @@
-import { memo, useId, useMemo, useState } from 'react'
+import { memo, useEffect, useId, useMemo, useState } from 'react'
 import BracketMatchCard from '../BracketMatchCard'
 import StageTabs from '../StageTabs'
 import { getStageTabId } from '../StageTabs/stageTabId'
-import { buildBracket, getCurrentStage } from '../../../utils/bracket'
+import { buildBracket, getCurrentStage, getNextChange } from '../../../utils/bracket'
 import type { BracketSlot } from '../../../utils/bracket'
 import type { MatchesByStage, PlayoffPrediction } from '../../../hooks/usePlayoffs'
 import type { PlayoffStage } from '../../../types/domain'
 import styles from './PlayoffBracket.module.css'
+
+const DAY_MS = 24 * 60 * 60 * 1000
 
 /**
  * En el celular se lista por horario —lo que el usuario quiere saber es qué se
@@ -32,13 +34,26 @@ const PlayoffBracket = memo(function PlayoffBracket({
   /** Pronósticos del usuario indexados por id de partido. */
   predictionsByMatch: Record<string, PlayoffPrediction>
 }) {
-  const bracket = useMemo(() => buildBracket(matchesByStage), [matchesByStage])
+  const [now, setNow] = useState(() => new Date())
+  const bracket = useMemo(() => buildBracket(matchesByStage, now), [matchesByStage, now])
   const currentStage = getCurrentStage(bracket)
   const [chosenStage, setChosenStage] = useState<PlayoffStage | null>(null)
   const panelId = useId()
 
-  // Si el usuario no eligió, la ronda en curso. Si eligió una que dejó de existir
-  // (cambió el torneo), también.
+  // Un solo timer, para el próximo momento en que algo cambia (un partido que
+  // arranca o uno en juego que pasa a "resultado pendiente"), en vez de recalcular
+  // cada X minutos sin que cambie nada. Si el momento ya pasó, salta enseguida.
+  const nextChangeTime = getNextChange(bracket, now)?.getTime() ?? null
+  useEffect(() => {
+    if (nextChangeTime === null) return undefined
+    // setTimeout desborda arriba de ~24,8 días y dispara al instante: tope de un día.
+    const delay = Math.min(Math.max(nextChangeTime - Date.now(), 0), DAY_MS)
+    const timer = setTimeout(() => setNow(new Date()), delay)
+    return () => clearTimeout(timer)
+  }, [nextChangeTime])
+
+  // Si el usuario no eligió, la ronda en curso. El cambio de torneo lo resuelve la
+  // `key` que pone `Playoffs`: el cuadro se monta de nuevo.
   const selectedStage =
     bracket.rounds.find(round => round.stage === chosenStage)?.stage ?? currentStage
   const selectedRound = bracket.rounds.find(round => round.stage === selectedStage)
@@ -71,6 +86,8 @@ const PlayoffBracket = memo(function PlayoffBracket({
             />
             <div
               role="tabpanel"
+              // Las tarjetas no tienen nada enfocable: sin esto, Tab saltea la ronda.
+              tabIndex={0}
               id={panelId}
               aria-labelledby={getStageTabId(panelId, selectedStage)}
               className={styles.panel}

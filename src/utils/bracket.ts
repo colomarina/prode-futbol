@@ -1,4 +1,5 @@
 import { getWinnerTeamId } from './score'
+import { getResultLoadTime } from './matchTiming'
 import type { MatchesByStage } from '../hooks/usePlayoffs'
 import type { Match, MatchWithTeams, PlayoffStage, TeamSummary, Uuid } from '../types/domain'
 
@@ -33,7 +34,7 @@ export const STAGE_SHORT_LABELS: Record<PlayoffStage, string> = {
   final: 'Final',
 }
 
-export type SlotState = 'scheduled' | 'live' | 'finished'
+export type SlotState = 'scheduled' | 'live' | 'awaiting-result' | 'finished'
 
 export interface BracketSlot {
   /** `null` es un cruce que todavía no se conoce: "A confirmar". */
@@ -90,9 +91,16 @@ export function getPlayoffWinnerId(
   return getWinnerTeamId(match.home_score, match.away_score, match) ?? match.qualifier_team_id
 }
 
+/**
+ * Un partido empezado se muestra "en juego" hasta que vence el plazo para cargar
+ * el resultado (`getResultLoadTime`, la misma regla que habilita al admin); de ahí
+ * en más, "resultado pendiente": sin eso diría "en juego" para siempre si nadie
+ * lo carga.
+ */
 const getSlotState = (match: MatchWithTeams, now: Date): SlotState => {
   if (match.is_finished) return 'finished'
-  return now >= new Date(match.match_date) ? 'live' : 'scheduled'
+  if (now < new Date(match.match_date)) return 'scheduled'
+  return now < getResultLoadTime(match.match_date) ? 'live' : 'awaiting-result'
 }
 
 /**
@@ -121,16 +129,29 @@ const placeMatches = (matches: MatchWithTeams[], size: number): (MatchWithTeams 
 const teamsOf = (match: MatchWithTeams | null): Uuid[] =>
   match ? [match.home_team_id, match.away_team_id] : []
 
-/** Cada equipo de la ronda `r` tiene que haber jugado en uno de sus dos cruces de origen. */
+/**
+ * Si un equipo puede venir de un cruce de origen: si ese partido terminó, tiene
+ * que ser su ganador; si no, cualquiera de los dos que lo juegan.
+ */
+const comesFrom = (team: Uuid, feeder: BracketSlot): boolean =>
+  feeder.winnerTeamId ? team === feeder.winnerTeamId : teamsOf(feeder.match).includes(team)
+
+/**
+ * Un cruce cargado tiene que tener un equipo de cada uno de sus dos cruces de
+ * origen. Una ronda sin cargar no se compara: sus slots no tienen equipos.
+ */
 const roundsConnect = (previous: BracketRound, current: BracketRound): boolean => {
   if (previous.slots.length !== current.slots.length * 2) return false
 
   return current.slots.every((slot, index) => {
-    const feeders = [
-      ...teamsOf(previous.slots[index * 2].match),
-      ...teamsOf(previous.slots[index * 2 + 1].match),
-    ]
-    return teamsOf(slot.match).every(team => feeders.includes(team))
+    if (!slot.match) return true
+
+    const [first, second] = [previous.slots[index * 2], previous.slots[index * 2 + 1]]
+    const { home_team_id: home, away_team_id: away } = slot.match
+    return (
+      (comesFrom(home, first) && comesFrom(away, second)) ||
+      (comesFrom(home, second) && comesFrom(away, first))
+    )
   })
 }
 
@@ -238,4 +259,26 @@ export function buildBracket(matchesByStage: MatchesByStage, now: Date = new Dat
 export function getCurrentStage(bracket: Bracket): PlayoffStage | null {
   const current = bracket.rounds.find(round => round.slots.some(slot => slot.state !== 'finished'))
   return (current ?? bracket.rounds.at(-1))?.stage ?? null
+}
+
+/**
+ * El próximo momento en que cambia el estado de algún cruce: el arranque de un
+ * partido programado o el vencimiento de uno en juego. La llave pone un solo
+ * timer para ese momento en vez de recalcular cada X minutos sin que nada cambie.
+ */
+export function getNextChange(bracket: Bracket, now: Date = new Date()): Date | null {
+  const slots = [
+    ...bracket.rounds.flatMap(round => round.slots),
+    ...(bracket.thirdPlace ? [bracket.thirdPlace] : []),
+  ]
+
+  const times = slots.flatMap(({ match, state }) => {
+    if (!match) return []
+    if (state === 'scheduled') return [new Date(match.match_date)]
+    if (state === 'live') return [getResultLoadTime(match.match_date)]
+    return []
+  })
+
+  const upcoming = times.filter(time => time > now).sort((a, b) => a.getTime() - b.getTime())
+  return upcoming[0] ?? null
 }
