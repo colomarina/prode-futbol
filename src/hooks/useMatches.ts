@@ -33,9 +33,12 @@ export const useMatches = (roundNumber: number | null = null, tournamentId: Uuid
         query = query.eq('tournament_id', tournamentId)
       }
 
+      // Por horario primero: en un playoff `match_number` es la posición en el
+      // cuadro y no el orden en que se juega. La llave ordena por cuadro en
+      // `usePlayoffs`; acá `match_number` solo desempata partidos simultáneos.
       const { data: matches, error: matchesError } = await query
-        .order('match_number', { ascending: true })
         .order('match_date', { ascending: true })
+        .order('match_number', { ascending: true })
 
       if (matchesError) throw matchesError
       return matches || []
