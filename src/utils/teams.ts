@@ -2,8 +2,8 @@
  * Resolver un equipo dentro de un partido, a partir de su id.
  *
  * Las dos funciones estaban duplicadas literal: `resolveTeamById` en `MatchCard`
- * y en `UserPredictionRow`, y `resolveTeamName` en `PlayoffMatch` y en
- * `MatchPrediction`. Son la misma pregunta con dos respuestas distintas —el
+ * y en `UserPredictionRow`, y `resolveTeamName` en la tarjeta de la llave (hoy
+ * `Playoffs/BracketMatchCard`) y en `MatchPrediction`. Son la misma pregunta con dos respuestas distintas —el
  * objeto o el nombre—, así que la segunda se apoya en la primera.
  */
 import type { MatchWithTeams, Prediction, TeamSummary, Uuid } from '../types/domain'

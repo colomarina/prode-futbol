@@ -1,0 +1,27 @@
+/* Scroll horizontal si las rondas no entran (el Mundial tiene cinco). */
+.tabs {
+  display: flex;
+  gap: var(--space-2xs);
+  overflow-x: auto;
+  padding: var(--space-2xs);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface-variant);
+}
+
+.tab {
+  flex: 1 0 auto;
+  padding: var(--space-xs) var(--space-md);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab[aria-selected='true'] {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}

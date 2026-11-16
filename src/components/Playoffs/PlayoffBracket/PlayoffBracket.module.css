@@ -1,10 +1,6 @@
 /**
- * Las dos vistas de la llave: tarjetas en móvil, cuadro compacto en escritorio.
- *
- * Antes cada `div` traía su `display` inline y un bloque `<style>` los daba
- * vuelta con `!important` arriba de 1024px — el `!important` no era una decisión
- * de estilo sino la única forma de ganarle al inline. Sin inline, alcanza con
- * declarar cada `display` en su media query.
+ * Las dos vistas de la llave: tabs por ronda en el celular, cuadro en escritorio.
+ * Están las dos en el DOM y cada media query muestra una.
  */
 .mobile {
   display: block;
@@ -22,4 +18,105 @@
   .desktop {
     display: block;
   }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/*
+ * El cuadro. Las columnas se estiran a la altura de la más alta (la primera
+ * ronda) y cada una reparte esa altura en filas iguales: el cruce i de una ronda
+ * queda centrado entre sus dos partidos de origen sin calcular márgenes.
+ */
+.board {
+  --bracket-gap: var(--space-xl);
+
+  display: flex;
+  gap: var(--bracket-gap);
+  overflow-x: auto;
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface);
+}
+
+/* 220px: el ancho que ya tenía la columna de la llave; no hay token de anchos. */
+.column {
+  display: flex;
+  flex: 0 0 220px;
+  flex-direction: column;
+}
+
+.title {
+  margin: 0 0 var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-primary-text);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.slots {
+  display: grid;
+  flex: 1;
+}
+
+.slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--space-2xs) 0;
+}
+
+.cardWrap {
+  position: relative;
+  width: 100%;
+}
+
+/*
+ * Conectores, solo si los cruces cierran (`buildBracket` lo comprueba). Cada
+ * partido saca una línea horizontal hacia la derecha; cada par de partidos se une
+ * con una vertical a mitad del espacio entre columnas, y cada partido de la ronda
+ * siguiente recibe una horizontal desde la izquierda.
+ */
+.board[data-connected='true'] .column:not([data-last]) .slot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: calc(var(--bracket-gap) / -2);
+  width: calc(var(--bracket-gap) / 2);
+  border-top: 1px solid var(--color-border);
+}
+
+.board[data-connected='true'] .column:not([data-last]) .slot::before {
+  content: '';
+  position: absolute;
+  right: calc(var(--bracket-gap) / -2);
+  border-right: 1px solid var(--color-border);
+}
+
+/* El de arriba del par baja desde su centro; el de abajo sube hasta su centro. */
+.board[data-connected='true'] .column:not([data-last]) .slot:nth-child(odd)::before {
+  top: 50%;
+  bottom: 0;
+}
+
+.board[data-connected='true'] .column:not([data-last]) .slot:nth-child(even)::before {
+  top: 0;
+  bottom: 50%;
+}
+
+.board[data-connected='true'] .column:not([data-first]) .cardWrap::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(var(--bracket-gap) / -2);
+  width: calc(var(--bracket-gap) / 2);
+  border-top: 1px solid var(--color-border);
 }
