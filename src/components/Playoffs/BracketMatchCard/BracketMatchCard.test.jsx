@@ -200,6 +200,52 @@ describe('BracketMatchCard en versus', () => {
   const terminado = (home, away, extra = {}) =>
     match({ is_finished: true, home_score: home, away_score: away, ...extra })
 
+  it('el marcador se anuncia como 2 a 1', () => {
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: terminado(2, 1), state: 'finished', winnerTeamId: 'river' }}
+      />
+    )
+
+    const centro = screen.getByTestId('versus-center')
+    expect(within(centro).getByText('2 - 1')).toHaveAttribute('aria-hidden', 'true')
+    expect(within(centro).getByText('2 a 1')).toBeInTheDocument()
+  })
+
+  it('vs no lleva texto de marcador para el lector', () => {
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: match(), state: 'scheduled', winnerTeamId: null }}
+      />
+    )
+
+    const centro = screen.getByTestId('versus-center')
+    expect(centro).toHaveTextContent(/^vs$/)
+    expect(within(centro).queryByText(/ a /)).not.toBeInTheDocument()
+  })
+
+  it('un cruce sin cargar con nombres largos se puede leer entero', () => {
+    const gimnasia = { id: 'gimnasia', name: 'Gimnasia y Esgrima La Plata', logo_url: null }
+    const velez = { id: 'velez', name: 'Vélez Sarsfield', logo_url: null }
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{
+          match: null,
+          state: null,
+          winnerTeamId: null,
+          sources: [{ teams: [gimnasia, velez] }, { teams: [] }],
+        }}
+      />
+    )
+
+    const nombre = screen.getByText('Gimnasia y Esgrima La Plata o Vélez Sarsfield')
+    expect(nombre).toHaveAttribute('title', 'Gimnasia y Esgrima La Plata o Vélez Sarsfield')
+    expect(nombre).toHaveAttribute('data-lines', '3')
+  })
+
   it('muestra el marcador entre los dos equipos al terminar', () => {
     const { container } = render(
       <BracketMatchCard

@@ -93,6 +93,8 @@ function VersusTeam({
 function SourceSide({ source }: { source: SlotSource }) {
   if (source.teams.length === 0) return <VersusTeam team={null} result={undefined} />
 
+  const names = source.teams.map(team => team.name).join(' o ')
+
   return (
     <div className={styles.versusTeam}>
       <span className={styles.logos}>
@@ -100,23 +102,40 @@ function SourceSide({ source }: { source: SlotSource }) {
           <VersusLogo key={team.id} team={team} />
         ))}
       </span>
-      <span className={styles.versusName}>{source.teams.map(team => team.name).join(' o ')}</span>
+      <span className={styles.versusName} title={names} data-lines="3">
+        {names}
+      </span>
     </div>
   )
 }
 
-function VersusCenter({ text }: { text: string }) {
+interface VersusCenterContent {
+  text: string
+  label?: string
+}
+
+function VersusCenter({ text, label }: VersusCenterContent) {
   return (
     <span className={styles.versusCenter} data-testid="versus-center">
-      {text}
+      {label ? (
+        <>
+          <span aria-hidden="true">{text}</span>
+          <span className={styles.srOnly}>{label}</span>
+        </>
+      ) : (
+        text
+      )}
     </span>
   )
 }
 
-const getVersusScore = (match: MatchWithTeams, isFinished: boolean) =>
+const getVersusScore = (match: MatchWithTeams, isFinished: boolean): VersusCenterContent =>
   isFinished && match.home_score !== null && match.away_score !== null
-    ? `${match.home_score} - ${match.away_score}`
-    : 'vs'
+    ? {
+        text: `${match.home_score} - ${match.away_score}`,
+        label: `${match.home_score} a ${match.away_score}`,
+      }
+    : { text: 'vs' }
 
 function Footer({ slot }: { slot: BracketSlot & { match: MatchWithTeams } }) {
   if (slot.state === 'live') return <p className={styles.live}>En juego</p>
@@ -205,7 +224,7 @@ const BracketMatchCard = memo(function BracketMatchCard({
         <Footer slot={{ ...slot, match }} />
         <div className={styles.versus}>
           <VersusTeam team={match.home_team} result={homeResult} />
-          <VersusCenter text={getVersusScore(match, isFinished)} />
+          <VersusCenter {...getVersusScore(match, isFinished)} />
           <VersusTeam team={match.away_team} result={awayResult} />
         </div>
         {penaltiesNote}

@@ -167,6 +167,10 @@
   -webkit-line-clamp: 2;
 }
 
+.versusName[data-lines='3'] {
+  -webkit-line-clamp: 3;
+}
+
 .versusCenter {
   font-size: var(--font-size-xl);
   font-weight: 800;
