@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, within, act } from '@testing-library/react'
+import { render, screen, within, act, fireEvent } from '@testing-library/react'
 import PlayoffBracket from './index'
 
 const PAST = '2026-11-10T20:00:00Z'
@@ -149,5 +149,62 @@ describe('PlayoffBracket: accesibilidad y tiempo', () => {
     })
 
     expect(screen.getAllByText('En juego').length).toBeGreaterThan(0)
+  })
+})
+
+describe('PlayoffBracket en el celular', () => {
+  const terminado = (home, away, date) => ({
+    is_finished: true,
+    home_score: home,
+    away_score: away,
+    match_date: date,
+  })
+
+  it('arranca por ronda con tarjetas horizontales', () => {
+    renderBracket(stages({ octavos: octavos() }))
+
+    const tarjetas = within(screen.getByRole('tabpanel')).getAllByRole('article')
+    expect(tarjetas.length).toBeGreaterThan(0)
+    tarjetas.forEach(tarjeta => expect(tarjeta).toHaveAttribute('data-layout', 'versus'))
+    expect(screen.getByRole('button', { name: 'Ver cuadro completo' })).toBeInTheDocument()
+  })
+
+  it('el botón alterna entre el cuadro completo y la vista por ronda', () => {
+    const { container } = renderBracket(stages({ octavos: octavos() }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver cuadro completo' }))
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
+    expect(container.querySelector('[data-view]')).toHaveAttribute('data-view', 'bracket')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver por ronda' }))
+    expect(screen.getByRole('tablist')).toBeInTheDocument()
+    expect(container.querySelector('[data-view]')).toHaveAttribute('data-view', 'rounds')
+  })
+
+  it('el tercer puesto de la tab Final también va horizontal', () => {
+    renderBracket(
+      stages({
+        semifinal: [
+          m('semifinal', 1, 'francia', 'espana', terminado(0, 2, PAST)),
+          m('semifinal', 2, 'inglaterra', 'argentina', terminado(1, 2, PAST)),
+        ],
+        final: [
+          m('final', 1, 'francia', 'inglaterra', terminado(4, 6, '2026-11-11T20:00:00Z')),
+          m('final', 2, 'espana', 'argentina', terminado(1, 0, '2026-11-12T20:00:00Z')),
+        ],
+      })
+    )
+
+    const tarjetas = within(screen.getByRole('tabpanel')).getAllByRole('article')
+    expect(tarjetas).toHaveLength(2)
+    tarjetas.forEach(tarjeta => expect(tarjeta).toHaveAttribute('data-layout', 'versus'))
+  })
+
+  it('el cuadro de escritorio mantiene las tarjetas apiladas', () => {
+    const { container } = renderBracket(stages({ octavos: octavos() }))
+
+    const tarjetas = container.querySelectorAll('[data-connected] article')
+    expect(tarjetas.length).toBeGreaterThan(0)
+    tarjetas.forEach(tarjeta => expect(tarjeta).toHaveAttribute('data-layout', 'stacked'))
   })
 })

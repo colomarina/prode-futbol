@@ -45,12 +45,19 @@ export default function QualifierPicker({
               onClick={() => onSelect(team.id)}
               className={styles.option}
             >
-              <span className={styles.team}>
-                <span className={styles.radio} aria-hidden="true" />
-                <span className={styles.teamName}>{team.name}</span>
-              </span>
-
-              {isSelected && <span className={styles.selectedTag}>SELECCIONADO</span>}
+              {isSelected && (
+                <span className={styles.check} data-testid="qualifier-check" aria-hidden="true">
+                  ✓
+                </span>
+              )}
+              {team.logo_url ? (
+                <img className={styles.logo} src={team.logo_url} alt="" loading="lazy" />
+              ) : (
+                <span className={styles.logo} aria-hidden="true">
+                  ⚽
+                </span>
+              )}
+              <span className={styles.teamName}>{team.name}</span>
             </button>
           )
         })}

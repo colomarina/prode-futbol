@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import QualifierPicker from './index'
 
@@ -31,8 +31,9 @@ describe('QualifierPicker', () => {
     const [local, visita] = screen.getAllByRole('radio')
     expect(local).toHaveAttribute('aria-checked', 'false')
     expect(visita).toHaveAttribute('aria-checked', 'true')
-    // El cartel de seleccionado aparece una sola vez.
-    expect(screen.getAllByText('SELECCIONADO')).toHaveLength(1)
+    const checks = screen.getAllByTestId('qualifier-check')
+    expect(checks).toHaveLength(1)
+    expect(visita).toContainElement(checks[0])
   })
 
   it('avisa qué equipo se eligió', async () => {
@@ -74,6 +75,33 @@ describe('QualifierPicker', () => {
     screen
       .getAllByRole('radio')
       .forEach(radio => expect(radio).toHaveAttribute('aria-checked', 'false'))
+    expect(screen.queryByTestId('qualifier-check')).not.toBeInTheDocument()
+  })
+
+  it('muestra el escudo de cada equipo', () => {
+    const conEscudo = [
+      { ...LOCAL, logo_url: 'https://escudos/argentina.png' },
+      { ...VISITA, logo_url: 'https://escudos/brasil.png' },
+    ]
+    renderPicker({ teams: conEscudo })
+
+    screen.getAllByRole('radio').forEach((radio, index) => {
+      const escudo = radio.querySelector('img')
+      expect(escudo).toHaveAttribute('src', conEscudo[index].logo_url)
+      expect(escudo).toHaveAttribute('alt', '')
+    })
+  })
+
+  it('sin escudo muestra la pelota', () => {
+    renderPicker({ teams: [{ ...LOCAL, logo_url: null }, VISITA] })
+
+    const pelota = within(screen.getAllByRole('radio')[0]).getByText('⚽')
+    expect(pelota).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('ya no dice SELECCIONADO', () => {
+    renderPicker({ selectedTeamId: VISITA.id })
+
     expect(screen.queryByText('SELECCIONADO')).not.toBeInTheDocument()
   })
 })
