@@ -1,5 +1,6 @@
 .card {
   --team-logo-size: 18px;
+  --versus-logo-size: 32px;
 
   display: flex;
   flex-direction: column;
@@ -110,4 +111,65 @@
 
 .logos > .logo + .logo {
   margin-left: calc(var(--space-2xs) * -1);
+}
+
+.card[data-layout='versus'] > .meta,
+.card[data-layout='versus'] > .live {
+  text-align: center;
+}
+
+.versus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.versusTeam {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
+.versusTeam[data-result='winner'] {
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.versusTeam[data-result='loser'] {
+  opacity: 0.55;
+}
+
+.versusLogo {
+  width: var(--versus-logo-size);
+  height: var(--versus-logo-size);
+  flex-shrink: 0;
+  object-fit: contain;
+  font-size: var(--font-size-xl);
+  line-height: var(--versus-logo-size);
+  text-align: center;
+}
+
+.logos > .versusLogo + .versusLogo {
+  margin-left: calc(var(--space-sm) * -1);
+}
+
+.versusName {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.versusCenter {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

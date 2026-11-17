@@ -195,3 +195,100 @@ describe('BracketMatchCard', () => {
     expect(screen.queryByText('Clasificó por penales')).not.toBeInTheDocument()
   })
 })
+
+describe('BracketMatchCard en versus', () => {
+  const terminado = (home, away, extra = {}) =>
+    match({ is_finished: true, home_score: home, away_score: away, ...extra })
+
+  it('muestra el marcador entre los dos equipos al terminar', () => {
+    const { container } = render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: terminado(2, 1), state: 'finished', winnerTeamId: 'river' }}
+      />
+    )
+
+    expect(screen.getByTestId('versus-center')).toHaveTextContent('2 - 1')
+    expect(screen.getByText('River Plate')).toBeInTheDocument()
+    expect(screen.getByText('Lanús')).toBeInTheDocument()
+    expect(container.querySelector('article')).toHaveAttribute('data-layout', 'versus')
+  })
+
+  it('muestra vs si el partido no terminó', () => {
+    const partido = match()
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: partido, state: 'scheduled', winnerTeamId: null }}
+      />
+    )
+
+    expect(screen.getByTestId('versus-center')).toHaveTextContent('vs')
+    expect(screen.getByText(new RegExp(formatMatchTime(partido.match_date)))).toBeInTheDocument()
+  })
+
+  it('marca al ganador con texto', () => {
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: terminado(2, 1), state: 'finished', winnerTeamId: 'river' }}
+      />
+    )
+
+    const marcas = screen.getAllByText('clasificado')
+    expect(marcas).toHaveLength(1)
+    expect(marcas[0].closest('[data-result="winner"]')).toHaveTextContent('River Plate')
+  })
+
+  it('en un cruce sin cargar muestra de dónde sale cada lado', () => {
+    const river = { id: 'river', name: 'River Plate', logo_url: null }
+    const lanus = { id: 'lanus', name: 'Lanús', logo_url: null }
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{
+          match: null,
+          state: null,
+          winnerTeamId: null,
+          sources: [{ teams: [river, lanus] }, { teams: [] }],
+        }}
+      />
+    )
+
+    expect(screen.getByText('River Plate o Lanús')).toBeInTheDocument()
+    expect(screen.getByText('A confirmar')).toBeInTheDocument()
+    expect(screen.getByTestId('versus-center')).toHaveTextContent('vs')
+  })
+
+  it('no habla de penales sin marcador ni con empate sin clasificado', () => {
+    const { unmount } = render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: match({ is_finished: true }), state: 'finished', winnerTeamId: null }}
+      />
+    )
+    expect(screen.queryByText('Clasificó por penales')).not.toBeInTheDocument()
+    unmount()
+
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: terminado(1, 1), state: 'finished', winnerTeamId: null }}
+      />
+    )
+    expect(screen.queryByText('Clasificó por penales')).not.toBeInTheDocument()
+  })
+
+  it('muestra el pronóstico igual que la tarjeta apilada', () => {
+    render(
+      <BracketMatchCard
+        layout="versus"
+        slot={{ match: terminado(2, 1), state: 'finished', winnerTeamId: 'river' }}
+        prediction={prediction()}
+      />
+    )
+
+    expect(screen.getByText('Tu pronóstico: 2-1')).toBeInTheDocument()
+    expect(screen.getByText('+3 pts')).toBeInTheDocument()
+  })
+})

@@ -8,6 +8,8 @@ import styles from './BracketMatchCard.module.css'
 
 type TeamResult = 'winner' | 'loser' | undefined
 
+export type CardLayout = 'stacked' | 'versus'
+
 const isTieScore = (match: Pick<MatchWithTeams, 'home_score' | 'away_score'>) =>
   match.home_score !== null && match.home_score === match.away_score
 
@@ -62,6 +64,60 @@ function SourceRow({ source }: { source: SlotSource }) {
   )
 }
 
+function VersusLogo({ team }: { team: Pick<Team, 'name' | 'logo_url'> | null | undefined }) {
+  return team?.logo_url ? (
+    <img className={styles.versusLogo} src={team.logo_url} alt="" loading="lazy" />
+  ) : (
+    <span className={styles.versusLogo} aria-hidden="true">
+      ⚽
+    </span>
+  )
+}
+
+function VersusTeam({
+  team,
+  result,
+}: {
+  team: Pick<Team, 'name' | 'logo_url'> | null | undefined
+  result: TeamResult
+}) {
+  return (
+    <div className={styles.versusTeam} data-result={result}>
+      <VersusLogo team={team} />
+      <span className={styles.versusName}>{team?.name || 'A confirmar'}</span>
+      {result === 'winner' && <span className={styles.srOnly}>clasificado</span>}
+    </div>
+  )
+}
+
+function SourceSide({ source }: { source: SlotSource }) {
+  if (source.teams.length === 0) return <VersusTeam team={null} result={undefined} />
+
+  return (
+    <div className={styles.versusTeam}>
+      <span className={styles.logos}>
+        {source.teams.map(team => (
+          <VersusLogo key={team.id} team={team} />
+        ))}
+      </span>
+      <span className={styles.versusName}>{source.teams.map(team => team.name).join(' o ')}</span>
+    </div>
+  )
+}
+
+function VersusCenter({ text }: { text: string }) {
+  return (
+    <span className={styles.versusCenter} data-testid="versus-center">
+      {text}
+    </span>
+  )
+}
+
+const getVersusScore = (match: MatchWithTeams, isFinished: boolean) =>
+  isFinished && match.home_score !== null && match.away_score !== null
+    ? `${match.home_score} - ${match.away_score}`
+    : 'vs'
+
 function Footer({ slot }: { slot: BracketSlot & { match: MatchWithTeams } }) {
   if (slot.state === 'live') return <p className={styles.live}>En juego</p>
   if (slot.state === 'awaiting-result') return <p className={styles.meta}>Resultado pendiente</p>
@@ -105,19 +161,30 @@ function PredictionLine({
 const BracketMatchCard = memo(function BracketMatchCard({
   slot,
   prediction = null,
+  layout = 'stacked',
 }: {
   slot: BracketSlot
   prediction?: PlayoffPrediction | null
+  layout?: CardLayout
 }) {
   const { match } = slot
 
   if (!match) {
-    const sources = slot.sources ?? [{ teams: [] }, { teams: [] }]
+    const [homeSource, awaySource] = slot.sources ?? [{ teams: [] }, { teams: [] }]
     return (
-      <article className={styles.card} data-placeholder="true">
-        {sources.map((source, index) => (
-          <SourceRow key={index} source={source} />
-        ))}
+      <article className={styles.card} data-placeholder="true" data-layout={layout}>
+        {layout === 'versus' ? (
+          <div className={styles.versus}>
+            <SourceSide source={homeSource} />
+            <VersusCenter text="vs" />
+            <SourceSide source={awaySource} />
+          </div>
+        ) : (
+          <>
+            <SourceRow source={homeSource} />
+            <SourceRow source={awaySource} />
+          </>
+        )}
       </article>
     )
   }
@@ -125,23 +192,43 @@ const BracketMatchCard = memo(function BracketMatchCard({
   const isFinished = slot.state === 'finished'
   const wonOnPenalties = isFinished && isTieScore(match) && Boolean(match.qualifier_team_id)
 
+  const homeResult = getResult(match.home_team_id, slot.winnerTeamId)
+  const awayResult = getResult(match.away_team_id, slot.winnerTeamId)
+  const predictionLine = prediction && (
+    <PredictionLine match={match} prediction={prediction} isFinished={isFinished} />
+  )
+  const penaltiesNote = wonOnPenalties && <p className={styles.meta}>Clasificó por penales</p>
+
+  if (layout === 'versus') {
+    return (
+      <article className={styles.card} data-state={slot.state} data-layout="versus">
+        <Footer slot={{ ...slot, match }} />
+        <div className={styles.versus}>
+          <VersusTeam team={match.home_team} result={homeResult} />
+          <VersusCenter text={getVersusScore(match, isFinished)} />
+          <VersusTeam team={match.away_team} result={awayResult} />
+        </div>
+        {penaltiesNote}
+        {predictionLine}
+      </article>
+    )
+  }
+
   return (
-    <article className={styles.card} data-state={slot.state}>
+    <article className={styles.card} data-state={slot.state} data-layout="stacked">
       <TeamRow
         team={match.home_team}
         score={isFinished ? match.home_score : null}
-        result={getResult(match.home_team_id, slot.winnerTeamId)}
+        result={homeResult}
       />
       <TeamRow
         team={match.away_team}
         score={isFinished ? match.away_score : null}
-        result={getResult(match.away_team_id, slot.winnerTeamId)}
+        result={awayResult}
       />
-      {wonOnPenalties && <p className={styles.meta}>Clasificó por penales</p>}
+      {penaltiesNote}
       <Footer slot={{ ...slot, match }} />
-      {prediction && (
-        <PredictionLine match={match} prediction={prediction} isFinished={isFinished} />
-      )}
+      {predictionLine}
     </article>
   )
 })
