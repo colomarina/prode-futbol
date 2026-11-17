@@ -6,14 +6,6 @@ import type { PlayoffStage } from '../../../types/domain'
 import { getStageTabId } from './stageTabId'
 import styles from './StageTabs.module.css'
 
-/**
- * Las rondas del cuadro como tabs, para el celular.
- *
- * Mismo teclado que `Navigation/NavTabs` (flechas circulares, `Home`, `End`), con
- * una diferencia: el foco se mueve solo cuando el usuario navega con el teclado.
- * `NavTabs` enfoca el tab activo en un efecto, o sea también al montar, y acá eso
- * le sacaría el foco a la página cada vez que se entra a la llave.
- */
 export default function StageTabs({
   rounds,
   selected,

@@ -2,7 +2,6 @@ import SelectDropdown from '../../Common/SelectDropdown'
 import { showsMatchNumber } from '../../../utils/matchNumber'
 import type { MatchWithTeams, Uuid } from '../../../types/domain'
 
-/** "#5 (Grupo A) - " delante de los escudos; en un playoff, solo el grupo si hay. */
 const matchPrefix = (match: MatchWithTeams): string => {
   const parts = [
     showsMatchNumber(match) ? `#${match.match_number}` : '',

@@ -1,8 +1,6 @@
-/**
- * La tarjeta de un cruce: la misma en el cuadro de escritorio y en las tabs del
- * celular, así que no fija ancho; lo pone el contenedor.
- */
 .card {
+  --team-logo-size: 18px;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
@@ -29,7 +27,6 @@
   font-size: var(--font-size-sm);
 }
 
-/* El eliminado se atenúa; el ganador además lleva el texto oculto "clasificado". */
 .row[data-result='winner'] {
   font-weight: 700;
   color: var(--color-primary-text);
@@ -39,14 +36,13 @@
   opacity: 0.55;
 }
 
-/* 18px: no hay token de tamaño de icono; es lo que entra en una fila de --font-size-sm. */
 .logo {
-  width: 18px;
-  height: 18px;
+  width: var(--team-logo-size);
+  height: var(--team-logo-size);
   flex-shrink: 0;
   object-fit: contain;
   font-size: var(--font-size-sm);
-  line-height: 18px;
+  line-height: var(--team-logo-size);
   text-align: center;
 }
 
@@ -107,7 +103,6 @@
   border-width: 0;
 }
 
-/* Los dos escudos de un cruce posible, juntos y algo superpuestos. */
 .logos {
   display: flex;
   flex-shrink: 0;

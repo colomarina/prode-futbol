@@ -98,10 +98,8 @@ describe('PlayoffBracket', () => {
 
     const titulos = screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)
     expect(titulos).toEqual(['Semifinales', 'Final'])
-    // Uno en el cuadro de escritorio y otro en la tab del celular.
     expect(screen.getAllByRole('heading', { level: 4, name: 'Tercer puesto' })).toHaveLength(2)
 
-    // En el celular, la tab Final muestra primero la final y después el tercer puesto.
     const panel = screen.getByRole('tabpanel')
     const equipos = within(panel)
       .getAllByText(/^(espana|francia)$/)

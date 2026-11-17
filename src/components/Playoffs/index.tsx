@@ -79,8 +79,6 @@ export default function Playoffs() {
         </p>
       </div>
 
-      {/* La key reinicia el cuadro al cambiar de torneo: si no, la ronda elegida en
-          las tabs sobrevive y se abre esa en vez de la que está en curso. */}
       <PlayoffBracket
         key={activeTournament?.id}
         matchesByStage={matchesByStage}

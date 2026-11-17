@@ -8,10 +8,6 @@ import styles from './BracketMatchCard.module.css'
 
 type TeamResult = 'winner' | 'loser' | undefined
 
-/**
- * Empate con el marcador cargado. Sin el chequeo de `null`, un partido marcado
- * terminado sin goles daba `null === null` y mostraba "Clasificó por penales".
- */
 const isTieScore = (match: Pick<MatchWithTeams, 'home_score' | 'away_score'>) =>
   match.home_score !== null && match.home_score === match.away_score
 
@@ -20,11 +16,6 @@ const getResult = (teamId: Uuid, winnerTeamId: Uuid | null): TeamResult => {
   return teamId === winnerTeamId ? 'winner' : 'loser'
 }
 
-/**
- * Una fila por equipo. El escudo va con `alt=""` porque el nombre está escrito al
- * lado; el ganador se marca con un texto oculto además del estilo, así no depende
- * solo del color.
- */
 function TeamRow({
   team,
   score,
@@ -50,11 +41,6 @@ function TeamRow({
   )
 }
 
-/**
- * Un lado de un cruce sin cargar: el ganador ya definido, los dos posibles
- * ("River Plate o Lanús", con los dos escudos) o "A confirmar" si tampoco se
- * conoce el partido de origen.
- */
 function SourceRow({ source }: { source: SlotSource }) {
   if (source.teams.length === 0) return <TeamRow team={null} score={null} result={undefined} />
 
@@ -88,11 +74,6 @@ function Footer({ slot }: { slot: BracketSlot & { match: MatchWithTeams } }) {
   )
 }
 
-/**
- * Lo que el usuario pronosticó. Antes de que empiece el partido no se muestra nada
- * si no pronosticó: puede estar a tiempo, y un "no pronosticaste" sería falso.
- * Los puntos aparecen recién con el partido terminado.
- */
 function PredictionLine({
   match,
   prediction,
@@ -102,8 +83,8 @@ function PredictionLine({
   prediction: PlayoffPrediction
   isFinished: boolean
 }) {
-  const isTie = isFinished && isTieScore(match)
   const hitQualifier = prediction.qualifier_prediction_id === match.qualifier_team_id
+  const showsQualifierResult = isFinished && Boolean(match.qualifier_team_id)
 
   return (
     <div className={styles.prediction}>
@@ -114,7 +95,7 @@ function PredictionLine({
       {prediction.qualifier_prediction_id && (
         <span className={styles.pick}>
           Elegiste: {resolveTeamName(prediction.qualifier_prediction_id, match)}
-          {isTie && match.qualifier_team_id ? (hitQualifier ? ' ✅' : ' ❌') : ''}
+          {showsQualifierResult ? (hitQualifier ? ' ✅' : ' ❌') : ''}
         </span>
       )}
     </div>

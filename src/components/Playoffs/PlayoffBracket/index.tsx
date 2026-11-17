@@ -8,24 +8,14 @@ import type { MatchesByStage, PlayoffPrediction } from '../../../hooks/usePlayof
 import type { PlayoffStage } from '../../../types/domain'
 import styles from './PlayoffBracket.module.css'
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const MAX_TIMER_DELAY_MS = 24 * 60 * 60 * 1000
 
-/**
- * En el celular se lista por horario —lo que el usuario quiere saber es qué se
- * juega primero—, y los cruces sin conocer van al final. El cuadro de escritorio
- * respeta el orden del cuadro, que es el de los slots.
- */
 const byDate = (a: BracketSlot, b: BracketSlot) => {
   if (!a.match) return b.match ? 1 : 0
   if (!b.match) return -1
   return new Date(a.match.match_date).getTime() - new Date(b.match.match_date).getTime()
 }
 
-/**
- * La llave: cuadro con conectores desde 1024px y una ronda por vez con tabs
- * debajo. Las dos vistas están en el DOM y el CSS muestra una; el modelo sale de
- * `buildBracket` y se calcula una sola vez.
- */
 const PlayoffBracket = memo(function PlayoffBracket({
   matchesByStage,
   predictionsByMatch,
@@ -40,20 +30,14 @@ const PlayoffBracket = memo(function PlayoffBracket({
   const [chosenStage, setChosenStage] = useState<PlayoffStage | null>(null)
   const panelId = useId()
 
-  // Un solo timer, para el próximo momento en que algo cambia (un partido que
-  // arranca o uno en juego que pasa a "resultado pendiente"), en vez de recalcular
-  // cada X minutos sin que cambie nada. Si el momento ya pasó, salta enseguida.
   const nextChangeTime = getNextChange(bracket, now)?.getTime() ?? null
   useEffect(() => {
     if (nextChangeTime === null) return undefined
-    // setTimeout desborda arriba de ~24,8 días y dispara al instante: tope de un día.
-    const delay = Math.min(Math.max(nextChangeTime - Date.now(), 0), DAY_MS)
+    const delay = Math.min(Math.max(nextChangeTime - Date.now(), 0), MAX_TIMER_DELAY_MS)
     const timer = setTimeout(() => setNow(new Date()), delay)
     return () => clearTimeout(timer)
   }, [nextChangeTime])
 
-  // Si el usuario no eligió, la ronda en curso. El cambio de torneo lo resuelve la
-  // `key` que pone `Playoffs`: el cuadro se monta de nuevo.
   const selectedStage =
     bracket.rounds.find(round => round.stage === chosenStage)?.stage ?? currentStage
   const selectedRound = bracket.rounds.find(round => round.stage === selectedStage)
@@ -65,7 +49,6 @@ const PlayoffBracket = memo(function PlayoffBracket({
     />
   )
 
-  // Fuera del cuadro: no alimenta ninguna ronda, así que no lleva conectores.
   const thirdPlaceBlock = bracket.thirdPlace && (
     <div className={styles.thirdPlace}>
       <h4 className={styles.thirdPlaceTitle}>Tercer puesto</h4>
@@ -86,7 +69,6 @@ const PlayoffBracket = memo(function PlayoffBracket({
             />
             <div
               role="tabpanel"
-              // Las tarjetas no tienen nada enfocable: sin esto, Tab saltea la ronda.
               tabIndex={0}
               id={panelId}
               aria-labelledby={getStageTabId(panelId, selectedStage)}
@@ -112,9 +94,6 @@ const PlayoffBracket = memo(function PlayoffBracket({
             >
               <h3 className={styles.title}>{round.label}</h3>
               {round.stage === 'final' && thirdPlaceBlock ? (
-                // Filas `1fr auto 1fr`: la final queda centrada entre sus semis y el
-                // tercer puesto ocupa la fila de abajo sin correrla. Si no entra, las
-                // dos filas `1fr` crecen igual y la final sigue en el medio.
                 <div className={styles.slots} style={{ gridTemplateRows: '1fr auto 1fr' }}>
                   <div aria-hidden="true" />
                   <div className={styles.slot}>

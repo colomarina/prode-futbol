@@ -7,7 +7,6 @@ const FUTURE = '2026-11-30T20:00:00Z'
 
 let nextId = 0
 
-/** Un partido de playoff mínimo: los equipos se identifican por su id. */
 const m = (stage, number, home, away, extra = {}) => ({
   id: `m${++nextId}`,
   playoff_stage: stage,
@@ -93,6 +92,24 @@ describe('buildBracket', () => {
     ])
   })
 
+  it('una primera ronda cargada a medias respeta las posiciones y sigue conectada', () => {
+    const octavos = octavosCompletos().filter(match => ![3, 5].includes(match.match_number))
+    const { rounds, connected } = buildBracket(stages({ octavos }), NOW)
+
+    expect(rounds.map(round => round.slots.length)).toEqual([8, 4, 2, 1])
+    expect(rounds[0].slots.map(slot => slot.match?.match_number ?? null)).toEqual([
+      1,
+      2,
+      null,
+      4,
+      null,
+      6,
+      7,
+      8,
+    ])
+    expect(connected).toBe(true)
+  })
+
   it('arranca en la primera ronda con partidos', () => {
     const dieciseisavos = Array.from({ length: 16 }, (_, i) => m('16avos', i + 1, `x${i}`, `y${i}`))
     const { rounds } = buildBracket(stages({ '16avos': dieciseisavos }), NOW)
@@ -101,15 +118,13 @@ describe('buildBracket', () => {
     expect(rounds.at(-1).stage).toBe('final')
   })
 
-  it('marca conectado un cuadro que cierra', () => {
-    // El cuarto 1 sale de los octavos 1 y 2; el cuarto 3, de los octavos 5 y 6.
+  it('marca conectado un cuadro donde el cuarto i sale de los octavos 2i-1 y 2i', () => {
     const cuartos = [m('cuartos', 1, 'h1', 'a2'), m('cuartos', 3, 'a5', 'h6')]
 
     expect(buildBracket(stages({ octavos: octavosCompletos(), cuartos }), NOW).connected).toBe(true)
   })
 
-  it('no conecta un cuadro cuyos cruces no cierran', () => {
-    // El Apertura 2026: el cuarto 1 fue Belgrano (octavo 1) contra Unión (octavo 4).
+  it('no conecta un cuadro numerado por horario, como el Apertura 2026', () => {
     const octavos = octavosCompletos()
     octavos[0] = m('octavos', 1, 'talleres', 'belgrano')
     octavos[3] = m('octavos', 4, 'ind-rivadavia', 'union')
@@ -170,8 +185,7 @@ describe('buildBracket: de dónde sale un cruce sin cargar', () => {
   })
 })
 
-describe('buildBracket con partido por el tercer puesto', () => {
-  // El Mundial 2026 cargó el tercer puesto como un segundo partido de `final`.
+describe('buildBracket con el tercer puesto cargado como un segundo partido de final', () => {
   const semifinal = [
     m('semifinal', 1, 'francia', 'espana', finished(0, 2)),
     m('semifinal', 2, 'inglaterra', 'argentina', finished(1, 2)),
@@ -246,7 +260,6 @@ describe('estado de un partido empezado', () => {
   })
 
   it('pasado el plazo para cargar el resultado, queda pendiente', () => {
-    // RESULT_LOAD_DELAY_HOURS = 2: empezó hace 3 horas y nadie cargó el resultado.
     expect(conFecha('2026-11-16T09:00:00Z')).toBe('awaiting-result')
   })
 })
@@ -263,7 +276,6 @@ describe('getNextChange', () => {
     )
 
   it('es el próximo arranque o el próximo vencimiento, el que llegue antes', () => {
-    // Uno en juego desde las 11 (pasa a pendiente a las 13) y otro que arranca a las 15.
     const bracket = bracketCon(['2026-11-16T11:00:00Z', '2026-11-16T15:00:00Z'])
 
     expect(getNextChange(bracket, NOW)).toEqual(new Date('2026-11-16T13:00:00Z'))

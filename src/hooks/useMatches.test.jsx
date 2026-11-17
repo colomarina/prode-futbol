@@ -78,13 +78,6 @@ describe('useMatches', () => {
     expect(result.current.matches).toBe(primera)
   })
 
-  /**
-   * En un playoff `match_number` es la posición en el cuadro, no el orden en que se
-   * juega: en los octavos del Clausura 2026 el partido 4 (viernes) es el primero y el
-   * 1 (domingo a la noche) de los últimos. El formulario, "Ver pronósticos" y los
-   * paneles de admin listan por horario; la llave ordena por cuadro con su propio
-   * hook (`usePlayoffs`).
-   */
   it('ordena los partidos por horario y desempata por match_number', async () => {
     mock = createSupabaseMock({ matches: { data: MATCHES, error: null } })
     const { useMatches } = await import('./useMatches')

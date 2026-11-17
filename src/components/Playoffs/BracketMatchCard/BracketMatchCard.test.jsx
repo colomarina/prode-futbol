@@ -155,6 +155,27 @@ describe('BracketMatchCard', () => {
 
     expect(screen.getByText(/Elegiste: River Plate/)).toHaveTextContent('❌')
   })
+
+  it('marca el clasificado acertado aunque el partido no termine empatado', () => {
+    const slot = {
+      match: match({ is_finished: true, home_score: 2, away_score: 0, qualifier_team_id: 'river' }),
+      state: 'finished',
+      winnerTeamId: 'river',
+    }
+    render(
+      <BracketMatchCard
+        slot={slot}
+        prediction={prediction({
+          home_prediction: 1,
+          away_prediction: 1,
+          qualifier_prediction_id: 'river',
+        })}
+      />
+    )
+
+    expect(screen.getByText(/Elegiste: River Plate/)).toHaveTextContent('✅')
+  })
+
   it('dice Resultado pendiente si venció el plazo y no hay resultado', () => {
     render(
       <BracketMatchCard slot={{ match: match(), state: 'awaiting-result', winnerTeamId: null }} />
