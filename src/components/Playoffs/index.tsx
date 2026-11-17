@@ -75,11 +75,15 @@ export default function Playoffs() {
             fontSize: 'var(--font-size-md)',
           }}
         >
-          Seguimiento completo de cruces: confirmados, pendientes y camino a la final.
+          Tu pronóstico y tus puntos en cada cruce.
         </p>
       </div>
 
-      <PlayoffBracket matchesByStage={matchesByStage} predictionsByMatch={predictionsByMatch} />
+      <PlayoffBracket
+        key={activeTournament?.id}
+        matchesByStage={matchesByStage}
+        predictionsByMatch={predictionsByMatch}
+      />
     </div>
   )
 }

@@ -34,8 +34,8 @@ export const useMatches = (roundNumber: number | null = null, tournamentId: Uuid
       }
 
       const { data: matches, error: matchesError } = await query
-        .order('match_number', { ascending: true })
         .order('match_date', { ascending: true })
+        .order('match_number', { ascending: true })
 
       if (matchesError) throw matchesError
       return matches || []

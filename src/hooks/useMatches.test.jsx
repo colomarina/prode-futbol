@@ -77,4 +77,15 @@ describe('useMatches', () => {
 
     expect(result.current.matches).toBe(primera)
   })
+
+  it('ordena los partidos por horario y desempata por match_number', async () => {
+    mock = createSupabaseMock({ matches: { data: MATCHES, error: null } })
+    const { useMatches } = await import('./useMatches')
+
+    const { result } = renderHook(() => useMatches(4, 't1'), { wrapper: createWrapper() })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(mock.queriesTo('matches')[0].orders).toEqual(['match_date', 'match_number'])
+  })
 })

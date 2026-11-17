@@ -7,7 +7,7 @@ import { vi } from 'vitest'
  * devuelve algo que se puede await-ear y resuelve `{ data, error }`. Este mock
  * replica esa forma para poder testear los hooks sin red.
  */
-export const createQueryResult = (result, onFilter) => {
+export const createQueryResult = (result, onFilter, onOrder) => {
   const query = {
     select: vi.fn(() => query),
     eq: vi.fn((column, value) => {
@@ -18,7 +18,10 @@ export const createQueryResult = (result, onFilter) => {
       onFilter?.(column, value)
       return query
     }),
-    order: vi.fn(() => query),
+    order: vi.fn((column, options) => {
+      onOrder?.(column, options)
+      return query
+    }),
     insert: vi.fn(() => query),
     update: vi.fn(() => query),
     delete: vi.fn(() => query),
@@ -38,16 +41,18 @@ export const createQueryResult = (result, onFilter) => {
  */
 export const createSupabaseMock = (resultsByTable, rpcResults = {}) => {
   const callsByTable = {}
-  /** @type {Array<{table: string, filters: Array<[string, unknown]>}>} */
+  /** @type {Array<{table: string, filters: Array<[string, unknown]>, orders: string[]}>} */
   const queries = []
 
   const from = vi.fn(table => {
     callsByTable[table] = (callsByTable[table] || 0) + 1
-    const record = { table, filters: [] }
+    const record = { table, filters: [], orders: [] }
     queries.push(record)
 
-    return createQueryResult(resultsByTable[table] ?? { data: [], error: null }, (column, value) =>
-      record.filters.push([column, value])
+    return createQueryResult(
+      resultsByTable[table] ?? { data: [], error: null },
+      (column, value) => record.filters.push([column, value]),
+      column => record.orders.push(column)
     )
   })
 

@@ -1,5 +1,14 @@
 import SelectDropdown from '../../Common/SelectDropdown'
+import { showsMatchNumber } from '../../../utils/matchNumber'
 import type { MatchWithTeams, Uuid } from '../../../types/domain'
+
+const matchPrefix = (match: MatchWithTeams): string => {
+  const parts = [
+    showsMatchNumber(match) ? `#${match.match_number}` : '',
+    match.group_label ? `(${match.group_label})` : '',
+  ].filter(Boolean)
+  return parts.length > 0 ? `${parts.join(' ')} - ` : ''
+}
 
 interface MatchSelectorProps {
   matches: MatchWithTeams[]
@@ -36,8 +45,7 @@ const MatchSelector = ({
       placeholder="Seleccionar partido..."
       renderButton={match => (
         <>
-          #{match.match_number}
-          {match.group_label ? ` (${match.group_label})` : ''} -
+          {matchPrefix(match)}
           {match.home_team?.logo_url && (
             <img
               src={match.home_team.logo_url}
@@ -67,8 +75,7 @@ const MatchSelector = ({
       )}
       renderOption={match => (
         <>
-          #{match.match_number}
-          {match.group_label ? ` (${match.group_label})` : ''} -
+          {matchPrefix(match)}
           {match.home_team?.logo_url && (
             <img
               src={match.home_team.logo_url}

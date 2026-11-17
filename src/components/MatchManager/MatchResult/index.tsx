@@ -4,6 +4,7 @@ import ScoreInput, { ScoreSeparator } from '../../Common/ScoreInput'
 import { canLoadResult, getResultLoadTime } from '../../../utils/matchTiming'
 import { getWinnerTeamId, parseScoreValue } from '../../../utils/score'
 import { formatMatchDateShort, formatMatchTime } from '../../../utils/matchDate'
+import { showsMatchNumber } from '../../../utils/matchNumber'
 
 const MatchResult = ({ match, resultValues, onValueChange }) => {
   const awayInputRef = useRef(null)
@@ -113,22 +114,23 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         padding: 'var(--space-sm)',
       }}
     >
-      {/* Match Number */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 'var(--space-md)',
-          left: 'var(--space-md)',
-          backgroundColor: 'var(--color-primary)',
-          color: 'var(--color-text-on-primary)',
-          padding: 'var(--space-xs) var(--space-md)',
-          borderRadius: 'var(--radius-lg)',
-          fontSize: 'var(--font-size-sm)',
-          fontWeight: '700',
-        }}
-      >
-        #{match.match_number || '?'}
-      </div>
+      {showsMatchNumber(match) && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'var(--space-md)',
+            left: 'var(--space-md)',
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-text-on-primary)',
+            padding: 'var(--space-xs) var(--space-md)',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: '700',
+          }}
+        >
+          #{match.match_number}
+        </div>
+      )}
 
       {/* Match Status Badge */}
       {match.is_finished && (

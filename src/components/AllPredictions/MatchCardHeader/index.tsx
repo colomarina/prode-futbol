@@ -2,6 +2,7 @@ import Badge from '../../Common/Badge'
 import MatchStatusBadge from '../MatchStatusBadge'
 import { useTournament } from '../../../contexts/TournamentContext'
 import { getGroupBadgeColors } from '../../../utils/groupBadgeStyles'
+import { showsMatchNumber } from '../../../utils/matchNumber'
 import type { MatchWithTeams } from '../../../types/domain'
 import styles from './MatchCardHeader.module.css'
 
@@ -20,7 +21,7 @@ export default function MatchCardHeader({ match }: { match: MatchWithTeams }) {
   return (
     <div className={styles.header}>
       <div className={styles.etiquetas}>
-        <Badge tone="primary">Partido #{match.match_number}</Badge>
+        {showsMatchNumber(match) && <Badge tone="primary">Partido #{match.match_number}</Badge>}
 
         {groupLabel && (
           <Badge
