@@ -1,93 +1,52 @@
-/*
- * Una fila del detalle de progreso. El borde y el ícono cambian según cuánto
- * pronosticó el jugador, y eso se decide con `data-progress` en vez de con tres
- * ternarios anidados dentro del `style`.
- */
 .row {
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
-  border: 2px solid var(--color-error);
-}
-
-.row[data-progress='partial'] {
-  border-color: var(--color-warning);
-}
-
-.row[data-progress='complete'] {
-  border-color: var(--color-success);
-}
-
-.player {
-  flex: 1 1 200px;
-  min-width: 0;
+  gap: var(--space-sm);
 }
 
 .name {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
   font-weight: 600;
-  color: var(--color-text-primary);
   font-size: var(--font-size-md);
-}
-
-.icon {
-  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  min-width: 0;
 }
 
 .count {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-}
-
-.missing {
-  flex: 0 0 auto;
-  min-width: 0;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-xs);
-}
-
-.missingLabel {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  font-weight: 600;
+  white-space: nowrap;
 }
 
 .missingList {
+  list-style: none;
+  margin: var(--space-xs) 0 0;
+  padding: 0;
   display: flex;
-  gap: var(--space-2xs);
   flex-wrap: wrap;
-  justify-content: flex-end;
-  /* Se acota para que la lista de faltantes no empuje al nombre del jugador. */
-  max-width: 200px;
+  gap: var(--space-xs);
 }
 
 .missingMatch {
   padding: var(--space-3xs) var(--space-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-xs);
-  font-weight: 700;
-  white-space: nowrap;
-  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
-  color: var(--color-warning-text);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 40%, transparent);
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error-text);
 }
 
 .complete {
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-md);
+  display: block;
+  margin-top: var(--space-3xs);
   font-size: var(--font-size-sm);
-  font-weight: 700;
-  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
   color: var(--color-success-text);
 }

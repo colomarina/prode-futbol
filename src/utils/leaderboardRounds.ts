@@ -28,6 +28,16 @@ export function getPlayedRoundNumbers(matchesMeta: MatchMeta[] = []): Set<number
   )
 }
 
+export function getFinishedRoundNumbers(matchesMeta: MatchMeta[] = []): Set<number> {
+  const pending = new Set<number>()
+  const rounds = new Set<number>()
+  ;(matchesMeta || []).forEach(match => {
+    rounds.add(match.round_number)
+    if (!match.is_finished) pending.add(match.round_number)
+  })
+  return new Set([...rounds].filter(round => !pending.has(round)))
+}
+
 /** Fechas de playoff, derivadas de `matches.is_playoff` y no de un rango fijo. */
 export function getPlayoffRoundNumbers(matchesMeta: MatchMeta[] = []): Set<number> {
   return new Set(

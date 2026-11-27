@@ -7,7 +7,8 @@ describe('LoadingState', () => {
     render(<LoadingState message="Cargando fechas..." />)
 
     expect(screen.getByText('Cargando fechas...')).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: 'Cargando' })).toBeInTheDocument()
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando fechas...')
   })
 
   it('el mensaje por defecto es "Cargando..."', () => {
@@ -20,8 +21,10 @@ describe('LoadingState', () => {
     // la app: 16, 20, 24, 48 y 56px, con bordes de 2.5, 3 y 4.
     const medidas = {}
     for (const size of ['xs', 'sm', 'md', 'lg']) {
-      const { unmount } = render(<LoadingState size={size} />)
-      medidas[size] = screen.getByRole('status').style.getPropertyValue('--spinner-size')
+      const { unmount, container } = render(<LoadingState size={size} />)
+      medidas[size] = container
+        .querySelector('[aria-hidden="true"]')
+        .style.getPropertyValue('--spinner-size')
       unmount()
     }
 
@@ -29,14 +32,16 @@ describe('LoadingState', () => {
   })
 
   it('un tamaño que no existe cae en lg en vez de romperse', () => {
-    render(<LoadingState size="gigante" />)
-    expect(screen.getByRole('status').style.getPropertyValue('--spinner-size')).toBe('56px')
+    const { container } = render(<LoadingState size="gigante" />)
+    expect(
+      container.querySelector('[aria-hidden="true"]').style.getPropertyValue('--spinner-size')
+    ).toBe('56px')
   })
 
   it('el color se le pasa al spinner', () => {
-    render(<LoadingState color="var(--color-error)" />)
-    expect(screen.getByRole('status').style.getPropertyValue('--spinner-color')).toBe(
-      'var(--color-error)'
-    )
+    const { container } = render(<LoadingState color="var(--color-error)" />)
+    expect(
+      container.querySelector('[aria-hidden="true"]').style.getPropertyValue('--spinner-color')
+    ).toBe('var(--color-error)')
   })
 })

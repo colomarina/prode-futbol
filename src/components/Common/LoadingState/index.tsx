@@ -47,9 +47,12 @@ export default function LoadingState({
   const config = SIZES[size] ?? SIZES.lg
 
   return (
-    <div style={{ textAlign: 'center', padding: 'var(--space-3xl) var(--space-lg)', ...style }}>
+    <div
+      role="status"
+      style={{ textAlign: 'center', padding: 'var(--space-3xl) var(--space-lg)', ...style }}
+    >
       <div style={{ margin: `0 auto ${config.spacing}`, width: 'fit-content' }}>
-        <Spinner size={config.spinner} borderWidth={config.border} color={color} />
+        <Spinner size={config.spinner} borderWidth={config.border} color={color} decorative />
       </div>
       <p
         style={{

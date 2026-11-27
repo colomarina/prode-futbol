@@ -1,11 +1,10 @@
 import { useCallback, useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import { getNextActiveRoundNumber } from '../utils/matchTiming'
 import { useMatchesMeta } from './useMatchesMeta'
 import type { Round, Uuid } from '../types/domain'
-import type { MutationResult } from './types'
 
 /**
  * Fechas del torneo y cuál es la activa.
@@ -16,8 +15,6 @@ import type { MutationResult } from './types'
  * dependen una de la otra.
  */
 export const useRounds = (tournamentId: Uuid | null = null) => {
-  const queryClient = useQueryClient()
-
   const {
     data: rounds,
     isPending: roundsLoading,
@@ -67,82 +64,6 @@ export const useRounds = (tournamentId: Uuid | null = null) => {
     return roundsList.find(round => round.round_number === activeRoundNumber) || null
   }, [roundsList, matchesMeta, matchesLoading])
 
-  const invalidateRounds = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: queryKeys.rounds(tournamentId) }),
-    [queryClient, tournamentId]
-  )
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({
-      roundNumber,
-      status,
-    }: {
-      roundNumber: number
-      status: string
-    }): Promise<void> => {
-      let query = supabase
-        .from('rounds')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('round_number', roundNumber)
-
-      if (tournamentId) {
-        query = query.eq('tournament_id', tournamentId)
-      }
-
-      const { error } = await query
-      if (error) throw error
-    },
-    onSuccess: invalidateRounds,
-  })
-
-  /**
-   * Se conserva el contrato `{ error }` en vez de propagar la excepción: los
-   * componentes que llaman a esto ya manejan la respuesta así y muestran su
-   * propio toast.
-   */
-  const runStatusMutation = useCallback(
-    async (roundNumber: number, status: string): Promise<MutationResult> => {
-      try {
-        await updateStatusMutation.mutateAsync({ roundNumber, status })
-        return { error: null }
-      } catch (error) {
-        return { error }
-      }
-    },
-    [updateStatusMutation]
-  )
-
-  const updateRoundStatus = useCallback(
-    (roundNumber: number, status: string) => runStatusMutation(roundNumber, status),
-    [runStatusMutation]
-  )
-
-  const lockRound = useCallback(
-    (roundNumber: number) => runStatusMutation(roundNumber, 'locked'),
-    [runStatusMutation]
-  )
-
-  const finishRound = useCallback(
-    (roundNumber: number) => runStatusMutation(roundNumber, 'finished'),
-    [runStatusMutation]
-  )
-
-  const openNextRound = useCallback(async (): Promise<MutationResult> => {
-    const pendingRound = roundsList.find(round => round.status === 'pending')
-
-    if (!pendingRound) {
-      return { error: new Error('No hay fechas pendientes para abrir') }
-    }
-
-    return runStatusMutation(pendingRound.round_number, 'open')
-  }, [roundsList, runStatusMutation])
-
-  const isRoundOpen = useCallback(
-    (roundNumber: number): boolean =>
-      roundsList.find(round => round.round_number === roundNumber)?.status === 'open',
-    [roundsList]
-  )
-
   const fetchRounds = useCallback((): void => {
     refetchRounds()
     refetchMatches()
@@ -154,11 +75,5 @@ export const useRounds = (tournamentId: Uuid | null = null) => {
     loading: roundsLoading || matchesLoading,
     error: roundsError ? roundsError.message : matchesError,
     fetchRounds,
-    updateRoundStatus,
-    openNextRound,
-    lockRound,
-    finishRound,
-    isRoundOpen,
-    canPredictRound: isRoundOpen,
   }
 }

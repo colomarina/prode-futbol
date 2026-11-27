@@ -1,46 +1,42 @@
-import { getProgressLevel } from '../roundStatus'
+import { getProgressLevel } from '../progress'
 import type { PlayerProgress } from '../../../hooks/useRoundProgress'
-import type { ProgressLevel } from '../roundStatus'
+import type { ProgressLevel } from '../progress'
 import styles from './PlayerProgressRow.module.css'
 
 const ICONS: Record<ProgressLevel, string> = { complete: '✅', partial: '⚠️', none: '❌' }
 
-/**
- * Una fila del detalle de progreso: quién es el jugador, cuánto cargó y qué
- * partidos le faltan.
- */
-export default function PlayerProgressRow({ player }: { player: PlayerProgress }) {
+export default function PlayerProgressRow({
+  player,
+  matchLabels,
+}: {
+  player: PlayerProgress
+  matchLabels: Record<number, string>
+}) {
   const level = getProgressLevel(player.progress)
   const missing = player.missingMatches ?? []
 
   return (
-    <div className={styles.row} data-progress={level}>
-      <div className={styles.player}>
-        <div className={styles.name}>
-          <span className={styles.icon} aria-hidden="true">
-            {ICONS[level]}
-          </span>
-          <span>{player.name}</span>
-        </div>
-        <div className={styles.count}>
-          {player.predictedCount} de {player.totalMatches} partidos
-        </div>
+    <li className={styles.row} data-progress={level}>
+      <div className={styles.header}>
+        <span className={styles.name}>
+          <span aria-hidden="true">{ICONS[level]}</span> <span>{player.name}</span>
+        </span>
+        <span className={styles.count}>
+          {player.predictedCount} de {player.totalMatches}
+        </span>
       </div>
 
       {missing.length > 0 ? (
-        <div className={styles.missing}>
-          <span className={styles.missingLabel}>Faltan partidos:</span>
-          <div className={styles.missingList}>
-            {missing.map(matchNumber => (
-              <span key={matchNumber} className={styles.missingMatch}>
-                #{matchNumber}
-              </span>
-            ))}
-          </div>
-        </div>
+        <ul className={styles.missingList} aria-label={`Le faltan a ${player.name}`}>
+          {missing.map(matchNumber => (
+            <li key={matchNumber} className={styles.missingMatch}>
+              {matchLabels[matchNumber] ?? `#${matchNumber}`}
+            </li>
+          ))}
+        </ul>
       ) : (
-        <span className={styles.complete}>Completo ✓</span>
+        <span className={styles.complete}>Completo</span>
       )}
-    </div>
+    </li>
   )
 }
