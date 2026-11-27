@@ -23,9 +23,8 @@ mismo botón se vuelve a apretar para completar o corregir.
 
 - **Proponer resultados.** Viene después, con el mismo módulo. Los resultados nunca se cargan
   solos: los confirma el admin.
-- **Dónde va el botón.** Se define cuando se reordene la UX del admin (ya no se abren ni se
-  bloquean fechas, así que el admin se va a limpiar). El botón se construye como un componente
-  autocontenido que se pueda montar en cualquier pantalla.
+- **Dónde va el botón:** en la pantalla de Fechas (`RoundManager`, `/admin/fechas`), arriba del
+  progreso de la fecha en juego. Se construye igual como un componente autocontenido.
 - Correr solo, sin admin (cron). Si algún día se quiere, es el enfoque B de abajo.
 
 ### Lo que lo haría un fracaso aunque funcione
