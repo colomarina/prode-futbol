@@ -77,6 +77,7 @@ El rol vive en `profiles.role`. El chequeo en el cliente solo **oculta UI**: la 
 
 - `CLAUDE.md` — guía de arquitectura del proyecto
 - `docs/supabase-schema.md` — snapshot del esquema de la base
+- `docs/pendientes.md` — lo que queda abierto (seguridad, deuda, decisiones de producto)
 
 ## 👥 Autor
 
