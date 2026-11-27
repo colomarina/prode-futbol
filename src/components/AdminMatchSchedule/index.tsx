@@ -3,43 +3,22 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
 import { getRoundDisplayName } from '../../utils/roundLabels'
-import { formatMatchDateTimeLong } from '../../utils/matchDate'
 import { showsMatchNumber } from '../../utils/matchNumber'
 import Button from '../Common/Button'
 import LoadingState from '../Common/LoadingState'
 import SelectDropdown from '../Common/SelectDropdown'
-import TeamDisplay from '../Common/TeamDisplay'
+import MatchupLogos from '../Common/MatchupLogos'
 import DateTimeInput from '../Common/DateTimeInput'
 import Toast from '../Common/Toast'
-
-const toDatetimeLocalValue = value => {
-  if (!value) return ''
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-
-  const pad = number => String(number).padStart(2, '0')
-  const year = date.getFullYear()
-  const month = pad(date.getMonth() + 1)
-  const day = pad(date.getDate())
-  const hours = pad(date.getHours())
-  const minutes = pad(date.getMinutes())
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`
-}
-
-const toUtcIso = value => {
-  if (!value) return null
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-
-  return date.toISOString()
-}
+import PageHeader from '../Common/PageHeader'
+import { useMatchesMeta } from '../../hooks/useMatchesMeta'
+import { getPreviousTime, hasScheduleChanged, toDatetimeLocalValue, toUtcIso } from './schedule'
+import styles from './AdminMatchSchedule.module.css'
 
 export default function AdminMatchSchedule() {
   const { activeTournament } = useTournament()
-  const { rounds, loading: roundsLoading } = useRounds(activeTournament?.id)
+  const { rounds, activeRound, loading: roundsLoading } = useRounds(activeTournament?.id)
+  const { matchesMeta } = useMatchesMeta(activeTournament?.id)
   const [selectedRound, setSelectedRound] = useState(null)
   const [scheduleValues, setScheduleValues] = useState({})
   const [saving, setSaving] = useState(false)
@@ -52,9 +31,11 @@ export default function AdminMatchSchedule() {
   } = useMatches(selectedRound, activeTournament?.id)
 
   useEffect(() => {
-    if (selectedRound || rounds.length === 0) return
-    setSelectedRound(rounds[0]?.round_number ?? null)
-  }, [rounds, selectedRound])
+    if (selectedRound || roundsLoading) return
+    const withMatches = matchesMeta.map(match => match.round_number)
+    const fallback = withMatches.length > 0 ? Math.max(...withMatches) : null
+    setSelectedRound(activeRound?.round_number ?? fallback)
+  }, [activeRound, matchesMeta, roundsLoading, selectedRound])
 
   /**
    * Los inputs se rellenan con el horario que está en la base.
@@ -81,10 +62,7 @@ export default function AdminMatchSchedule() {
   }, [matches])
 
   const pendingChanges = useMemo(() => {
-    return matches.filter(match => {
-      const currentValue = toDatetimeLocalValue(match.match_date)
-      return scheduleValues[match.id] !== undefined && scheduleValues[match.id] !== currentValue
-    })
+    return matches.filter(match => hasScheduleChanged(match.match_date, scheduleValues[match.id]))
   }, [matches, scheduleValues])
 
   const handleValueChange = useCallback((matchId, value) => {
@@ -141,23 +119,19 @@ export default function AdminMatchSchedule() {
 
   if (roundsLoading) {
     return (
-      <div className="container" style={{ maxWidth: '1000px' }}>
+      <div className={styles.container}>
         <LoadingState message="Cargando fechas del torneo..." />
       </div>
     )
   }
 
   return (
-    <div className="container" style={{ maxWidth: '1000px' }}>
+    <div className={styles.container}>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
-        <h2 style={{ marginBottom: 'var(--space-sm)' }}>🕒 Reprogramar partidos</h2>
-        <p style={{ marginTop: 0, color: 'var(--color-text-secondary)' }}>
-          Ajustá los horarios de los partidos por fecha para cubrir aplazos, suspensiones o cambios
-          de agenda.
-        </p>
+      <PageHeader icon="🕒" title="Horarios" centered />
 
+      <div className={styles.picker}>
         <SelectDropdown
           label="Fecha del torneo"
           items={rounds.map(round => ({ ...round, id: round.round_number }))}
@@ -171,106 +145,55 @@ export default function AdminMatchSchedule() {
       </div>
 
       {!selectedRound ? (
-        <div className="card">Seleccioná una fecha para ver y modificar los horarios.</div>
+        <p className={styles.empty}>Seleccioná una fecha para ver y modificar los horarios.</p>
       ) : matchesLoading ? (
         <LoadingState message="Cargando partidos..." />
       ) : matches.length === 0 ? (
-        <div className="card">No hay partidos cargados para esta fecha.</div>
+        <p className={styles.empty}>No hay partidos cargados para esta fecha.</p>
       ) : (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          <ul className={styles.list}>
             {matches.map(match => {
-              const matchDateValue = scheduleValues[match.id] ?? ''
-              const currentDateLabel = formatMatchDateTimeLong(match.match_date)
-              const hasChanges =
-                scheduleValues[match.id] !== undefined &&
-                scheduleValues[match.id] !== toDatetimeLocalValue(match.match_date)
+              const value = scheduleValues[match.id] ?? ''
+              const previous = getPreviousTime(match.match_date, value)
 
               return (
-                <div key={match.id} className="card" style={{ padding: 'var(--space-lg)' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 'var(--space-lg)',
-                      flexWrap: 'wrap',
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: '240px' }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 'var(--space-md)',
-                          flexWrap: 'wrap',
-                          marginBottom: 'var(--space-sm)',
-                        }}
-                      >
-                        <TeamDisplay team={match.home_team} size="md" />
-                        <span style={{ fontWeight: '700', color: 'var(--color-primary-text)' }}>
-                          vs
-                        </span>
-                        <TeamDisplay team={match.away_team} size="md" />
-                      </div>
-
-                      {showsMatchNumber(match) && (
-                        <div style={{ fontWeight: '700', marginBottom: 'var(--space-xs)' }}>
-                          Partido {match.match_number}
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          color: 'var(--color-text-secondary)',
-                          fontSize: 'var(--font-size-base)',
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontWeight: '600',
-                            color: 'var(--color-text-primary)',
-                            marginBottom: 'var(--space-2xs)',
-                          }}
-                        >
-                          Horario actual
-                        </div>
-                        <div>{currentDateLabel}</div>
-                        {hasChanges && (
-                          <div
-                            style={{
-                              marginTop: 'var(--space-2xs)',
-                              color: 'var(--color-warning)',
-                              fontWeight: '600',
-                            }}
-                          >
-                            Cambiará al guardar
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ minWidth: '220px', width: '100%', maxWidth: '320px' }}>
-                      <DateTimeInput
-                        label="Horario"
-                        value={matchDateValue}
-                        onChange={event => handleValueChange(match.id, event.target.value)}
-                      />
-                    </div>
+                <li key={match.id} className={styles.card} data-changed={previous !== null}>
+                  <span id={`teams-${match.id}`} className={styles.matchup}>
+                    <MatchupLogos home={match.home_team} away={match.away_team} middle="vs" />
+                  </span>
+                  <div className={styles.date}>
+                    <DateTimeInput
+                      value={value}
+                      ariaLabelledBy={`teams-${match.id}`}
+                      onChange={event => handleValueChange(match.id, event.target.value)}
+                    />
                   </div>
-                </div>
+                  {(previous || showsMatchNumber(match)) && (
+                    <p className={styles.extra}>
+                      {showsMatchNumber(match) && `Partido ${match.match_number}`}
+                      {showsMatchNumber(match) && previous && ' · '}
+                      {previous && <span className={styles.previous}>antes: {previous}</span>}
+                    </p>
+                  )}
+                </li>
               )
             })}
-          </div>
+          </ul>
 
-          <div style={{ marginTop: 'var(--space-lg)' }}>
+          <div className={styles.saveBar}>
             <Button
               variant="success"
+              size="lg"
               onClick={handleSaveAll}
               disabled={saving || pendingChanges.length === 0}
               fullWidth
             >
-              {saving ? 'Guardando horarios...' : 'Guardar cambios'}
+              {saving
+                ? 'Guardando horarios...'
+                : pendingChanges.length > 0
+                  ? `Guardar cambios (${pendingChanges.length})`
+                  : 'Guardar cambios'}
             </Button>
           </div>
         </>
