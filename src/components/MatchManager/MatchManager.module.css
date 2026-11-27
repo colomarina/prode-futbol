@@ -1,0 +1,37 @@
+.sectionTitle {
+  margin: var(--space-lg) var(--space-2xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.loadedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.allLoaded {
+  margin: var(--space-lg) 0 0;
+  text-align: center;
+  font-size: var(--font-size-md);
+  color: var(--color-success-text);
+}
+
+.saveBar {
+  position: sticky;
+  bottom: var(--space-lg);
+  margin-top: var(--space-xl);
+  z-index: var(--z-sticky);
+}

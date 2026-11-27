@@ -1,11 +1,11 @@
-import type { TeamSummary, Uuid } from '../../../../types/domain'
+import type { TeamSummary, Uuid } from '../../../types/domain'
 import styles from './QualifierPicker.module.css'
 
 /**
  * Quién clasifica si el partido de playoff termina empatado.
  *
  * Se muestra solo cuando el marcador pronosticado es un empate; las reglas de
- * cuándo y con qué seleccionado están en `../qualifier.js`.
+ * cuándo y con qué seleccionado están en `PredictionForm/MatchPrediction/qualifier.ts`.
  *
  */
 export default function QualifierPicker({
@@ -14,12 +14,14 @@ export default function QualifierPicker({
   isLocked,
   canPredict,
   onSelect,
+  hint = 'Elegí quién pensás que clasifica por penales.',
 }: {
   teams: TeamSummary[]
   selectedTeamId: Uuid | null
   isLocked?: boolean
   canPredict?: boolean
   onSelect: (teamId: Uuid) => void
+  hint?: string
 }) {
   const disabled = !canPredict || isLocked
 
@@ -65,9 +67,7 @@ export default function QualifierPicker({
 
       {canPredict && (
         <p className={styles.hint}>
-          {isLocked
-            ? 'No hace falta elegir: con ese marcador hay ganador directo.'
-            : 'Elegí quién pensás que clasifica por penales.'}
+          {isLocked ? 'No hace falta elegir: con ese marcador hay ganador directo.' : hint}
         </p>
       )}
     </div>
