@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { getLeaderboardRounds, hasPlayoffMatches } from './leaderboardRounds'
+import {
+  getFinishedRoundNumbers,
+  getLeaderboardRounds,
+  hasPlayoffMatches,
+} from './leaderboardRounds'
 
 const round = (roundNumber, extra = {}) => ({ round_number: roundNumber, ...extra })
 
@@ -141,5 +145,22 @@ describe('hasPlayoffMatches', () => {
     expect(hasPlayoffMatches([match(1), match(2)])).toBe(false)
     expect(hasPlayoffMatches([])).toBe(false)
     expect(hasPlayoffMatches()).toBe(false)
+  })
+})
+
+describe('getFinishedRoundNumbers', () => {
+  it('incluye solo las fechas con todos sus partidos terminados', () => {
+    const meta = [
+      { round_number: 1, is_finished: true },
+      { round_number: 1, is_finished: true },
+      { round_number: 2, is_finished: true },
+      { round_number: 2, is_finished: false },
+    ]
+    expect(getFinishedRoundNumbers(meta)).toEqual(new Set([1]))
+  })
+
+  it('devuelve un conjunto vacio sin partidos', () => {
+    expect(getFinishedRoundNumbers([])).toEqual(new Set())
+    expect(getFinishedRoundNumbers(undefined)).toEqual(new Set())
   })
 })

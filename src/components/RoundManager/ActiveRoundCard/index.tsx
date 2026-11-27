@@ -1,47 +1,38 @@
 import RoundProgress from '../RoundProgress'
+import LoadingState from '../../Common/LoadingState'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
 import type { Round } from '../../../types/domain'
 import type { PlayerProgress } from '../../../hooks/useRoundProgress'
 import styles from './ActiveRoundCard.module.css'
 
-/**
- * La tarjeta destacada de la fecha activa, con el progreso de los jugadores.
- *
- * "Activa" no quiere decir `status === 'open'`: se deriva del partido más próximo
- * que todavía no empezó (`utils/matchTiming.ts`). `rounds.status` se actualiza a
- * mano y queda desincronizado, así que no sirve para esto.
- */
 export default function ActiveRoundCard({
   round,
   players,
+  matchLabels,
+  loading,
+  error,
 }: {
   round: Round
   players: PlayerProgress[]
+  matchLabels: Record<number, string>
+  loading: boolean
+  error: boolean
 }) {
   return (
-    <div className={styles.card}>
-      <div className={styles.stripe} aria-hidden="true" />
-
-      <div className={styles.body}>
-        <div className={styles.tag}>
-          <span aria-hidden="true">🟢</span>
-          <span className={styles.tagText}>Fecha activa por partidas</span>
-        </div>
-
-        <div className={styles.round}>
-          <div className={styles.roundIcon} aria-hidden="true">
-            📅
-          </div>
-          <div>
-            <p className={styles.roundName}>{getRoundDisplayName(round)}</p>
-            <p className={styles.roundHint}>
-              La fecha activa se calcula por el partido más próximo que todavía no empezó
-            </p>
-          </div>
-        </div>
-
-        {players.length > 0 && <RoundProgress players={players} />}
-      </div>
-    </div>
+    <section className={styles.card} aria-label="Fecha en juego">
+      <p className={styles.tag}>
+        <span aria-hidden="true">🟢</span> Fecha en juego
+      </p>
+      <p className={styles.roundName}>{getRoundDisplayName(round)}</p>
+      {loading ? (
+        <LoadingState message="Cargando progreso..." size="sm" />
+      ) : error ? (
+        <p className={styles.notice}>No se pudo cargar el progreso</p>
+      ) : players.length === 0 ? (
+        <p className={styles.notice}>Todavía nadie pronosticó esta fecha</p>
+      ) : (
+        <RoundProgress players={players} matchLabels={matchLabels} />
+      )}
+    </section>
   )
 }

@@ -6,6 +6,7 @@ interface SpinnerProps {
   borderWidth?: number
   color?: string
   trackColor?: string
+  decorative?: boolean
 }
 
 /**
@@ -30,6 +31,7 @@ export default function Spinner({
   borderWidth = 4,
   color = 'var(--color-primary)',
   trackColor,
+  decorative = false,
 }: SpinnerProps) {
   // La pista es el mismo color pero apenas visible, así que se deriva en vez de
   // pedirla: quien pasa `color="var(--color-error)"` no tiene que acordarse de
@@ -42,6 +44,8 @@ export default function Spinner({
     '--spinner-color': color,
     '--spinner-track': track,
   }
+
+  if (decorative) return <div aria-hidden="true" className={styles.spinner} style={estilo} />
 
   return <div role="status" aria-label="Cargando" className={styles.spinner} style={estilo} />
 }

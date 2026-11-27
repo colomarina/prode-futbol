@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { FormEvent } from 'react'
 import { useRounds } from '../../hooks/useRounds'
 import { useMatches } from '../../hooks/useMatches'
@@ -7,6 +7,10 @@ import { useTournament } from '../../contexts/TournamentContext'
 import { getRoundDisplayName } from '../../utils/roundLabels'
 import { canLoadResult, RESULT_LOAD_DELAY_HOURS } from '../../utils/matchTiming'
 import MatchResult from './MatchResult'
+import LoadedResultRow from './LoadedResultRow'
+import PageHeader from '../Common/PageHeader'
+import { getPendingResultsRoundNumber, splitByResult } from '../../utils/adminResults'
+import styles from './MatchManager.module.css'
 import Button from '../Common/Button'
 import Toast from '../Common/Toast'
 import SelectDropdown from '../Common/SelectDropdown'
@@ -46,6 +50,13 @@ export default function MatchManager() {
       ),
     [matchesMeta, rounds]
   )
+
+  useEffect(() => {
+    if (selectedRound !== null || matchesMeta.length === 0) return
+    setSelectedRound(getPendingResultsRoundNumber(matchesMeta))
+  }, [matchesMeta, selectedRound])
+
+  const { pending, loaded } = useMemo(() => splitByResult(matches ?? []), [matches])
 
   const handleValueChange = useCallback((matchId, field, value) => {
     setResultValues(prev => ({
@@ -150,21 +161,7 @@ export default function MatchManager() {
 
   return (
     <div className="container" style={{ maxWidth: '900px' }}>
-      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-        <h2
-          style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: 'var(--color-primary-text)',
-            marginBottom: '8px',
-          }}
-        >
-          ⚙️ Cargar Resultados
-        </h2>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
-          Seleccioná una fecha cerrada y cargá los resultados de los partidos
-        </p>
-      </div>
+      <PageHeader icon="⚙️" title="Resultados" />
 
       {/* Selector de fecha */}
       <div style={{ marginBottom: '16px' }}>
@@ -221,51 +218,53 @@ export default function MatchManager() {
            * porque es un envoltorio y algunos navegadores le ponen margen propio.
            */
           <form onSubmit={handleSubmit} style={{ margin: 0 }}>
-            {/* Lista de partidos */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {matches.map(match => (
-                <MatchResult
-                  key={`${match.round_number}-${match.match_number}-${match.id}`}
-                  match={match}
-                  resultValues={resultValues}
-                  onValueChange={handleValueChange}
-                />
-              ))}
-            </div>
+            {pending.length > 0 ? (
+              <>
+                <h3 className={styles.sectionTitle}>Pendientes ({pending.length})</h3>
+                <div className={styles.list}>
+                  {pending.map(match => (
+                    <MatchResult
+                      key={match.id}
+                      match={match}
+                      resultValues={resultValues}
+                      onValueChange={handleValueChange}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className={styles.allLoaded}>Todos los resultados de esta fecha están cargados</p>
+            )}
+
+            {loaded.length > 0 && (
+              <>
+                <h3 className={styles.sectionTitle}>Ya cargados ({loaded.length})</h3>
+                <ul className={styles.loadedList}>
+                  {loaded.map(match => (
+                    <LoadedResultRow key={match.id} match={match} />
+                  ))}
+                </ul>
+              </>
+            )}
 
             {/* Botón para guardar todos */}
-            <div
-              style={{
-                marginTop: '24px',
-                position: 'sticky',
-                bottom: '20px',
-                zIndex: 'var(--z-sticky)',
-              }}
-            >
-              <Button
-                type="submit"
-                variant="success"
-                size="lg"
-                fullWidth
-                disabled={saving || !hasValidResults}
-              >
-                <span style={{ fontSize: 'var(--font-size-2xl)' }}>{saving ? '⏳' : '💾'}</span>
-                <span>{saving ? 'Guardando...' : 'Guardar Todos los Resultados'}</span>
-              </Button>
-            </div>
+            {pending.length > 0 && (
+              <div className={styles.saveBar}>
+                <Button
+                  type="submit"
+                  variant="success"
+                  size="lg"
+                  fullWidth
+                  disabled={saving || !hasValidResults}
+                >
+                  <span style={{ fontSize: 'var(--font-size-2xl)' }}>{saving ? '⏳' : '💾'}</span>
+                  <span>{saving ? 'Guardando...' : 'Guardar Todos los Resultados'}</span>
+                </Button>
+              </div>
+            )}
           </form>
         )
-      ) : (
-        <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📅</div>
-          <h3 style={{ color: 'var(--color-text-primary)', marginBottom: '8px' }}>
-            Seleccioná una fecha
-          </h3>
-          <p style={{ color: 'var(--color-text-secondary)' }}>
-            Elegí una fecha cerrada para cargar los resultados
-          </p>
-        </div>
-      )}
+      ) : null}
 
       {/* Toast notifications */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

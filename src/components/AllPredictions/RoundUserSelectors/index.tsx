@@ -1,7 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import MatchSelector from '../MatchSelector'
 import SelectDropdown from '../../Common/SelectDropdown'
 import { getRoundDisplayName } from '../../../utils/roundLabels'
+import { getFinishedRoundNumbers } from '../../../utils/leaderboardRounds'
+import { useMatchesMeta } from '../../../hooks/useMatchesMeta'
+import { useTournament } from '../../../contexts/TournamentContext'
 import type { MatchWithTeams, Round, Uuid } from '../../../types/domain'
 import type { AllPredictionsViewMode, PredictionsUser } from '../../../hooks/useAllPredictions'
 
@@ -32,6 +35,10 @@ const RoundUserSelectors = ({
   selectedMatchId,
   onMatchChange,
 }: RoundUserSelectorsProps) => {
+  const { activeTournament } = useTournament()
+  const { matchesMeta } = useMatchesMeta(activeTournament?.id)
+  const finishedRounds = useMemo(() => getFinishedRoundNumbers(matchesMeta), [matchesMeta])
+
   // Seleccionar automáticamente la última fecha si no hay seleccionada
   useEffect(() => {
     if (!selectedRound && availableRounds.length > 0) {
@@ -71,7 +78,7 @@ const RoundUserSelectors = ({
   }, [viewMode, onMatchChange])
 
   const getRoundLabel = (round: Round): string => {
-    return `${getRoundDisplayName(round)} ${round.status === 'finished' ? '🏁' : '⚽'}`
+    return `${getRoundDisplayName(round)} ${finishedRounds.has(round.round_number) ? '🏁' : '⚽'}`
   }
 
   return (

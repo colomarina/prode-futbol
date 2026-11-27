@@ -2,10 +2,9 @@ import type { PostgrestError } from '@supabase/supabase-js'
 
 /**
  * Lo que puede llegar en el `error` de una escritura: el de PostgREST, el de Auth
- * (que extiende `Error`), o uno propio que el hook arma (`openNextRound` tira un
- * `Error` cuando no hay fecha pendiente).
+ * (que extiende `Error`), o uno propio que arme un hook.
  *
- * Los tres tienen `message`, que es lo único que leen los componentes para armar el
+ * Todos tienen `message`, que es lo único que leen los componentes para armar el
  * toast. Tipar esto como `unknown` sería más correcto en abstracto y peor en la
  * práctica: obligaría a estrechar en cada consumidor para leer un campo que siempre
  * está.

@@ -27,6 +27,7 @@ interface DateTimeInputProps {
   disabled?: boolean
   placeholder?: string
   style?: CSSProperties
+  ariaLabelledBy?: string
 }
 
 export default function DateTimeInput({
@@ -37,6 +38,7 @@ export default function DateTimeInput({
   disabled = false,
   placeholder = 'Seleccionar fecha y hora',
   style,
+  ariaLabelledBy,
 }: DateTimeInputProps) {
   const generatedId = useId()
   const inputId = id || generatedId
@@ -64,24 +66,13 @@ export default function DateTimeInput({
           alignItems: 'center',
           gap: 'var(--space-sm)',
           width: '100%',
-          padding: 'var(--space-md) var(--space-md)',
+          padding: '0 var(--space-sm)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-border)',
           backgroundColor: disabled ? 'var(--color-surface-variant)' : 'var(--color-surface)',
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.03)',
         }}
       >
-        <span
-          style={{
-            fontSize: 'var(--font-size-base)',
-            color: 'var(--color-primary-text)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          📅
-        </span>
         {/*
           Aca habia un `style={{ width: '100%' }}` que no hacia nada: react-datepicker
           no acepta `style`, asi que el ancho completo nunca se aplico. Lo marco el
@@ -95,12 +86,13 @@ export default function DateTimeInput({
           showTimeSelect
           timeFormat="HH:mm"
           timeIntervals={15}
-          dateFormat="dd/MM/yyyy HH:mm"
+          dateFormat="dd/MM HH:mm"
           locale="es"
           placeholderText={placeholder}
           timeCaption="Horario"
           showPopperArrow={false}
           disabled={disabled}
+          ariaLabelledBy={ariaLabelledBy}
           popperPlacement="bottom-end"
           wrapperClassName=""
           className=""

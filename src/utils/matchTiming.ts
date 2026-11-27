@@ -22,8 +22,8 @@ export const hasMatchStarted = (matchDate: IsoDate): boolean => new Date() >= ne
 export const getResultLoadTime = (matchDate: IsoDate): Date =>
   new Date(new Date(matchDate).getTime() + RESULT_LOAD_DELAY_HOURS * 60 * MINUTO_MS)
 
-export const canLoadResult = (matchDate: IsoDate): boolean =>
-  new Date() >= getResultLoadTime(matchDate)
+export const canLoadResult = (matchDate: IsoDate, now: Date = new Date()): boolean =>
+  now >= getResultLoadTime(matchDate)
 
 export const secondsUntilCutoff = (matchDate: IsoDate): number =>
   Math.floor((getCutoffTime(matchDate) - Date.now()) / 1000)

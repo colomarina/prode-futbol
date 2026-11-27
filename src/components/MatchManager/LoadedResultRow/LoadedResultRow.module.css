@@ -1,0 +1,32 @@
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.matchup {
+  justify-self: center;
+  min-width: 0;
+}
+
+.score {
+  color: var(--color-text-primary);
+}
+
+.check {
+  color: var(--color-success-text);
+  font-weight: 700;
+}
+
+.extra {
+  grid-column: 1;
+  margin: var(--space-2xs) 0 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}

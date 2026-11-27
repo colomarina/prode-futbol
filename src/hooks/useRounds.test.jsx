@@ -174,21 +174,4 @@ describe('useRounds', () => {
     // admite pronosticos, no la ultima del torneo.
     await waitFor(() => expect(result.current.activeRound?.round_number).toBe(2))
   })
-
-  it('openNextRound avisa cuando no hay fechas pendientes', async () => {
-    mock = createSupabaseMock({
-      rounds: { data: ROUNDS_T1, error: null },
-      matches: { data: MATCHES_T1, error: null },
-    })
-    const { wrapper } = createWrapper()
-    const { useRounds } = await import('./useRounds')
-
-    const { result } = renderHook(() => useRounds('t1'), { wrapper })
-    await waitFor(() => expect(result.current.loading).toBe(false))
-
-    // Ninguna de las dos fechas está en 'pending'.
-    const { error } = await result.current.openNextRound()
-
-    expect(error?.message).toBe('No hay fechas pendientes para abrir')
-  })
 })

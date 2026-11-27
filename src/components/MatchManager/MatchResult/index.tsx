@@ -1,8 +1,12 @@
-import { useCallback, memo, useEffect, useMemo, useRef } from 'react'
+import { useCallback, memo, useEffect, useRef } from 'react'
 import TeamDisplay from '../../Common/TeamDisplay'
 import ScoreInput, { ScoreSeparator } from '../../Common/ScoreInput'
 import { canLoadResult, getResultLoadTime } from '../../../utils/matchTiming'
-import { getWinnerTeamId, parseScoreValue } from '../../../utils/score'
+import QualifierPicker from '../../Common/QualifierPicker'
+import {
+  resolveQualifier,
+  getQualifierToSync,
+} from '../../PredictionForm/MatchPrediction/qualifier'
 import { formatMatchDateShort, formatMatchTime } from '../../../utils/matchDate'
 import { showsMatchNumber } from '../../../utils/matchNumber'
 
@@ -43,57 +47,24 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
     ? resultValues[match.id]?.away || match.away_score?.toString() || ''
     : awayScore
 
-  const homeScoreNumber = parseScoreValue(displayHomeValue)
-  const awayScoreNumber = parseScoreValue(displayAwayValue)
-  const autoWinnerTeamId = getWinnerTeamId(homeScoreNumber, awayScoreNumber, match)
-
-  const selectedQualifierTeamId = useMemo(() => {
-    if (!match.is_playoff) return null
-
-    return (
-      autoWinnerTeamId ||
-      resultValues[match.id]?.qualifier ||
-      match.qualifier_team_id ||
-      match.home_team_id
-    )
-  }, [
-    autoWinnerTeamId,
-    match.home_team_id,
-    match.id,
-    match.is_playoff,
-    match.qualifier_team_id,
-    resultValues,
-  ])
-
-  const qualifierIsLocked = Boolean(autoWinnerTeamId)
+  const qualifier = resolveQualifier({
+    match,
+    predictionValue: resultValues[match.id],
+    canPredict: true,
+  })
 
   useEffect(() => {
-    if (!match.is_playoff) return
-
-    if (autoWinnerTeamId && resultValues[match.id]?.qualifier !== autoWinnerTeamId) {
-      onValueChange(match.id, 'qualifier', autoWinnerTeamId)
-      return
-    }
-
-    if (!autoWinnerTeamId && !resultValues[match.id]?.qualifier) {
-      onValueChange(match.id, 'qualifier', match.qualifier_team_id || match.home_team_id)
-    }
-  }, [
-    autoWinnerTeamId,
-    match.home_team_id,
-    match.id,
-    match.is_playoff,
-    match.qualifier_team_id,
-    onValueChange,
-    resultValues,
-  ])
+    const toSync = getQualifierToSync({
+      match,
+      predictionValue: resultValues[match.id],
+      canPredict: true,
+    })
+    if (toSync) onValueChange(match.id, 'qualifier', toSync)
+  }, [match, onValueChange, resultValues])
 
   const handleQualifierChange = useCallback(
-    qualifierTeamId => {
-      if (!match.is_playoff || qualifierIsLocked) return
-      onValueChange(match.id, 'qualifier', qualifierTeamId)
-    },
-    [match.id, match.is_playoff, onValueChange, qualifierIsLocked]
+    qualifierTeamId => onValueChange(match.id, 'qualifier', qualifierTeamId),
+    [match.id, onValueChange]
   )
 
   const formattedDate = formatMatchDateShort(match.match_date)
@@ -237,66 +208,14 @@ const MatchResult = ({ match, resultValues, onValueChange }) => {
         </div>
       </div>
 
-      {match.is_playoff && (
-        <div
-          style={{
-            marginBottom: 'var(--space-lg)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 'var(--space-md)',
-            backgroundColor: 'var(--color-surface-variant)',
-          }}
-        >
-          <p
-            style={{
-              // El titulo del panel de penales de `QualifierPicker`, que es el mismo
-              // panel del lado del jugador, usa `margin: 0 0 var(--space-md) 0` y
-              // `--font-size-md`. Queda igual.
-              margin: '0 0 var(--space-md) 0',
-              fontSize: 'var(--font-size-md)',
-              fontWeight: '700',
-              color: 'var(--color-text-primary)',
-            }}
-          >
-            🥊 Si empatan, ¿quién clasifica por penales?
-          </p>
-
-          {[match.home_team, match.away_team].map(team => (
-            <label
-              key={team.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-sm)',
-                marginBottom: 'var(--space-sm)',
-                cursor: qualifierIsLocked ? 'default' : 'pointer',
-              }}
-            >
-              <input
-                type="radio"
-                name={`match-qualifier-${match.id}`}
-                checked={selectedQualifierTeamId === team.id}
-                disabled={qualifierIsLocked}
-                onChange={() => handleQualifierChange(team.id)}
-              />
-              <span style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)' }}>
-                {team.name}
-              </span>
-            </label>
-          ))}
-
-          {qualifierIsLocked && (
-            <p
-              style={{
-                margin: 'var(--space-sm) 0 0 0',
-                color: 'var(--color-text-secondary)',
-                fontSize: 'var(--font-size-sm)',
-              }}
-            >
-              No hace falta elegir: con ese marcador hay ganador directo.
-            </p>
-          )}
-        </div>
+      {qualifier.shouldShowPicker && (
+        <QualifierPicker
+          teams={[match.home_team, match.away_team]}
+          selectedTeamId={qualifier.selectedTeamId}
+          canPredict={canEditResult}
+          onSelect={handleQualifierChange}
+          hint="Elegí quién clasificó por penales."
+        />
       )}
 
       {!canEditResult && !match.is_finished && (

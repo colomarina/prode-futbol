@@ -53,10 +53,8 @@ export type TournamentType = 'league' | 'world_cup' | 'cup'
 /**
  * El CHECK de `rounds.status`.
  *
- * **Ojo**: el default de la columna en la base es `'closed'`, un valor que no está
- * en su propio CHECK (es la deuda de esquema que documenta el plan), así que una
- * fila puede traer algo fuera de esta unión. `RoundManager/roundStatus.js` lo
- * normaliza con `getRoundStatus()`, que cae a `pending`.
+ * Ya no lo lee ni lo escribe la app: la fecha activa, la tabla y la llave salen de
+ * los partidos.
  */
 export type RoundStatus = 'pending' | 'open' | 'locked' | 'finished'
 

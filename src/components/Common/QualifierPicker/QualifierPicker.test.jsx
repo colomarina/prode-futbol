@@ -105,3 +105,17 @@ describe('QualifierPicker', () => {
     expect(screen.queryByText('SELECCIONADO')).not.toBeInTheDocument()
   })
 })
+
+describe('QualifierPicker: texto de ayuda', () => {
+  it('sin hint muestra el texto de los pronosticos', () => {
+    renderPicker({ canPredict: true })
+
+    expect(screen.getByText('Elegí quién pensás que clasifica por penales.')).toBeInTheDocument()
+  })
+
+  it('con hint muestra ese texto', () => {
+    renderPicker({ canPredict: true, hint: 'Otro texto' })
+
+    expect(screen.getByText('Otro texto')).toBeInTheDocument()
+  })
+})

@@ -8,6 +8,9 @@ registros de cada fase se borraron: están en el historial de git. El último co
 tiene es `4f3c8ff`. Ahí también está el SQL que se aplicó en la fase 9 (`docs/plan-fase-9.md`):
 A1, el trigger que impide cambiarse el `role`, y A2, las policies que rechazan escrituras en
 torneos no `active`.
+El SQL que se aplicó el 27/11 para el admin nuevo (progreso solo con jugadores del torneo y
+default de `rounds.status`), con su rollback, está en `docs/plan-admin.md`, Task 1, en el
+historial de git.
 
 Nada de esta lista bloquea nada. Cada punto dice qué es y si conviene hacerlo.
 
@@ -15,11 +18,10 @@ Nada de esta lista bloquea nada. Cada punto dice qué es y si conviene hacerlo.
 | --- | --- | --- | --- |
 | 1 | [Seguridad: cutoff y pronósticos ajenos](#1-seguridad) | SQL | **alto**: se puede pronosticar con el partido empezado y ver los pronósticos ajenos antes |
 | 2 | [Importar fechas desde ESPN](#2-importar-fechas-desde-espn) | feature | — |
-| 3 | [Limpiar la UX del admin](#3-limpiar-la-ux-del-admin) | producto | — |
-| 4 | [Limpieza de esquema](#4-limpieza-de-esquema) | SQL | nulo: prolijidad |
-| 5 | [Decisiones de producto chicas](#5-decisiones-de-producto-chicas) | producto | nulo |
-| 6 | [Deuda de TypeScript y tests](#6-deuda-de-typescript-y-tests) | código | nulo: no cambia comportamiento |
-| 7 | [Datos de prueba sueltos](#7-datos-de-prueba-sueltos) | base | nulo |
+| 3 | [Limpieza de esquema](#3-limpieza-de-esquema) | SQL | nulo: prolijidad |
+| 4 | [Decisiones de producto chicas](#4-decisiones-de-producto-chicas) | producto | nulo |
+| 5 | [Deuda de TypeScript y tests](#5-deuda-de-typescript-y-tests) | código | nulo: no cambia comportamiento |
+| 6 | [Datos de prueba sueltos](#6-datos-de-prueba-sueltos) | base | nulo |
 
 ---
 
@@ -307,27 +309,12 @@ ventana → S4/S5 según lo que salga → S6 cuando quieras. Con **S2 + S3** lo 
 ## 2. Importar fechas desde ESPN
 
 Diseño en `docs/diseno-importar-fecha-espn.md`, **pendiente de tu revisión**. Después va el plan
-de implementación. Los cuartos del Clausura 2026 ya se cargaron a mano con este método el 27/11.
+de implementación. El botón va en la pantalla de Fechas (`RoundManager`), arriba del progreso. Los cuartos del Clausura 2026 ya se cargaron a mano con este método el 27/11.
 
 Toca dos puntos de esta lista: agrega `matches.external_id` (conviene antes o junto con borrar
-`matches.status`, punto 4) y su RPC repite en SQL el cierre de 10 minutos (se cruza con S2).
+`matches.status`, punto 3) y su RPC repite en SQL el cierre de 10 minutos (se cruza con S2).
 
-## 3. Limpiar la UX del admin
-
-**Ya no se abren ni se bloquean fechas**: `rounds.status` dejó de usarse en la práctica (y ya
-no decide qué fechas muestra la tabla, ver `utils/leaderboardRounds.ts`). El panel de fechas
-(`RoundManager`, `/admin/fechas`) sigue girando alrededor de esos estados, así que hay que
-replantear el admin. Ahí se decide también dónde va el botón de importar.
-
-Al hacerlo, mirar:
-
-- `/admin/mundial` nunca se abrió después de la fase 8: `AdminRoute` exige torneo no
-  finalizado y el único Mundial está `finished`. Se mira cuando haya un Mundial activo.
-- El default de `rounds.status` es `'closed'`, que su propio CHECK rechaza (sigue así al
-  27/11). Si `status` deja de importar, se corrige el default a `'pending'` y listo:
-  `alter table public.rounds alter column status set default 'pending';`.
-
-## 4. Limpieza de esquema
+## 3. Limpieza de esquema
 
 Nada de esto rompe nada hoy. Era la "entrega B" de la fase 9.
 
@@ -345,20 +332,23 @@ Nada de esto rompe nada hoy. Era la "entrega B" de la fase 9.
   `round_finances` + sus funciones). Siguen todas al 27/11. `DROP` de alto riesgo: revisar
   `pg_depend` antes. Si algún día se retoma la feature de pagos, ojo: `round_finances` y
   `round_payments` no tienen `tournament_id`.
+- **Funciones viejas de puntos**: `recalculate_round` y `recalculate_round_scores` escriben en
+  `round_scores` **sin `tournament_id`**. Nadie las llama (los puntos los calcula el trigger
+  `update_points_on_match_result`), pero si alguien lo hiciera mezclaría puntos entre torneos.
+  Conviene borrarlas, con el mismo cuidado de `pg_depend`.
 - **Reducir `docs/supabase-schema.md`** a lo que el generador no cubre (RLS, triggers),
   idealmente con el resultado de S0.
 - ~~Índices en `matches` y `round_scores` por torneo y fecha~~: **ya existen**
   (`idx_matches_tournament_round`, `idx_round_scores_tournament_round`).
 
-## 5. Decisiones de producto chicas
+## 4. Decisiones de producto chicas
 
-- **La regla del clasificado por penales está duplicada.** `MatchManager/MatchResult` la
-  reimplementa inline y `PredictionForm/MatchPrediction/qualifier.ts` la tiene con tests. No son
-  idénticas: el formulario muestra el selector solo con empate, el admin lo muestra siempre en
-  playoff y lo deshabilita cuando hay ganador. Unificarlas cambia la UI del admin y toca la
-  escritura que dispara el scoring. El mismo refactor se lleva el último literal de
-  `MatchResult` (`marginTop: '36px'`, duplicado en `MatchHeader.module.css`). Encaja con el
-  punto 3.
+- **El `marginTop: 36px` de `MatchManager/MatchResult`** está duplicado en
+  `MatchHeader.module.css`: las dos tarjetas implementan por su cuenta el patrón "badge absoluto
+  arriba + contenido corrido". La regla del clasificado ya se unificó (`qualifier.ts` +
+  `Common/QualifierPicker`); falta este literal.
+- **`/admin/mundial` nunca se abrió después de la fase 8**: `AdminRoute` exige torneo no
+  finalizado y el único Mundial está `finished`. Se mira cuando haya un Mundial activo.
 - **El globito del suspendido no se renderiza nunca**: `SUSPENDED_PLAYERS` son los mismos
   nombres que dos grupos de `constants/hiddenPlayers`, y `useLeaderboard` filtra los ocultos.
   Hay que decidir si esos jugadores van ocultos o suspendidos.
@@ -370,7 +360,7 @@ Nada de esto rompe nada hoy. Era la "entrega B" de la fase 9.
   flechas que pide APG. No está roto. Se rediseñó el 17/11 (dos botones lado a lado) sin cambiar
   esto.
 
-## 6. Deuda de TypeScript y tests
+## 5. Deuda de TypeScript y tests
 
 No cambia comportamiento ni aspecto. Se hace cuando haya ganas.
 
@@ -408,7 +398,7 @@ En Windows un cambio de capitalización a secas no lo ve git: `git mv` en dos pa
 
 También: `src/hooks/useWorldCupBonus.ts` cita `docs/pruebas-fase-3b.md`, que ya no existe.
 
-## 7. Datos de prueba sueltos
+## 6. Datos de prueba sueltos
 
 - Dos pronósticos de `test-colo` que RLS no le deja borrar al dueño: un `2-1` en `test-sandbox`
   (fecha 6, partido 4, `id 10db5a14-…`) y un `7-7` en `mundial-2026`. Inocuos.
